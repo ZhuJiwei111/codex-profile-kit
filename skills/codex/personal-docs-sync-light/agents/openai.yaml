@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Docs Sync Light"
+  short_description: "Minimal docs freshness check"
+  default_prompt: "Use $personal-docs-sync-light after behavior, config, API, command, or workflow changes."

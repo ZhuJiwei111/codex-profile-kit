@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Review Response"
+  short_description: "Handle review feedback rigorously"
+  default_prompt: "Use $personal-review-response when addressing code review or PR feedback."

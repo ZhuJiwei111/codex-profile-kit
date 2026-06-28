@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Planning With Files Zh"
+  short_description: "Durable Chinese file planning"
+  default_prompt: "Use $personal-planning-with-files-zh for long-running or cross-session work that needs task_plan.md, findings.md, and progress.md."

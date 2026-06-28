@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Evidence Debugging"
+  short_description: "Debug from concrete symptoms"
+  default_prompt: "Use $personal-evidence-debugging to diagnose a failing test, runtime error, or repeated command failure."

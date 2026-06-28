@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Subagent Boundaries"
+  short_description: "Safe bounded delegation for agents"
+  default_prompt: "Use $personal-subagent-boundaries when delegating work to subagents."

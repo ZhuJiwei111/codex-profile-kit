@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Context Compression"
+  short_description: "Compress context without losing state"
+  default_prompt: "Use $personal-context-compression when a long session needs a durable handoff summary."

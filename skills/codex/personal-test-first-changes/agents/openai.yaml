@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Test First Changes"
+  short_description: "Risk-based test-first changes"
+  default_prompt: "Use $personal-test-first-changes before implementing a bug fix or behavior change."

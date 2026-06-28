@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Skill Hygiene"
+  short_description: "Audit skills plugins and MCP config"
+  default_prompt: "Use $personal-skill-hygiene to audit or clean Codex or Claude skills, plugins, and MCP configuration."

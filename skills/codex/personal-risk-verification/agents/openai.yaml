@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Risk Verification"
+  short_description: "Scale verification to change risk"
+  default_prompt: "Use $personal-risk-verification before claiming local changes are complete."

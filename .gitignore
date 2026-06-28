@@ -1,0 +1,30 @@
+# Generated archives and local overlays
+*.tar.gz
+HOST_LOCAL.md
+tmp/
+.tmp/
+
+# Python/runtime byproducts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Sensitive or machine-local Codex state
+auth.json
+history.jsonl
+session_index.jsonl
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+attachments/
+cache/
+memories/
+sessions/
+archived_sessions/
+plugins/cache/
+logs/
+log/
+
+# Local editor/system files
+.DS_Store
+*.swp

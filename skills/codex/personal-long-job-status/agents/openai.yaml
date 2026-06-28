@@ -1,0 +1,7 @@
+interface:
+  display_name: "Personal Long Job Status"
+  short_description: "Manual one-shot job status check"
+  default_prompt: "Use $personal-long-job-status to manually check the current task or known local job status and estimate remaining time."
+
+policy:
+  allow_implicit_invocation: false

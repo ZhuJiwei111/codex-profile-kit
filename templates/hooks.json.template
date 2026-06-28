@@ -1,0 +1,94 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/direct_download_guard.py",
+            "timeout": 10,
+            "statusMessage": "Checking large-download proxy policy"
+          },
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py --event PreToolUse",
+            "timeout": 10,
+            "statusMessage": "Checking Hookify Codex bash rules"
+          }
+        ]
+      },
+      {
+        "matcher": "^(Edit|Write|MultiEdit|apply_patch|functions\\.apply_patch)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py --event PreToolUse",
+            "timeout": 10,
+            "statusMessage": "Checking Hookify Codex file rules"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py --event PostToolUse",
+            "timeout": 10,
+            "statusMessage": "Running Hookify Codex bash rules"
+          }
+        ]
+      },
+      {
+        "matcher": "^(Edit|Write|MultiEdit|apply_patch|functions\\.apply_patch)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py --event PostToolUse",
+            "timeout": 10,
+            "statusMessage": "Running Hookify Codex file rules"
+          },
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/smart_commit_stage.py --mode record",
+            "timeout": 10,
+            "statusMessage": "Recording edited file for accepted staging"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py --event UserPromptSubmit",
+            "timeout": 10,
+            "statusMessage": "Checking Hookify Codex prompt rules"
+          },
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/smart_commit_stage.py --mode confirm",
+            "timeout": 10,
+            "statusMessage": "Staging accepted edited files"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py --event Stop",
+            "timeout": 10,
+            "statusMessage": "Checking Hookify Codex stop rules"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
+sandbox_mode = "workspace-write"
+personality = "friendly"
+service_tier = "default"
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[features]
+hooks = true
+
+[sandbox_workspace_write]
+network_access = true

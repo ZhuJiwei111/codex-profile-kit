@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Context Optimization"
+  short_description: "Reduce context noise and token cost"
+  default_prompt: "Use $personal-context-optimization when context, tool output, or retrieval noise is slowing work down."

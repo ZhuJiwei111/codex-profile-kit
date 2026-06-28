@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Repo Intake"
+  short_description: "Bounded first-pass repo inspection"
+  default_prompt: "Use $personal-repo-intake before starting a bounded task in an unfamiliar repository."

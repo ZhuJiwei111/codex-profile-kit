@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Branch Finish"
+  short_description: "Finish verified repo changes cleanly"
+  default_prompt: "Use $personal-branch-finish when implementation is complete and verified."
