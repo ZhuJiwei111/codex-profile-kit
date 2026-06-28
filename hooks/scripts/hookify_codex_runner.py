@@ -84,17 +84,16 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
 
 def rule_files(cwd: Path) -> list[Path]:
     candidates: list[Path] = []
-    locations = [
-        Path.home() / ".codex" / "hookify",
-        cwd / ".codex",
-        cwd / ".codex" / "hookify",
+    location_patterns = [
+        (Path.home() / ".codex" / "hookify", ("*.md",)),
+        (cwd / ".codex", ("hookify*.md", "*.local.md")),
+        (cwd / ".codex" / "hookify", ("*.md",)),
     ]
-    for location in locations:
+    for location, patterns in location_patterns:
         if not location.is_dir():
             continue
-        candidates.extend(sorted(location.glob("hookify*.md")))
-        candidates.extend(sorted(location.glob("*.local.md")))
-        candidates.extend(sorted(location.glob("*.md")))
+        for pattern in patterns:
+            candidates.extend(sorted(location.glob(pattern)))
     seen: set[Path] = set()
     unique: list[Path] = []
     for path in candidates:

@@ -14,7 +14,7 @@ source: https://github.com/davepoon/buildwithclaude/blob/main/plugins/all-hooks/
 Codex 适配版分两步工作：
 
 1. 文件编辑工具成功后，只记录本次工具明确触及的仓库内文件，作为待验收暂存列表。
-2. 用户之后明确说“验收通过”“可以暂存”“可以 add”“可以提交”“stage”或“commit”等确认语时，才暂存待验收列表里的文件。
+2. 用户之后明确说“验收通过”“可以暂存”“可以 add”或“stage”等确认语时，才暂存待验收列表里的文件。
 
 安全边界：
 

@@ -3,8 +3,7 @@
 
 Record mode stores edited files in a pending list. Confirm mode stages pending
 files only when the user prompt explicitly says the work has been accepted or
-asks for staging/commit preparation. It never creates commits and never runs
-`git add .`.
+asks for staging. It never creates commits and never runs `git add .`.
 """
 
 from __future__ import annotations
@@ -22,10 +21,11 @@ from typing import Any
 PATCH_FILE_RE = re.compile(r"^\*\*\* (?:Add|Update|Delete) File: (.+)$", re.MULTILINE)
 CONFIRM_RE = re.compile(
     r"(验收通过|确认验收|已验收|验收完成|"
-    r"可以\s*(?:暂存|add|stage|提交|commit)|"
-    r"请\s*(?:暂存|add|stage|提交|commit)|"
-    r"帮我\s*(?:暂存|add|stage|提交|commit)|"
-    r"(?:^|[\s,，。；;])(?:stage|commit)(?:[\s,，。；;]|$))",
+    r"可以\s*(?:暂存|git\s+add|add|stage)|"
+    r"请\s*(?:暂存|git\s+add|add|stage)|"
+    r"帮我\s*(?:暂存|git\s+add|add|stage)|"
+    r"(?:please|can\s+you)\s+(?:git\s+add|add|stage)\b|"
+    r"(?:^|[\s,，。；;])git\s+add(?:[\s,，。；;]|$))",
     re.IGNORECASE,
 )
 NEGATIVE_RE = re.compile(

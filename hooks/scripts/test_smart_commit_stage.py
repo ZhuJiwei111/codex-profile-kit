@@ -87,6 +87,20 @@ class SmartCommitStageTest(unittest.TestCase):
 
         self.assert_file_not_staged()
 
+    def test_confirm_mode_does_not_stage_for_final_answer_prompt(self) -> None:
+        self.invoke("record", {"cwd": str(self.repo), "tool_input": {"file_path": "file.txt"}})
+
+        self.invoke("confirm", {"cwd": str(self.repo), "user_prompt": "请提交最终答案"})
+
+        self.assert_file_not_staged()
+
+    def test_confirm_mode_does_not_stage_for_stage_number_prompt(self) -> None:
+        self.invoke("record", {"cwd": str(self.repo), "tool_input": {"file_path": "file.txt"}})
+
+        self.invoke("confirm", {"cwd": str(self.repo), "user_prompt": "继续看 stage 2 的输出"})
+
+        self.assert_file_not_staged()
+
 
 if __name__ == "__main__":
     unittest.main()

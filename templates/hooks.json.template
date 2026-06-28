@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "^Bash$",
+        "matcher": "^(Bash|bash|exec_command|functions\\.exec_command|shell_command|functions\\.shell_command)$",
         "hooks": [
           {
             "type": "command",
@@ -31,17 +31,6 @@
       }
     ],
     "PostToolUse": [
-      {
-        "matcher": "^Bash$",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py --event PostToolUse",
-            "timeout": 10,
-            "statusMessage": "Running Hookify Codex bash rules"
-          }
-        ]
-      },
       {
         "matcher": "^(Edit|Write|MultiEdit|apply_patch|functions\\.apply_patch)$",
         "hooks": [

@@ -19,7 +19,8 @@ pattern: rm\s+-rf
 
 支持的事件别名：
 
-- `bash`: Codex `PreToolUse` / `PostToolUse` 中的 Bash 命令。
+- `bash`: 当前注册在 Codex `PreToolUse` 中的 Bash/shell 命令；runner
+  仍支持 `PostToolUse`，但本机默认不再对 Bash 命令重复运行 Post 检查。
 - `file`: Codex 文件编辑工具，例如 `Edit`、`Write`、`MultiEdit`、`apply_patch`。
 - `prompt`: Codex `UserPromptSubmit`。
 - `stop`: Codex `Stop`。
