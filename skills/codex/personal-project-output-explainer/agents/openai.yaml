@@ -1,4 +1,4 @@
 interface:
   display_name: "Project Output Explainer"
-  short_description: "Explain project status, plans, and decisions"
-  default_prompt: "Use $personal-project-output-explainer to explain or summarize this project status, plan, or decision for someone who knows the project only partially."
+  short_description: "Explain project outputs with advisor-style context and evidence boundaries"
+  default_prompt: "Use $personal-project-output-explainer to verify key facts, build an implicit explanation map, and explain this project status, result, plan, or decision for a technically capable reader who has not followed the thread."
