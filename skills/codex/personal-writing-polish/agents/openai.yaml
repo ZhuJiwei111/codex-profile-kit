@@ -1,0 +1,6 @@
+interface:
+  display_name: "Writing Polish"
+  short_description: "Polish technical writing with evidence boundaries"
+  default_prompt: "Use $personal-writing-polish to audit and rewrite this text so it is direct, natural, and technically precise."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Multiline Coordination"
+  short_description: "Coordinate worktree lines and intake gates"
+  default_prompt: "Use $personal-multiline-coordination to audit and coordinate multiple worktree lines before continuing worker development."
+policy:
+  allow_implicit_invocation: true

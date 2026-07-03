@@ -19,6 +19,12 @@ The main process should not directly use `watch`, `tail -f`, `nvidia-smi -l`,
 `while true`, repeated polling, artifact polling, repeated log reads, GPU status
 loops, or a long terminal observation loop for long-running monitoring.
 
+Goal continuation is also not a monitoring cadence. If a worker goal starts a
+long GPU job, download, eval, or batch process, keep the goal for the bounded
+stage but switch observation to detached execution plus a monitoring subAgent.
+The worker should wait for monitor events instead of repeatedly waking itself
+to check progress.
+
 Only continue with active monitoring when the user explicitly authorized it for
 the current stage. In that case, spawn a monitoring subAgent and keep the main
 process alive as a persistent supervisor. The main process should use repeat

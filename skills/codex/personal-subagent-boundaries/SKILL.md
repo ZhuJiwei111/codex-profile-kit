@@ -15,6 +15,11 @@ format.
 
 Require key paths, evidence, conclusions, risks, and next steps.
 
+For Codex worker threads, multiple git worktrees, long-lived worker goals,
+coordinator intake, or worktree archive/restart, also use
+`personal-worktree-goal-coordination`. Keep this skill focused on delegation,
+subAgent ownership, and monitoring boundaries.
+
 ## Allowed Patterns
 
 - Read-only exploration, comparison, or review.
