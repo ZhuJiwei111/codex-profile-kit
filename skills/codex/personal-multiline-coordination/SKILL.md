@@ -19,7 +19,7 @@ If this skill was triggered implicitly because multiple worktrees, workers, or b
 
 1. Identify whether you are acting as `coordinator`, `worker`, or `monitoring observer`.
 2. Run a read-only audit:
-   `python3 /root/.codex/skills/personal-multiline-coordination/scripts/audit_multiline.py <project-root>`
+   `python3 "$HOME/.codex/skills/personal-multiline-coordination/scripts/audit_multiline.py" <project-root>`
 3. Read `references/registry.md` before creating, checking, or updating `.codex/multiline/registry.json` or `registry.md`.
 4. Read `references/lifecycle.md` before opening, continuing, stopping, restarting, archiving, or finishing a line.
 5. Read `references/routing.md` before involving worker threads, subagents, long-running jobs, verification, commits, PRs, or merge/finish decisions.
