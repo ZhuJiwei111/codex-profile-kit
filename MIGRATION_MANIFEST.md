@@ -8,7 +8,8 @@ Generated for a clean Codex profile kit.
 - `templates/HOST_LOCAL_TEMPLATE.md`: target-machine overlay template.
 - `templates/hooks.json.template`: Codex hook wiring template with placeholders.
 - `templates/config.toml.template`: minimal portable Codex config reference.
-- `skills/codex/`: non-system custom Codex skills from `~/.codex/skills`.
+- `skills/codex/`: personal workflow skills plus explicitly allowlisted
+  portable Codex skills from `~/.codex/skills`.
 - `skills/agents/find-skills/`: portable agent skill discovery helper.
 - `hooks/scripts/`: hook scripts and tests from `~/.codex/hooks`.
 - `hooks/rules/`: Hookify markdown rules from `~/.codex/hookify`.

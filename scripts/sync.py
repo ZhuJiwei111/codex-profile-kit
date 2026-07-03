@@ -47,6 +47,13 @@ ALLOWED_SKILL_KEYS = {
     "metadata",
     "name",
 }
+PORTABLE_CODEX_SKILL_NAMES = {
+    "awesome-rebuttal",
+    "code-documentation",
+    "code-simplifier",
+    "context-save-restore",
+    "hookify-writing-rules",
+}
 SAFE_AGENT_SECTIONS = {
     "Maintenance",
     "Workflow",
@@ -284,6 +291,10 @@ def sanitize_skill(skill_file: Path) -> None:
     skill_file.write_text(sanitized, encoding="utf-8")
 
 
+def is_portable_codex_skill(name: str) -> bool:
+    return name.startswith("personal-") or name in PORTABLE_CODEX_SKILL_NAMES
+
+
 def section_title(line: str) -> str | None:
     stripped = line.strip()
     if stripped.startswith("## ") and not stripped.startswith("### "):
@@ -422,6 +433,8 @@ def export_to(root: Path, home: Path, tarball: bool = False) -> None:
     for skill_dir in sorted((codex / "skills").iterdir()):
         if not skill_dir.is_dir() or skill_dir.name.startswith("."):
             continue
+        if not is_portable_codex_skill(skill_dir.name):
+            continue
         dst = skills_root / "codex" / skill_dir.name
         copytree(skill_dir, dst)
         skill_file = dst / "SKILL.md"
@@ -476,7 +489,8 @@ Generated for a clean Codex profile kit.
 - `templates/HOST_LOCAL_TEMPLATE.md`: target-machine overlay template.
 - `templates/hooks.json.template`: Codex hook wiring template with placeholders.
 - `templates/config.toml.template`: minimal portable Codex config reference.
-- `skills/codex/`: non-system custom Codex skills from `~/.codex/skills`.
+- `skills/codex/`: personal workflow skills plus explicitly allowlisted
+  portable Codex skills from `~/.codex/skills`.
 - `skills/agents/find-skills/`: portable agent skill discovery helper.
 - `hooks/scripts/`: hook scripts and tests from `~/.codex/hooks`.
 - `hooks/rules/`: Hookify markdown rules from `~/.codex/hookify`.

@@ -16,7 +16,9 @@ contains exported portable assets only.
 ## Included Assets
 
 - Portable `rules/AGENTS.portable.md`.
-- Non-system Codex skills under `skills/codex/`.
+- Personal workflow Codex skills under `skills/codex/`, plus explicitly
+  allowlisted portable Codex skills. Do not export every locally installed
+  non-system skill by default.
 - Portable agent skills under `skills/agents/`.
 - Native hook scripts and hook docs under `hooks/`.
 - Hookify rules under `hooks/rules/`.
@@ -33,6 +35,8 @@ Never export, commit, copy, print, or summarize secret values or runtime state:
 - Codex memories and rollout summaries unless the user separately approves a memory migration design.
 - Plugin caches, connector OAuth state, app caches, model caches.
 - Project trust lists, conda environments, package caches, datasets, model weights, project outputs.
+- Locally installed non-personal skill suites, such as PaperSpine, unless the
+  user explicitly asks to include that suite in the profile kit.
 - Generated tarballs in Git history.
 
 ## Commands
