@@ -16,3 +16,10 @@ GPU-looking task without `CUDA_VISIBLE_DEVICES` detected.
 
 Before heavy GPU work, check `nvidia-smi`, choose an explicit device scope, and
 ask before launching long-running or heavy jobs.
+
+For long-running GPU jobs, include the expected device scope in the Plan vs
+Actual mapping and startup guard. During the bounded startup guard, verify that
+the target process uses the expected device(s) and watch for obvious low
+utilization, unexplained 0-100 utilization thrashing, missing device use, memory
+errors, or CUDA errors. Non-target processes sharing the same GPU are background
+context only and should not trigger an anomaly by themselves.
