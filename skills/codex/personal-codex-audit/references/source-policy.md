@@ -2,6 +2,20 @@
 
 Use this policy before collecting or summarizing the user's Codex profile.
 
+## Host Scope
+
+- The current execution host is the default read and write boundary.
+- Unqualified requests about sessions, threads, memories, Codex state,
+  archives, profiles, or reusable assets refer only to the current host.
+- A remote worker must not access another host's thread titles, previews,
+  metadata, messages, memories, or session-derived summaries. Direct the user
+  to initiate cross-host Codex-state work from the Windows control plane, where
+  explicit authorization is required before discovery.
+- Do not use app-wide thread listings to expose other hosts while auditing the
+  current host. Keep the unfiltered result inside tool orchestration, emit only
+  entries matching the known current host, and never read an unmatched thread.
+- Subagents inherit the same host scope and may not expand it.
+
 ## Default Sources
 
 Read these sources by default when they exist:
@@ -22,6 +36,8 @@ Do not read or summarize these by default:
 - Auth, credential, token, cookie, password, SSH key, `.netrc`, secret, or Codex auth files.
 - `auth.json`, `history.jsonl`, `session_index.jsonl`, SQLite files, attachments, caches, plugin caches, logs, and raw session transcripts.
 - Project-specific or task-specific memories, including experiment logs, paper/rebuttal state, remote server state, dataset transfer records, platform-specific setup, and one-off troubleshooting.
+- Threads, memories, or session-derived summaries from another host unless the
+  user explicitly approved that host before discovery.
 - Long logs, generated artifacts, archived sessions, or high-noise historical dumps.
 
 If the user explicitly requests one of these sources, ask before reading anything sensitive and report only redacted configuration categories.

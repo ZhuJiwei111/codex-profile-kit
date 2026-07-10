@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Triad Discussion"
-  short_description: "Coordinate staged triad research discussions."
-  default_prompt: "Use $personal-triad-discussion to coordinate a staged discussion between me, Codex, and an external GPT reviewer."
+  short_description: "Coordinate triad discussions with live notes."
+  default_prompt: "Use $personal-triad-discussion to coordinate a staged triad discussion with local live context notes."

@@ -16,10 +16,16 @@ that require explicit user intent and verification.
 
 1. Start read-only. Do not edit `AGENTS.md`, skills, hooks, memory, config, migration kits, profile-kit repositories, or generated reports unless the user separately asks for a concrete modification.
 2. Read `references/source-policy.md` before gathering evidence. Follow its allowed sources, exclusions, and memory-filtering rules.
-3. Run `scripts/collect_codex_profile.py --home "$HOME"` when the local filesystem is available. Use the JSON as the current-state inventory for preferences, skills, hooks, and headings.
-4. Search memory lightly only for reusable, cross-task Codex workflow preferences. Do not summarize project-specific, platform-specific, experiment-specific, remote-host-specific, or task-log memory by default.
-5. Use script-derived counts for skills, Hookify rules, native hooks, and headings. Reconcile manual groupings against those counts before reporting.
-6. Write a concise Chinese report grounded in current files and any reusable memory signals. Clearly separate observed state from suggestions.
+3. Lock the host scope before gathering evidence. `Current profile`, `sessions`,
+   `memories`, and similar unqualified terms mean the current execution host
+   only. On a remote worker, do not inspect another host's thread titles,
+   previews, messages, memories, or session-derived summaries. Direct the user
+   to initiate cross-host Codex-state work from the Windows control plane, where
+   explicit authorization is required before discovery.
+4. Run `scripts/collect_codex_profile.py --home "$HOME"` when the local filesystem is available. Use the JSON as the current-state inventory for preferences, skills, hooks, and headings.
+5. Search memory lightly only for reusable, cross-task Codex workflow preferences. Do not summarize project-specific, platform-specific, experiment-specific, remote-host-specific, or task-log memory by default.
+6. Use script-derived counts for skills, Hookify rules, native hooks, and headings. Reconcile manual groupings against those counts before reporting.
+7. Write a concise Chinese report grounded in current files and any reusable memory signals. Clearly separate observed state from suggestions.
 
 ## Sync Workflow
 
@@ -50,6 +56,13 @@ Use these Chinese section labels unless the user asks for another format:
 
 - Never print secrets, credentials, private keys, cookies, tokens, auth files, raw session logs, or long memory extracts.
 - Do not read `auth.json`, `history.jsonl`, `session_index.jsonl`, SQLite files, cache/plugin-cache directories, attachments, or session transcript directories.
+- Treat another host's thread titles, previews, metadata, messages, memories,
+  and session-derived summaries as cross-host data. A remote worker must not
+  access them; explicit authorization is handled by the Windows control plane.
+- For a current-host inventory, do not serialize the full result of an app-wide
+  thread listing. Filter inside tool orchestration by the known current host and
+  emit only matching records. Never call `read_thread` for an unmatched host.
+- Subagents inherit the locked host scope and may not expand it.
 - If a useful finding would require reading sensitive or high-noise sources, state the limitation and ask for explicit approval.
 - Prefer direct current files over stale memory. When memory is used, label it as memory-derived and possibly stale.
 - Keep recommendations narrow: update global/user-level configuration only when the user explicitly requests that next step.
