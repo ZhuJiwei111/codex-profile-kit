@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Skill Hygiene"
-  short_description: "Audit Codex skill plugin and hook lifecycles"
-  default_prompt: "Use $personal-skill-hygiene to audit one Codex skill, plugin, or hook and recommend the safest recoverable lifecycle action."
+  short_description: "Admit and manage Codex skill lifecycles safely"
+  default_prompt: "Use $personal-skill-hygiene to review one Codex skill, plugin, or hook for admission, provenance, portability, or the safest recoverable lifecycle action."

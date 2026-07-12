@@ -27,6 +27,7 @@ Read only the smallest safe projection needed from these sources when present:
 | --- | --- |
 | `~/.codex/AGENTS.md` | Existence, headings, and relevant durable rules |
 | `~/.codex/skills/*/SKILL.md` | Personal/custom skill name, description, path, and safe resource structure |
+| Personal `references/source-notes.md` | Classification, checked date, source identity, adopted/rejected items, deviations, runtime dependency, and explicit provenance gaps |
 | `~/.agents/skills/*/SKILL.md` | User/agent skill name, description, path, and safe resource structure |
 | `agents/openai.yaml` | Presence and UI metadata needed for a requested skill audit |
 | `~/.codex/config.toml` | Allowlisted feature booleans, `skills.config` path/enablement fields, and the safe MCP projection below |
@@ -34,6 +35,7 @@ Read only the smallest safe projection needed from these sources when present:
 | Referenced files under `~/.codex/hooks/` | Existence and a short module-doc or heading summary |
 | `~/.codex/hookify/*.md` | Top-level safe frontmatter only; never nested or raw regex content by default |
 | `~/codex-profile-kit` | Git state, safe dry-run diff, manifest, and exported portable assets when comparison is requested |
+| `THIRD_PARTY_SKILLS.lock.json` | Safe source identity, license label, admission/provenance states, immutable local snapshot identity, content digest, and update-review requirement |
 
 Read `~/.codex/HOST_LOCAL.md` only when resolving current-host profile paths or
 environment facts is material. Do not export the populated host overlay.
@@ -92,6 +94,8 @@ Never read, serialize, or summarize by default:
   header material, OAuth state, runtime health, or tool output.
 - Other-host tasks, threads, memories, previews, messages, or session-derived
   summaries.
+- Unlocked third-party scripts or resources beyond the bounded candidate review
+  needed for a separately authorized single-skill admission decision.
 - Long generated artifacts, archived sessions, or unrelated project files.
 
 If a requested conclusion depends on an excluded source, report the limitation.
@@ -109,3 +113,6 @@ high-noise runtime state.
   schema-v3 projection.
 - Separate observations from recommended changes and state the exact authority
   needed for each write.
+- Treat provenance and admission records as claims to reconcile with current
+  files, not proof that a skill is safe, enabled, behaviorally correct, or
+  current with upstream.

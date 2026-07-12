@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-12.
+Checked: 2026-07-14.
 
 This skill applies official Codex documentation to the local profile design.
 It does not copy external implementation code.
@@ -39,6 +39,13 @@ state, task, or required claim materially changes.
 - `codex-profile-kit/scripts/sync.py` is the local transfer mechanism. Its
   `push --confirm` path stages with `git add -A`, so this skill adds a clean-diff
   authorization gate without modifying the sync script.
+- The user-approved 2026-07-14 admission design keeps `.system/skill-creator`
+  and `.system/skill-installer` product-owned while adding local provenance,
+  safety, trigger, portability, update, and rollback gates through
+  `personal-skill-hygiene`.
+- `THIRD_PARTY_SKILLS.lock.json` is the portable vendor lock. It binds the
+  explicit allowlist to a complete tree digest and records unresolved source
+  evidence rather than promoting a local snapshot to an upstream commit.
 
 ## Deliberately Rejected
 
@@ -54,6 +61,9 @@ state, task, or required claim materially changes.
   inventory.
 - Treating export as authorization to stage, commit, push, publish, or change
   repository visibility.
+- Treating successful creation, installation, discovery, enablement, or export
+  as a skill-admission verdict.
+- Copying product-owned system skills into profile-kit to enforce local policy.
 
 ## Local Deviations
 
@@ -66,3 +76,5 @@ state, task, or required claim materially changes.
 - Outside-home symlink targets are listed but not followed.
 - Memory-informed audits remain possible only after explicit user opt-in and do
   not make memory part of the ordinary portable snapshot.
+- Whole-profile audit aggregates admission state; it does not decide or mutate
+  one candidate's admission. That remains owned by `personal-skill-hygiene`.

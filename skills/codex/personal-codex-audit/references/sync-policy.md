@@ -45,13 +45,19 @@ authorize commit or push.
 2. Run `git status --short` before a profile-kit write. Preserve existing user
    changes and stop if the intended command could absorb unrelated work.
 3. Run `python3 scripts/sync.py audit` and inspect the categorized diff.
-4. Pause when differences affect broad behavior, `AGENTS.md`, config templates,
+4. Reconcile personal source-note presence and the third-party allowlist/content
+   lock. Do not export host-only, unassessed, deferred, rejected, unlocked, or
+   digest-drifted skills.
+5. Pause when differences affect broad behavior, `AGENTS.md`, config templates,
    host facts, hooks, trust-related state, memories, or sensitive paths.
 
 ## Included Portable Assets
 
 - `rules/AGENTS.portable.md`.
 - Personal workflow skills and explicitly allowlisted portable skills.
+- `THIRD_PARTY_SKILLS.lock.json`, which binds allowlisted vendor identities to
+  reviewed source/license states and exact portable snapshot digests. It is
+  profile policy and is not copied into the target Codex home.
 - Agent skills under `skills/agents/`.
 - Hook scripts, tests, safe hook documentation, and Hookify rules.
 - Portable templates, connector checklist, manifest, sync tooling, and CI.
@@ -74,6 +80,8 @@ or runtime state:
 - Conda environments, package caches, datasets, model weights, project outputs,
   or generated tarballs in Git history.
 - Non-personal installed suites unless explicitly allowlisted.
+- Host-only, unassessed, deferred, rejected, unlocked, or locally drifted
+  third-party skills.
 
 ## Export
 
@@ -87,6 +95,11 @@ git status --short
 
 Review the actual diff and confirm that no unrelated path was added. Do not
 stage, commit, or push as part of ordinary export.
+
+Admission does not authorize export, and export does not grant admission. A
+new portable vendor normally requires `admitted + complete + vendor`. A
+documented pre-contract `legacy-exception` may preserve only its exact locked
+snapshot and must fail before any update until provenance is completed.
 
 ## Apply
 

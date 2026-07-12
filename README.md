@@ -7,6 +7,8 @@
 
 - `rules/AGENTS.portable.md`：可迁移的 Codex 行为规则。
 - `skills/`：非系统 Codex skills 和 `.agents/skills` 中的可迁移 skill。
+- `THIRD_PARTY_SKILLS.lock.json`：allowlist 第三方 Codex skill 的来源状态和
+  精确内容摘要锁。
 - `agents/codex/`：经过明确 allowlist 的 custom Codex agent 执行配置。
 - `hooks/`：native hook 脚本、受控的全局 Markdown 规则和对应测试。
 - `templates/`：`hooks.json`、`config.toml`、目标机器本地信息模板。
@@ -34,9 +36,10 @@ python3 scripts/sync.py apply
 会拒绝 `--home` 之下的符号链接路径组件，避免沿链接越界覆盖；如果使用这种目录
 共享方式，需要先改成真实目录并人工核对。`verify` 也会拒绝受管 snapshot 内的
 符号链接，防止把跨目录引用迁移到目标 profile；同时验证 personal skill 的 UI
-metadata、skill 内相对资源链接，以及 personal descriptions 合计不超过 6,000
-字符。当前这项 metadata 合同只覆盖 personal skills，allowlist 中的第三方 skill
-仍由其独立生命周期负责。
+metadata 与 source-notes、所有受管 skill 的相对资源链接，以及 managed catalog
+descriptions 合计不超过 6,500 字符。allowlist 第三方 skill 还必须与
+`THIRD_PARTY_SKILLS.lock.json` 的身份和完整内容摘要精确闭合；缺项、额外项或
+内容漂移都会 fail closed。personal UI metadata 合同不扩展到 vendor skill。
 
 `export` 先在同一文件系统的临时候选副本中完成生成和 `verify`，随后只事务替换
 受管入口。验证失败或正常替换异常时，live snapshot 保持不变或自动回滚；这不等

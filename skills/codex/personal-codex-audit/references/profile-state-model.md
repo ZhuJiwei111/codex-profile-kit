@@ -56,6 +56,35 @@ trust. A trusted definition may become untrusted after any definition change.
 - For outside-home or sensitive symlink targets, report the entry but leave
   metadata `not-read`.
 
+### Skill Admission Dimensions
+
+Keep these fields independent for each personal or externally acquired skill:
+
+- `source_classification`: `local-origin`, `upstream-derived`, `hybrid`, or
+  `unresolved`;
+- `provenance_status`: `complete`, `partial`, `missing`, or `conflicting`;
+- `admission_status`: `unassessed`, `admitted`, `deferred`, `rejected`, or the
+  compatibility-only `legacy-exception`;
+- `portability_disposition`: `vendor`, `internalized`, `host-only`, or
+  `not-assigned`;
+- `activation_state`: `staged`, `active`, `disabled`, `archived`, or `unknown`;
+  and
+- `exported` and `verified`, which retain their existing meanings.
+
+Do not infer admission from acquisition mode, file presence, discovery,
+enablement, an allowlist, or export. Report at least these violations:
+
+- active or exported while unassessed, deferred, or rejected;
+- host-only content present in the portable snapshot;
+- vendor source revision or content digest drift;
+- vendor content with unrecorded local modification;
+- missing or conflicting provenance presented as complete; and
+- a legacy exception used to authorize an update or a new candidate.
+
+`legacy-exception` preserves only a pre-contract content-locked snapshot with
+an explicit gap and mandatory review before update. It is not equivalent to
+`admitted + complete`.
+
 ## MCP State
 
 - A projected MCP entry proves only that a declaration was parsed from the

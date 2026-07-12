@@ -13,8 +13,10 @@ python3 scripts/sync.py verify
 
 Verification rejects symbolic links inside managed profile assets so a copied
 skill, hook, template, or custom agent cannot retain an out-of-profile target.
-It also validates personal-skill UI metadata, in-skill relative resource links,
-and the aggregate 6,000-character personal description budget.
+It also validates personal-skill UI metadata and source-note presence, in-skill
+relative resource links, the aggregate 6,500-character managed-catalog
+description budget, and the allowlist/content lock in
+`THIRD_PARTY_SKILLS.lock.json` for portable third-party Codex skills.
 
 ## 2. Fill Host Facts
 

@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-12.
+Checked: 2026-07-14.
 
 This skill uses upstream material as design evidence, not as an authority over
 the local Codex profile. Local authorization, host boundaries, specialist
@@ -22,6 +22,21 @@ The three built-in entries are hash-addressed evidence snapshots of the current
 host. They are not exported by profile-kit and are not distributed runtime
 dependencies of this skill.
 
+## Local Admission Design
+
+The 2026-07-14 user-approved design adds a local admission layer around the
+product-owned creator and installer without copying either `.system` skill.
+It separates acquisition mode, provenance completeness, admission status, and
+portability disposition so that successful authoring or download cannot be
+mistaken for activation or export approval.
+
+The design is local-origin policy informed by repeated profile-maintenance
+experience: newly created personal skills need source and trigger evidence,
+while externally installed skills need immutable identity, instruction/script
+review, dependency boundaries, a content lock, and an explicit update/rollback
+owner. Popularity and curated labels remain discovery signals, not trust
+evidence.
+
 ## Deliberately Rejected
 
 - A universal Iron Law or mandatory test count for every skill edit.
@@ -33,6 +48,10 @@ dependencies of this skill.
 - Treating cache removal as equivalent to disablement or uninstallation.
 - Splitting a skill solely because of length without distinct triggers, owners,
   or resource boundaries.
+- Copying or modifying `.system/skill-creator` or `.system/skill-installer` to
+  enforce local policy.
+- Treating install success, stars, download counts, or an allowlist entry as an
+  admission verdict.
 
 ## Local Deviations
 
@@ -45,3 +64,8 @@ dependencies of this skill.
   the user's explicit authorization boundary.
 - Testing is risk-tiered: metadata edits receive static checks, while trigger,
   discipline, and destructive behavior receive progressively stronger probes.
+- Admission is a local controller contract. Product-owned creator/installer
+  skills continue to own authoring and acquisition mechanics.
+- A documented `legacy-exception` may preserve only a content-locked existing
+  vendor snapshot with an explicit provenance gap; it cannot authorize update
+  or serve as precedent for a new candidate.

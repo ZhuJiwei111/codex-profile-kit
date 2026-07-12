@@ -15,6 +15,9 @@ narrower `AGENTS.md` files.
   priority instruction or the user's explicit request.
 - Put durable guidance in the narrowest scope that owns it. Do not maintain
   competing copies of a specialized workflow here and in a skill.
+- Before activating a newly created or externally installed skill, apply the
+  skill-admission contract owned by `personal-skill-hygiene`; keep provenance,
+  security, trigger, portability, and lifecycle details there.
 
 ## Core Workflow
 

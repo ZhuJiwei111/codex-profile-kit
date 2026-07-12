@@ -511,6 +511,71 @@ class WholeProfileContractTests(unittest.TestCase):
         self.assertIn("normative", connectors)
         self.assertIn("enabled = true", template)
 
+    def test_new_skills_route_through_the_admission_contract(self) -> None:
+        agents = (
+            SYNC.REPO_ROOT / "rules/AGENTS.portable.md"
+        ).read_text(encoding="utf-8")
+        hygiene = (
+            SYNC.REPO_ROOT / "skills/codex/personal-skill-hygiene/SKILL.md"
+        ).read_text(encoding="utf-8")
+        normalized_agents = " ".join(agents.split()).lower()
+        normalized_hygiene = " ".join(hygiene.split()).lower()
+
+        self.assertIn(
+            "before activating a newly created or externally installed skill, "
+            "apply the skill-admission contract owned by "
+            "`personal-skill-hygiene`",
+            normalized_agents,
+        )
+        self.assertIn("skill-admission.md", normalized_hygiene)
+        self.assertIn("provenance-contract.md", normalized_hygiene)
+        for detail in (
+            "source_classification",
+            "primary_sources",
+            "admission_status",
+            "portability_disposition",
+            "identity -> provenance",
+        ):
+            self.assertNotIn(detail, normalized_agents)
+
+    def test_profile_audit_tracks_skill_admission_dimensions(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills/codex"
+        audit = (
+            skill_root / "personal-codex-audit/SKILL.md"
+        ).read_text(encoding="utf-8")
+        state = (
+            skill_root
+            / "personal-codex-audit/references/profile-state-model.md"
+        ).read_text(encoding="utf-8")
+        source_policy = (
+            skill_root / "personal-codex-audit/references/source-policy.md"
+        ).read_text(encoding="utf-8")
+        combined = " ".join((audit + state + source_policy).split()).lower()
+
+        for dimension in (
+            "source_classification",
+            "provenance_status",
+            "admission_status",
+            "portability_disposition",
+        ):
+            self.assertIn(dimension, combined)
+        self.assertIn("third_party_skills.lock.json", combined)
+
+    def test_generated_docs_describe_skill_admission_validation(self) -> None:
+        install = (SYNC.REPO_ROOT / "INSTALL.md").read_text(encoding="utf-8")
+        manifest = (
+            SYNC.REPO_ROOT / "MIGRATION_MANIFEST.md"
+        ).read_text(encoding="utf-8")
+        readme = (SYNC.REPO_ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertEqual(install, SYNC.INSTALL)
+        self.assertEqual(manifest, SYNC.migration_manifest())
+        for document in (install, manifest, readme):
+            normalized = document.lower()
+            self.assertIn("third_party_skills.lock.json", normalized)
+            self.assertIn("managed", normalized)
+            self.assertIn("6,500", normalized)
+
 
 class PortableSkillTests(unittest.TestCase):
     def test_every_personal_skill_has_source_notes(self) -> None:
@@ -595,7 +660,7 @@ class PortableSkillTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, "missing skill resource"):
                 SYNC.validate_skills(root)
 
-    def test_personal_catalog_description_budget_is_enforced(self) -> None:
+    def test_personal_skill_requires_source_notes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             skill = root / "skills" / "codex" / "personal-sample"
@@ -613,6 +678,32 @@ class PortableSkillTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
+            with self.assertRaisesRegex(SystemExit, "source-notes"):
+                SYNC.validate_skills(root)
+
+    def test_personal_catalog_description_budget_is_enforced(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills" / "codex" / "personal-sample"
+            (skill / "agents").mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                "---\nname: personal-sample\n"
+                "description: Use for one focused sample workflow.\n---\n",
+                encoding="utf-8",
+            )
+            (skill / "agents" / "openai.yaml").write_text(
+                "interface:\n"
+                "  display_name: \"Personal Sample\"\n"
+                "  short_description: \"Validate one focused sample workflow\"\n"
+                "  default_prompt: \"Use $personal-sample for this sample.\"\n",
+                encoding="utf-8",
+            )
+            (skill / "references").mkdir()
+            (skill / "references" / "source-notes.md").write_text(
+                "# Source Notes\n",
+                encoding="utf-8",
+            )
+
             with mock.patch.object(
                 SYNC,
                 "PERSONAL_SKILL_DESCRIPTION_BUDGET",
@@ -621,6 +712,113 @@ class PortableSkillTests(unittest.TestCase):
             ):
                 with self.assertRaisesRegex(SystemExit, "description budget"):
                     SYNC.validate_skills(root)
+
+    def test_managed_catalog_budget_includes_non_personal_skills(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            vendor = root / "skills" / "codex" / "vendor-sample"
+            agent = root / "skills" / "agents" / "agent-sample"
+            vendor.mkdir(parents=True)
+            agent.mkdir(parents=True)
+            (vendor / "SKILL.md").write_text(
+                "---\nname: vendor-sample\n"
+                "description: This vendor description consumes catalog context.\n"
+                "---\n",
+                encoding="utf-8",
+            )
+            (agent / "SKILL.md").write_text(
+                "---\nname: agent-sample\n"
+                "description: This agent description also consumes catalog context.\n"
+                "---\n",
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(
+                SYNC,
+                "MANAGED_SKILL_DESCRIPTION_BUDGET",
+                70,
+                create=True,
+            ):
+                with self.assertRaisesRegex(
+                    SystemExit,
+                    "managed skill description budget",
+                ):
+                    SYNC.validate_skills(root)
+
+    def test_portable_third_party_lock_matches_allowlist(self) -> None:
+        entries = SYNC.validate_third_party_skill_lock(SYNC.REPO_ROOT)
+        self.assertEqual(set(entries), SYNC.PORTABLE_CODEX_SKILL_NAMES)
+
+    def test_portable_third_party_lock_rejects_allowlist_drift(self) -> None:
+        with mock.patch.object(
+            SYNC,
+            "PORTABLE_CODEX_SKILL_NAMES",
+            {"different-vendor"},
+        ):
+            with self.assertRaisesRegex(SystemExit, "allowlist"):
+                SYNC.validate_third_party_skill_lock(SYNC.REPO_ROOT)
+
+    def test_portable_third_party_lock_rejects_snapshot_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "profile"
+            shutil.copytree(
+                SYNC.REPO_ROOT / "skills/codex/awesome-rebuttal",
+                root / "skills/codex/awesome-rebuttal",
+            )
+            shutil.copy2(
+                SYNC.REPO_ROOT / "THIRD_PARTY_SKILLS.lock.json",
+                root / "THIRD_PARTY_SKILLS.lock.json",
+            )
+            skill = root / "skills/codex/awesome-rebuttal/SKILL.md"
+            skill.write_text(
+                skill.read_text(encoding="utf-8") + "\nchanged\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(SystemExit, "snapshot sha256"):
+                SYNC.validate_third_party_skill_lock(root)
+
+    def test_portable_third_party_lock_rejects_duplicate_json_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "profile"
+            root.mkdir()
+            source = (
+                SYNC.REPO_ROOT / "THIRD_PARTY_SKILLS.lock.json"
+            ).read_text(encoding="utf-8")
+            duplicate = source.replace(
+                '"schema_version": 1,',
+                '"schema_version": 1,\n  "schema_version": 1,',
+                1,
+            )
+            (root / "THIRD_PARTY_SKILLS.lock.json").write_text(
+                duplicate,
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(SystemExit, "duplicate JSON key"):
+                SYNC.validate_third_party_skill_lock(root)
+
+    def test_portable_third_party_lock_rejects_extra_skill_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "profile"
+            shutil.copytree(
+                SYNC.REPO_ROOT / "skills/codex/awesome-rebuttal",
+                root / "skills/codex/awesome-rebuttal",
+            )
+            shutil.copy2(
+                SYNC.REPO_ROOT / "THIRD_PARTY_SKILLS.lock.json",
+                root / "THIRD_PARTY_SKILLS.lock.json",
+            )
+            extra = root / "skills/codex/extra-vendor"
+            extra.mkdir()
+            (extra / "SKILL.md").write_text(
+                "---\nname: extra-vendor\n"
+                "description: Unlocked third-party skill.\n---\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(SystemExit, "directories/lock mismatch"):
+                SYNC.validate_third_party_skill_lock(root)
 
 
 class CustomAgentProfileTests(unittest.TestCase):

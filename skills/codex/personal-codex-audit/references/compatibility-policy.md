@@ -30,7 +30,7 @@ full audit merely because the version string differs from `0.144.1`.
 | --- | --- | --- |
 | Native hooks | Event list, matcher, input/output schema, tool names, trust behavior | Hook schema fixtures and real-shape payload tests |
 | Custom agents | Agent TOML, model/reasoning fields, sandbox inheritance, loader or spawn behavior | Custom-agent loader/schema smoke and affected routing probe |
-| Skill discovery | Discovery roots, `openai.yaml`, invocation policy, catalog budget, rename behavior | Validators, catalog/discovery smoke, positive and negative route probes |
+| Skill discovery | Discovery roots, `openai.yaml`, invocation policy, admission/lock schema, catalog budget, rename behavior | Validators, lock/digest checks, catalog/discovery smoke, positive and negative route probes |
 | Config and MCP | MCP field ownership, transport/auth configuration, config layering | Collector parser tests, secret-negative tests, safe declaration comparison |
 | Profile transfer | Manifest, export/apply targets, backup behavior, generated templates | Sync tests, dry run, `verify`, and drift audit |
 

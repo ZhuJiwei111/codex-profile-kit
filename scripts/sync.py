@@ -53,6 +53,8 @@ ALLOWED_SKILL_KEYS = {
     "name",
 }
 PERSONAL_SKILL_DESCRIPTION_BUDGET = 6000
+MANAGED_SKILL_DESCRIPTION_BUDGET = 6500
+THIRD_PARTY_SKILL_LOCK_FILENAME = "THIRD_PARTY_SKILLS.lock.json"
 REQUIRED_OPENAI_INTERFACE_KEYS = {
     "display_name",
     "short_description",
@@ -294,8 +296,10 @@ python3 scripts/sync.py verify
 
 Verification rejects symbolic links inside managed profile assets so a copied
 skill, hook, template, or custom agent cannot retain an out-of-profile target.
-It also validates personal-skill UI metadata, in-skill relative resource links,
-and the aggregate 6,000-character personal description budget.
+It also validates personal-skill UI metadata and source-note presence, in-skill
+relative resource links, the aggregate 6,500-character managed-catalog
+description budget, and the allowlist/content lock in
+`THIRD_PARTY_SKILLS.lock.json` for portable third-party Codex skills.
 
 ## 2. Fill Host Facts
 
@@ -1357,8 +1361,11 @@ Generated for a clean Codex profile kit.
   MCP endpoint declarations with no authentication state.
 - `skills/codex/`: personal workflow skills plus explicitly allowlisted
   portable Codex skills from `~/.codex/skills`.
-  Verification checks personal-skill UI metadata, relative resource links, and
-  the aggregate 6,000-character personal description budget.
+  Verification checks personal-skill UI metadata and source-note presence,
+  relative resource links, and the aggregate 6,500-character managed-catalog
+  description budget.
+- `THIRD_PARTY_SKILLS.lock.json`: reviewed source/license state and exact
+  content digests for allowlisted portable third-party Codex skills.
 - `skills/agents/find-skills/`: portable agent skill discovery helper.
 - `agents/codex/`: allowlisted custom Codex agent profiles from
   `~/.codex/agents`.
@@ -1461,9 +1468,196 @@ def validate_managed_snapshot_paths(root: Path) -> None:
         )
 
 
+def skill_tree_sha256(skill_dir: Path) -> str:
+    """Hash one immutable skill snapshot by relative path and file content."""
+    digest = hashlib.sha256()
+    for path in sorted(skill_dir.rglob("*")):
+        if path.is_symlink():
+            raise SystemExit(f"third-party skill snapshot contains symlink: {path}")
+        if not path.is_file():
+            continue
+        relative = path.relative_to(skill_dir).as_posix().encode("utf-8")
+        digest.update(relative)
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
+
+
+def validate_personal_skill_source_notes(skill_dir: Path, root: Path) -> None:
+    notes = skill_dir / "references" / "source-notes.md"
+    if not notes.is_file() or notes.is_symlink():
+        raise SystemExit(
+            f"missing personal skill source-notes: {rel(skill_dir, root)}"
+        )
+    if not notes.read_text(encoding="utf-8").startswith("# Source Notes\n"):
+        raise SystemExit(
+            f"invalid personal skill source-notes heading: {rel(notes, root)}"
+        )
+
+
+def validate_third_party_skill_lock(root: Path) -> dict[str, dict[str, object]]:
+    path = root / THIRD_PARTY_SKILL_LOCK_FILENAME
+    if not path.is_file() or path.is_symlink():
+        raise SystemExit(f"missing third-party skill lock: {path}")
+
+    def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"duplicate JSON key: {key}")
+            result[key] = value
+        return result
+
+    try:
+        data = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=unique_object,
+        )
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        raise SystemExit(f"invalid third-party skill lock: {path}: {exc}") from exc
+    if not isinstance(data, dict) or set(data) != {"schema_version", "skills"}:
+        raise SystemExit("invalid third-party skill lock top-level keys")
+    if data["schema_version"] != 1 or not isinstance(data["skills"], list):
+        raise SystemExit("invalid third-party skill lock schema")
+
+    expected_entry_keys = {
+        "name",
+        "source_classification",
+        "provenance_status",
+        "admission_status",
+        "portability_disposition",
+        "source",
+        "snapshot",
+        "local_modifications",
+        "provenance_gaps",
+        "review_before_update",
+    }
+    expected_source_keys = {
+        "repository",
+        "requested_ref",
+        "resolved_commit",
+        "license",
+        "checked",
+    }
+    expected_snapshot_keys = {
+        "profile_revision",
+        "profile_tree_oid",
+        "hash_algorithm",
+        "sha256",
+    }
+    entries: dict[str, dict[str, object]] = {}
+    for raw_entry in data["skills"]:
+        if not isinstance(raw_entry, dict) or set(raw_entry) != expected_entry_keys:
+            raise SystemExit("invalid third-party skill lock entry keys")
+        name = raw_entry["name"]
+        if not isinstance(name, str) or re.fullmatch(r"[a-z0-9-]+", name) is None:
+            raise SystemExit("invalid third-party skill lock name")
+        if name in entries:
+            raise SystemExit(f"duplicate third-party skill lock entry: {name}")
+
+        source = raw_entry["source"]
+        snapshot = raw_entry["snapshot"]
+        if not isinstance(source, dict) or set(source) != expected_source_keys:
+            raise SystemExit(f"invalid third-party skill lock source: {name}")
+        if not isinstance(snapshot, dict) or set(snapshot) != expected_snapshot_keys:
+            raise SystemExit(f"invalid third-party skill lock snapshot: {name}")
+        repository = source["repository"]
+        if not isinstance(repository, str) or re.fullmatch(
+            r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?",
+            repository,
+        ) is None:
+            raise SystemExit(f"invalid third-party skill repository: {name}")
+        if not isinstance(source["requested_ref"], str) or not source["requested_ref"]:
+            raise SystemExit(f"invalid third-party skill requested ref: {name}")
+        resolved_commit = source["resolved_commit"]
+        if resolved_commit is not None and (
+            not isinstance(resolved_commit, str)
+            or re.fullmatch(r"[0-9a-f]{40}", resolved_commit) is None
+        ):
+            raise SystemExit(f"invalid third-party skill resolved commit: {name}")
+        if not isinstance(source["license"], str) or not source["license"].strip():
+            raise SystemExit(f"invalid third-party skill license: {name}")
+        try:
+            datetime.strptime(source["checked"], "%Y-%m-%d")
+        except (TypeError, ValueError) as exc:
+            raise SystemExit(f"invalid third-party skill checked date: {name}") from exc
+
+        source_classification = raw_entry["source_classification"]
+        provenance_status = raw_entry["provenance_status"]
+        admission_status = raw_entry["admission_status"]
+        portability = raw_entry["portability_disposition"]
+        if source_classification not in {
+            "local-origin",
+            "upstream-derived",
+            "hybrid",
+            "unresolved",
+        }:
+            raise SystemExit(f"invalid source_classification: {name}")
+        if provenance_status not in {"complete", "partial", "missing", "conflicting"}:
+            raise SystemExit(f"invalid provenance_status: {name}")
+        if admission_status not in {"admitted", "legacy-exception"}:
+            raise SystemExit(f"non-admitted third-party skill in portable lock: {name}")
+        if portability != "vendor":
+            raise SystemExit(f"invalid third-party portability disposition: {name}")
+        if admission_status == "admitted" and provenance_status != "complete":
+            raise SystemExit(f"admitted vendor provenance is incomplete: {name}")
+        if provenance_status == "complete" and resolved_commit is None:
+            raise SystemExit(f"complete vendor provenance lacks immutable commit: {name}")
+
+        gaps = raw_entry["provenance_gaps"]
+        if not isinstance(gaps, list) or not all(
+            isinstance(item, str) and item.strip() for item in gaps
+        ):
+            raise SystemExit(f"invalid third-party provenance gaps: {name}")
+        if (admission_status == "legacy-exception" or provenance_status != "complete") and not gaps:
+            raise SystemExit(f"incomplete third-party provenance lacks gap: {name}")
+        if raw_entry["local_modifications"] not in {"none", "present", "unknown"}:
+            raise SystemExit(f"invalid third-party local modification state: {name}")
+        if raw_entry["review_before_update"] is not True:
+            raise SystemExit(f"third-party update review is not required: {name}")
+
+        for key in ("profile_revision", "profile_tree_oid"):
+            value = snapshot[key]
+            if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{40}", value) is None:
+                raise SystemExit(f"invalid third-party snapshot {key}: {name}")
+        if snapshot["hash_algorithm"] != "sha256-path-content-v1":
+            raise SystemExit(f"invalid third-party snapshot hash algorithm: {name}")
+        expected_hash = snapshot["sha256"]
+        if not isinstance(expected_hash, str) or re.fullmatch(r"[0-9a-f]{64}", expected_hash) is None:
+            raise SystemExit(f"invalid third-party snapshot sha256: {name}")
+        skill_dir = root / "skills" / "codex" / name
+        if not skill_dir.is_dir() or skill_dir.is_symlink():
+            raise SystemExit(f"allowlisted third-party skill is unavailable: {name}")
+        if skill_tree_sha256(skill_dir) != expected_hash:
+            raise SystemExit(f"third-party skill snapshot sha256 mismatch: {name}")
+        entries[name] = raw_entry
+
+    locked_names = set(entries)
+    if locked_names != PORTABLE_CODEX_SKILL_NAMES:
+        raise SystemExit(
+            "third-party skill allowlist/lock mismatch: "
+            f"allowlist={sorted(PORTABLE_CODEX_SKILL_NAMES)} "
+            f"lock={sorted(locked_names)}"
+        )
+    skill_root = root / "skills" / "codex"
+    managed_third_party = {
+        item.name
+        for item in skill_root.iterdir()
+        if item.is_dir() and not item.name.startswith("personal-")
+    }
+    if managed_third_party != locked_names:
+        raise SystemExit(
+            "third-party skill directories/lock mismatch: "
+            f"directories={sorted(managed_third_party)} "
+            f"lock={sorted(locked_names)}"
+        )
+    return entries
+
+
 def validate_skills(root: Path) -> None:
     skill_roots = [root / "skills" / "codex", root / "skills" / "agents"]
     personal_description_total = 0
+    managed_description_total = 0
     for skill_root in skill_roots:
         if not skill_root.is_dir():
             continue
@@ -1480,14 +1674,22 @@ def validate_skills(root: Path) -> None:
                 raise SystemExit(f"unexpected frontmatter keys in {rel(skill_file, root)}: {sorted(extra)}")
             if fm["name"] != skill_dir.name:
                 raise SystemExit(f"skill name/folder mismatch: {rel(skill_file, root)}")
+            managed_description_total += len(fm["description"])
             if skill_dir.name.startswith("personal-"):
                 personal_description_total += len(fm["description"])
                 validate_personal_skill_openai_yaml(skill_dir, root)
             validate_skill_resource_links(skill_dir, root)
+            if skill_dir.name.startswith("personal-"):
+                validate_personal_skill_source_notes(skill_dir, root)
     if personal_description_total > PERSONAL_SKILL_DESCRIPTION_BUDGET:
         raise SystemExit(
             "personal skill description budget exceeded: "
             f"{personal_description_total} > {PERSONAL_SKILL_DESCRIPTION_BUDGET}"
+        )
+    if managed_description_total > MANAGED_SKILL_DESCRIPTION_BUDGET:
+        raise SystemExit(
+            "managed skill description budget exceeded: "
+            f"{managed_description_total} > {MANAGED_SKILL_DESCRIPTION_BUDGET}"
         )
 
 
@@ -1671,6 +1873,7 @@ def verify_repo(root: Path = REPO_ROOT) -> None:
     if bad:
         raise SystemExit("forbidden paths:\n" + "\n".join(bad))
     validate_skills(root)
+    validate_third_party_skill_lock(root)
     validate_renamed_skills(root)
     validate_custom_agents(root)
     validate_custom_agents_with_codex(root)
