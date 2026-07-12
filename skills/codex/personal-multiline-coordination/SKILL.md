@@ -1,59 +1,220 @@
 ---
 name: personal-multiline-coordination
-description: Coordinate multiple Codex worker threads, git worktrees, long-running job lines, staged handoffs, registry audits, recovery queues, decision records, and finish gates. Use when the user explicitly asks for multiline/worktree coordination, or when multiple worktrees/workers create ownership, cwd, branch, handoff, monitoring, or merge-risk ambiguity; if triggered implicitly, start with read-only audit and do not write registry files or operate workers until the user confirms.
+description: Coordinate parallel Codex worker lines across visible tasks, isolated Git worktrees, resources, intake, integration, and recovery. Use for explicit multiline/worktree execution or ambiguous worker/worktree ownership; implicit use is read-only only.
 ---
 
 # Personal Multiline Coordination
 
-## Overview
+## Mission
 
-Use this skill as a lightweight, Trellis-inspired router for multi-line Codex work. It manages lines, gates, recovery, and handoff discipline without making Trellis CLI or `.trellis/` a default dependency.
+Act as the coordinator for parallel repository work whose worker, worktree,
+dependency, integration, or resource ownership would otherwise be ambiguous.
 
-## Core Rule
+Keep a star topology:
 
-Start with truth from the workspace. Run or emulate the read-only audit before asking the user for facts that can be discovered locally.
+- the coordinator owns the global plan, scheduling, intake, and authoritative
+  line decisions;
+- each writer owns one bounded line and one canonical worktree;
+- workers report evidence and a `recommended_outcome` of `accept`, `reject`,
+  or `needs-more-evidence`, but do not decide the coordination line's result;
+- cross-line decisions return to the coordinator or user.
 
-If this skill was triggered implicitly because multiple worktrees, workers, or branches look risky, only audit and explain the risk. Do not create worktrees, write `.codex/multiline/*`, edit planning files, archive workers, start jobs, commit, merge, or open PRs until the user explicitly confirms that action.
+This skill does not create a permanent multiline registry. Current truth comes
+from Desktop task state, Git state, and an optional lightweight coordinator
+snapshot.
 
-## Workflow
+## Entry And Authority Gate
 
-1. Identify whether you are acting as `coordinator`, `worker`, or `monitoring observer`.
-2. Run a read-only audit:
-   `python3 "$HOME/.codex/skills/personal-multiline-coordination/scripts/audit_multiline.py" <project-root>`
-3. Read `references/registry.md` before creating, checking, or updating `.codex/multiline/registry.json` or `registry.md`.
-4. Read `references/lifecycle.md` before opening, continuing, stopping, restarting, archiving, or finishing a line.
-5. Read `references/routing.md` before involving worker threads, subagents, long-running jobs, verification, commits, PRs, or merge/finish decisions.
-6. Read `references/recovery.md` before recording checkpoints, decision records, recovery queue items, archive entries, or revive candidates.
-7. Produce one of these outputs:
-   - `Audit Summary`: current worktrees, registry state, mismatches, risks, and recommended next safe action.
-   - `Line Card`: objective, canonical cwd/branch, owner/thread, scope, exclusive files, stop condition, handoff path, and verification expectation.
-   - `Coordinator Intake`: evidence from worker handoff, git state, artifacts, decision, risks, and next gate.
-   - `Locked Coordination Brief`: goal, active lines, non-goals, acceptance criteria, key decisions, risks, and remaining open questions.
+Classify the entry before acting.
 
-## Authority Boundaries
+### Explicit execution
 
-- The coordinator owns global scope, registry writes, line creation, intake, finish gates, and archive decisions.
-- A worker owns one actual Codex thread cwd, one canonical worktree/branch, one bounded line card, and line-local handoff files.
-- A monitoring observer is read-only and follows the long-running job rules from the user's durable instructions and `personal-subagent-boundaries`.
-- Workers must not edit shared registry, root planning files, or other workers' files unless the line card explicitly grants ownership.
-- Never ask an existing worker to edit a different worktree than its actual cwd. If cwd, branch, thread, or registry ownership drift is unclear, preserve evidence and recommend archive + restart.
+An explicit request to coordinate or execute multiple worker/worktree lines
+authorizes the non-destructive Desktop worker tasks and Git worktrees named in
+one reviewed launch manifest. It does not authorize commits, integration,
+cleanup, heavy resources, monitoring, publication, or destructive recovery
+unless the manifest grants those actions precisely.
 
-## Default Model
+### Explicit audit or discussion
 
-Use personal terms, not Trellis tool terms:
+Inspect and reason only. Do not create tasks, worktrees, snapshots, branches,
+or symlinks, and do not operate existing workers.
 
-- `Line / Stage`: a bounded stream of work similar to a Trellis issue lifecycle.
-- `Checkpoint`: a gate summary written only at major transitions.
-- `Decision Record`: a compact trace of a state-changing decision, evidence paths, rationale, and outcome.
-- `Recovery Queue`: recoverable stale, blocked, abandoned, or no-go work with revive conditions.
-- `Finish Candidate`: a line that passed worker verification and coordinator intake, ready to route into branch finish.
+### Implicit trigger
 
-Do not assume Trellis CLI, Trellis MCP tools, `.trellis/`, graph VCS state, or semantic AST diffs unless the user explicitly requests Trellis.
+When this skill triggers because existing workers or worktrees create risk,
+start with the read-only audit and report the mismatch. Do not write state or
+operate workers until the user confirms execution.
 
-## Safety Defaults
+Run:
 
-- Active lines that edit files, run long jobs, or use workers require canonical worktrees.
-- No line may start or continue without a Line Card.
-- A line may enter `finish_candidate` only after `pass`, complete handoff, verification evidence, and coordinator intake.
-- Do not auto-monitor long jobs; register long-job lines here and route monitoring details to the existing long-running job and subagent-boundary rules.
-- Do not auto-merge, commit, create PRs, or mark project success from this skill. Route finish work to `personal-branch-finish` after the finish gate.
+```bash
+python3 "$HOME/.codex/skills/personal-multiline-coordination/scripts/audit_multiline.py" <project-root> --json
+```
+
+Add `--snapshot <file-or-> --check` only when a schema-v2 coordinator snapshot
+already exists or is supplied through stdin.
+
+## Select The Execution Surface
+
+Use a Desktop-visible worker task for a top-level implementation line that
+needs an independent lifecycle, durable user visibility, or an isolated
+worktree.
+
+Use a managed subagent for bounded, one-shot work such as exploration, review,
+validation, helper work, or ordinary conflict resolution. Follow
+`personal-subagent-boundaries` for its prompt and reporting contract.
+
+The coordinator may resolve a tiny deterministic integration conflict locally.
+Route substantive rework that needs its own iteration history back to a
+Desktop-visible worker. Route cross-line design conflicts to the user, using
+`personal-brainstorms` when the decision is consequential.
+
+Do not silently substitute a managed subagent when the approved manifest calls
+for a Desktop worker but the required task capability is unavailable. Report
+the capability gap and preserve the line as planned.
+
+## Coordination Workflow
+
+1. Establish the repository root, applicable instructions, current branch,
+   worktree inventory, relevant dirty state, and interrupted Git operations.
+2. Decompose work into top-level lines. Record dependencies, write sets, output
+   paths, resource claims, acceptance criteria, and stop conditions.
+3. Build both a dependency graph and a conflict graph. A conflict exists when
+   active lines overlap in writes, outputs, exclusive resources, or mutable
+   project data.
+4. Present one launch manifest. Include every task/worktree creation plus any
+   separate integration, resource, monitoring, or cleanup grant being sought.
+5. Prepare worktrees only for currently ready writers, from their resolved base
+   OID. Keep future task/worktree creation authorized but deferred. Bind readers
+   to a fixed revision and avoid unnecessary reader worktrees.
+6. Launch only currently ready and non-conflicting lines. Give each worker its
+   line card and no broader authority.
+7. Wait for events or handoffs. Intake evidence, inspect Git state and outputs,
+   then set the coordinator decision: `pass`, `no-go`,
+   `needs-more-evidence`, or `blocked`.
+8. Schedule newly unblocked lines. Do not use a fixed worker count when the
+   dependency, conflict, or resource graphs imply a different safe level.
+9. Under an exact integration grant, create a source checkpoint and integrate
+   it through the dedicated integration worktree. Record source and integrated
+   OIDs.
+10. Run the final completion gate through `personal-risk-verification`, then
+    route formal Git readiness or user-directed commit/PR handling to
+    `personal-branch-finish`.
+
+Read `references/contracts.md` before producing a launch manifest, line card,
+snapshot, worker report, or coordinator intake.
+
+## Workspace Rules
+
+A writer's canonical `cwd`, branch, and worktree are immutable for that worker
+task. Never redirect an existing writer to another worktree. Restart or hand
+off from a clean, visible state instead.
+
+Resolve worktree placement in this order:
+
+1. explicit user path;
+2. repository instructions or established convention;
+3. Desktop-native placement;
+4. an applicable `HOST_LOCAL.md` override;
+5. repo-sibling fallback:
+   `<repo-parent>/.codex-worktrees/<repo-name>/<coordination-id>/`.
+
+The fallback contains `integration/` and `workers/<line-id>/`. Do not place
+fallback worktrees inside the repository or under `~/.codex`.
+
+Read `references/worktree-integration.md` before creating worktrees, sharing
+project-local data, checkpointing, integrating, or resolving conflicts.
+
+## Event-Driven Supervision
+
+Supervise through worker lifecycle events, completed tool calls, handoffs, and
+bounded waits. Do not periodically poll every worker, tail logs continuously,
+or duplicate a monitor's checks.
+
+The coordinator may perform a bounded read-only intake check when a worker
+reports or appears to stop. It should then decide, request specific missing
+evidence, or wait for the next event.
+
+Worker silence is not evidence of failure. Use recovery reconciliation before
+restarting or replacing a worker.
+
+Read `references/desktop-workers.md` before launching, waiting on, resuming, or
+replacing Desktop-visible workers.
+
+## Integration Boundary
+
+Workers do not commit. They stop with a dirty or clean line worktree plus a
+structured report.
+
+Only the coordinator may, under an explicit local integration grant:
+
+- inspect and accept the exact line diff;
+- stage only task-owned paths;
+- create the source checkpoint commit on the line branch;
+- integrate it into the dedicated integration branch, normally by
+  cherry-pick;
+- record the source checkpoint OID and resulting integrated OID.
+
+An internal checkpoint is not final Git readiness and does not authorize a
+user-facing commit, merge, push, PR, or publication.
+
+## Resource And Monitoring Grants
+
+Treat high-traffic downloads, heavy GPU use, long-job launch, active
+monitoring, repair/restart, and next-stage launch as separate resource actions.
+They may be granted per line or stage in the launch manifest; do not infer one
+from another.
+
+A monitoring worker is read-only. It reports evidence and never repairs,
+restarts, stops, mutates outputs, launches a next stage, or makes a line
+decision unless an exact contingency was preauthorized.
+
+Read `references/resource-grants.md` before scheduling constrained resources or
+long-running lines.
+
+## Recovery And Cleanup
+
+Reconcile Desktop facts, Git/worktree facts, interrupted operations, and any
+available snapshot before changing state. Default to preservation.
+
+Do not automatically delete a Desktop task permanently, force-remove a
+worktree, prune globally, discard a dirty tree, delete a branch, abort an
+operation, or erase project data.
+
+A conditional cleanup grant may cover named clean, closed, integrated or
+otherwise preserved line worktrees. It never covers source project data behind
+a symlink; cleanup removes only the approved link or worktree.
+
+Read `references/recovery-and-cleanup.md` before recovery, replacement, or
+cleanup.
+
+## Persistence
+
+Keep live coordination state in current task context when practical. Use a
+small schema-v2 snapshot only when reconciliation or handoff benefits from a
+machine-checkable view.
+
+For cross-session work, promote the brief and snapshot into the approved
+`.planning/<plan-id>/` plan through `personal-planning-with-files-zh`. Do not
+create `.codex/multiline`, a shadow registry, or a second source of truth.
+
+## Output
+
+Return the smallest useful artifact for the current gate: an audit summary,
+launch manifest, line card, coordinator intake, integration record, recovery or
+cleanup recommendation, or final coordination handoff.
+
+State what remains unverified, what needs new authority, and which event should
+wake the coordinator next.
+
+## Reference Routing
+
+- `references/contracts.md`: state axes and artifact schemas.
+- `references/desktop-workers.md`: visible worker lifecycle and supervision.
+- `references/worktree-integration.md`: layouts, bindings, integration, conflicts.
+- `references/resource-grants.md`: heavy resources, long jobs, and monitoring.
+- `references/recovery-and-cleanup.md`: reconciliation and safe cleanup.
+- `references/routing.md`: adjacent skill ownership and handoffs.
+- `references/source-notes.md`: provenance, environment evidence, adopted
+  ideas, rejected ideas, and validation limits.

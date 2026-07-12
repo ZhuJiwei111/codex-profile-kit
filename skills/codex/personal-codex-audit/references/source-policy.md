@@ -1,62 +1,111 @@
-# Source Policy
+# Profile Source Policy
 
-Use this policy before collecting or summarizing the user's Codex profile.
+Use this policy before collecting or summarizing the current host's reusable
+Codex profile.
 
-## Host Scope
+## Contents
 
-- The current execution host is the default read and write boundary.
-- Unqualified requests about sessions, threads, memories, Codex state,
-  archives, profiles, or reusable assets refer only to the current host.
-- A remote worker must not access another host's thread titles, previews,
-  metadata, messages, memories, or session-derived summaries. Direct the user
-  to initiate cross-host Codex-state work from the Windows control plane, where
-  explicit authorization is required before discovery.
-- Do not use app-wide thread listings to expose other hosts while auditing the
-  current host. Keep the unfiltered result inside tool orchestration, emit only
-  entries matching the known current host, and never read an unmatched thread.
-- Subagents inherit the same host scope and may not expand it.
+- Scope and default sources
+- MCP safe projection
+- Memory and symlink boundaries
+- Default exclusions and reporting
+
+## Scope
+
+- Keep the audit on the current execution host. A different home path is not
+  evidence of a different host's authorization.
+- Limit the default inventory to durable profile assets. Tasks, threads,
+  sessions, transcripts, runtime databases, and app-wide history are out of
+  scope.
+- Subagents inherit the same host and source boundary.
 
 ## Default Sources
 
-Read these sources by default when they exist:
+Read only the smallest safe projection needed from these sources when present:
 
-- `~/.codex/AGENTS.md`: durable server-level Codex behavior preferences.
-- `~/.codex/skills/*/SKILL.md`: personal/custom Codex skill names, descriptions, and concise workflow intent.
-- `~/.agents/skills/*/SKILL.md`: legacy or agent-level skills, especially `find-skills`.
-- `~/.codex/hookify/*.md`: safe Hookify rule frontmatter fields and short rule descriptions; avoid printing raw regex patterns unless the user asks for rule debugging.
-- `~/.codex/hooks`: native hook filenames and safe metadata such as Markdown frontmatter or a short module docstring.
-- `~/.codex/memories/MEMORY.md`: only reusable cross-task Codex workflow preferences and lessons.
+| Source | Allowed projection |
+| --- | --- |
+| `~/.codex/AGENTS.md` | Existence, headings, and relevant durable rules |
+| `~/.codex/skills/*/SKILL.md` | Personal/custom skill name, description, path, and safe resource structure |
+| `~/.agents/skills/*/SKILL.md` | User/agent skill name, description, path, and safe resource structure |
+| `agents/openai.yaml` | Presence and UI metadata needed for a requested skill audit |
+| `~/.codex/config.toml` | Allowlisted feature booleans, `skills.config` path/enablement fields, and the safe MCP projection below |
+| `~/.codex/hooks.json` or inline `[hooks]` | Event, matcher presence/length, handler type, and referenced file state; never raw command text |
+| Referenced files under `~/.codex/hooks/` | Existence and a short module-doc or heading summary |
+| `~/.codex/hookify/*.md` | Top-level safe frontmatter only; never nested or raw regex content by default |
+| `~/codex-profile-kit` | Git state, safe dry-run diff, manifest, and exported portable assets when comparison is requested |
 
-Prefer current files for current state. Use memory only as a reusable signal or historical explanation.
+Read `~/.codex/HOST_LOCAL.md` only when resolving current-host profile paths or
+environment facts is material. Do not export the populated host overlay.
+
+## MCP Projection
+
+For each configured `mcp_servers.<id>` entry, collect only:
+
+- a syntactically safe server id;
+- the declared `enabled` boolean, or `null` when unspecified;
+- transport category: `streamable-http`, `stdio`, or `unknown`;
+- `public_url` only for an explicitly reviewed allowlisted public HTTPS URL
+  without userinfo, query, fragment, control characters, whitespace, or a
+  local/private host;
+- one auth mechanism category: `none`, `env-var-name`, `headers`,
+  `oauth-or-runtime`, or `not-collected`.
+
+Do not serialize MCP `command`, `args`, environment entries, bearer-token
+variable names or values, header names or values, OAuth material, runtime
+health, login state, or tool results. A declared public URL does not prove
+reachability, authentication, availability, or successful initialization.
+
+## Memory Is Explicit Opt-In
+
+- The collector may report the safe `[features].memories` state, but it never
+  reads memory content.
+- Do not read `~/.codex/memories/` during an ordinary profile audit.
+- Use memory only when the user explicitly requests a memory-informed audit and
+  the current task's memory controls permit it.
+- Then inspect only the minimum current-host entries needed for reusable Codex
+  workflow preferences. Exclude project outcomes, experiment logs, remote-host
+  state, papers, data transfers, and one-off troubleshooting.
+- Label all retained findings `memory-derived` and possibly stale. Never copy
+  memory content into profile-kit without a separately approved migration
+  design.
+
+## Symlink Boundary
+
+- Inventory a symlinked skill entry because Codex may discover it.
+- Read target metadata only when the resolved `SKILL.md` remains under the
+  current home and avoids excluded or sensitive paths.
+- For outside-home, sensitive, or broken targets, report the entry and
+  `metadata_status` without reading target content.
 
 ## Default Exclusions
 
-Do not read or summarize these by default:
+Never read, serialize, or summarize by default:
 
-- Auth, credential, token, cookie, password, SSH key, `.netrc`, secret, or Codex auth files.
-- `auth.json`, `history.jsonl`, `session_index.jsonl`, SQLite files, attachments, caches, plugin caches, logs, and raw session transcripts.
-- Project-specific or task-specific memories, including experiment logs, paper/rebuttal state, remote server state, dataset transfer records, platform-specific setup, and one-off troubleshooting.
-- Threads, memories, or session-derived summaries from another host unless the
-  user explicitly approved that host before discovery.
-- Long logs, generated artifacts, archived sessions, or high-noise historical dumps.
+- Credentials, tokens, cookies, private keys, `.netrc`, authenticated URLs, or
+  secret environment files.
+- `auth.json`, `history.jsonl`, `session_index.jsonl`, SQLite/WAL/SHM files,
+  attachments, logs, caches, plugin caches, or raw transcripts.
+- Hook trust hashes, individual hook approval state, project trust, connector
+  OAuth state, plugin runtime state, or approval history.
+- MCP command lines, arguments, environment entries, bearer-token fields,
+  header material, OAuth state, runtime health, or tool output.
+- Other-host tasks, threads, memories, previews, messages, or session-derived
+  summaries.
+- Long generated artifacts, archived sessions, or unrelated project files.
 
-If the user explicitly requests one of these sources, ask before reading anything sensitive and report only redacted configuration categories.
+If a requested conclusion depends on an excluded source, report the limitation.
+Do not turn permission to audit into permission to inspect credentials or
+high-noise runtime state.
 
-## Memory Filtering
+## Reporting Boundary
 
-When searching memory, keep only signals that are portable across future Codex sessions, such as:
-
-- Stable user preferences for asking questions, language, evidence boundaries, long-running jobs, temporary work, or safe configuration changes.
-- Stable mappings of where reusable Codex assets live.
-- Lessons about maintaining skills, hooks, AGENTS rules, migration kits, or workflow portability.
-
-Exclude memories whose main value is tied to a particular repository, experiment, machine, remote host, paper, data transfer, CI run, or old task outcome.
-
-## Reporting Boundaries
-
-In the final user-facing report:
-
-- Write in Chinese by default.
-- Distinguish observed current files from memory-derived context.
-- Mention stale or missing evidence instead of filling gaps with assumptions.
-- Put actual edits under `需要你批准的建议`; do not make them during this audit.
+- Distinguish observed files, parsed configuration, user reports, product UI
+  confirmation, and unknown state.
+- Prefer paths relative to the current home. For outside-home symlink or command
+  targets, report only the category and basename needed to explain the gap.
+- Do not print raw hook commands, raw matcher patterns, full config files, or
+  memory extracts. Do not print raw MCP definitions; use only the safe
+  schema-v3 projection.
+- Separate observations from recommended changes and state the exact authority
+  needed for each write.

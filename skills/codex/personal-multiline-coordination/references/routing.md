@@ -1,45 +1,73 @@
-# Cross-Skill Routing
+# Workflow Routing
 
-Keep this skill as the multiline router. Do not copy the full rules from other skills; route to them at the right gate.
+## Entry Routing
 
-## Use With Other Personal Skills
+| Situation | Owner |
+| --- | --- |
+| Explicit multi-worker/worktree execution | `personal-multiline-coordination` |
+| Existing worker/worktree ambiguity without execution request | this skill, read-only audit only |
+| One bounded subagent delegation | `personal-subagent-boundaries` |
+| Consequential decomposition or architecture choice | `personal-brainstorms` |
+| Critical unresolved requirements | `personal-grilling` |
+| Cross-session planning files | `personal-planning-with-files-zh` |
+| One-time long-job status request | `personal-long-job-status` |
+| Unexpected failure or failed repair attempt | `personal-evidence-debugging` |
+| Final evidence-backed completion decision | `personal-risk-verification` |
+| Formal Git readiness, user commit/PR choice, or handoff | `personal-branch-finish` |
 
-- `personal-subagent-boundaries`: before creating worker, explorer, reviewer, validator, or monitoring subagents; use it for delegation contracts, exclusive file boundaries, and monitoring observer rules.
-- Long-Running Jobs rules from durable instructions: before launching or supervising GPU jobs, downloads, evals, training, batch processing, or jobs expected to run longer than 10 minutes.
-- `personal-branch-finish`: when a line reaches `finish_candidate` and the remaining work is commit, PR, merge, final summary, or clean handoff.
-- `personal-risk-verification`: before claiming a line, branch, or coordination stage is complete.
-- `personal-repo-intake`: when the repository itself is unfamiliar and basic edit surface, commands, or git state are unknown.
-- `personal-context-compression` or `context-save-restore`: when handoff needs to survive a long session or context transition.
+Multiline coordination remains the coordinator when it invokes an adjacent
+skill. The adjacent skill owns only its specialized decision or artifact.
 
-## Thread And Worktree Tools
+## Worker Versus Subagent
 
-If Codex app thread/worktree tools are available:
+Use a Desktop-visible worker task for a top-level implementation line with its
+own worktree and lifecycle. Use a managed subagent for bounded exploration,
+review, validation, helper work, monitoring, or ordinary conflict analysis.
 
-- Use them for read-only inspection when that resolves cwd, branch, ownership, or stale-thread ambiguity.
-- Ask for explicit confirmation before creating, renaming, archiving, or handing off user-owned threads.
-- Prefer app-native worktree mechanisms over manual `git worktree add` when available.
+Follow `personal-subagent-boundaries` for managed-subagent context, file
+ownership, stop, and reporting. This skill adds the global dependency,
+worktree, resource, and intake decisions.
 
-If only git is available:
+## Planning And Context
 
-- Detect whether the current checkout is already a linked worktree before creating another one.
-- Follow project conventions for worktree location.
-- Verify project-local worktree directories are ignored before using them.
+- Current-task coordination needs no persistent registry.
+- When a coordination run must cross sessions, ask
+  `personal-planning-with-files-zh` to own the plan root and store a compact
+  brief plus optional snapshot there.
+- Use `personal-context-compression` to produce a compact continuation summary;
+  it does not write or restore state.
+- Use `personal-context-save-restore` only for an explicit immutable
+  cross-session packet; restoring it never launches workers or mutates Git.
 
-## Worker Prompt Contract
+## Verification And Finish
 
-Worker prompts should include:
+Worker checks are line-local evidence. Integration checks are stage evidence.
+Neither is the final completion verdict.
 
-- Line id and objective.
-- Canonical cwd and branch.
-- Exclusive editable paths.
-- Read-only inputs.
-- Allowed commands and long-job boundaries.
-- Stop condition.
-- Handoff path and required handoff fields.
-- Maximum productive continuation budget.
+After all accepted lines are integrated, use `personal-risk-verification` as
+the only final completion gate. If it supports handoff, use
+`personal-branch-finish` for branch/worktree readiness and explicit user Git
+decisions. This skill does not push, open PRs, or merge.
 
-Workers stop at `pass`, `no-go`, `needs-more-evidence`, or `blocked` and wait for coordinator intake.
+## Long Jobs
 
-## Do Not Route Automatically
+This skill schedules authorized long-job lines and records their resource
+contracts. Durable launch and monitoring rules still apply. Use
+`personal-long-job-status` only when the user asks for a one-time read-only
+status/ETA; it does not become the coordinator or monitor.
 
-Do not automatically start long monitoring, create workers, archive threads, commit, PR, merge, publish, clean artifacts, or mutate registry files only because an audit found risk. Report the risk and ask for or rely on explicit authorization for the action.
+## Conflict Routing
+
+1. Tiny deterministic integration conflict: coordinator, within grant.
+2. Bounded independent conflict analysis: managed subagent.
+3. Substantive implementation rework: Desktop-visible worker.
+4. Cross-line design conflict: user decision, usually with
+   `personal-brainstorms`; use `personal-grilling` for decision-changing unknowns.
+
+The coordinator records the result and reschedules affected lines.
+
+## Current Compatibility Contract
+
+Do not recreate a permanent multiline registry or `finish_candidate`. Formal
+Git readiness consumes the current coordinator intake, authoritative decision,
+and integration provenance through `personal-branch-finish`.

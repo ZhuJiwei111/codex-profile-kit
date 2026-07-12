@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""Codex PreToolUse guard for large dataset downloads.
-
-Policy:
-- Large downloads must explicitly run without proxy environment variables.
-- If a command looks like a large download and still relies on the inherited
-  proxy environment, block it and ask the agent/user to retry direct.
-- Do not fall back to proxy automatically when direct access fails.
-"""
+"""Block likely large transfers that accidentally inherit proxy variables."""
 
 from __future__ import annotations
 
@@ -15,6 +8,7 @@ import os
 import re
 import shlex
 import sys
+from typing import Any
 
 
 PROXY_VARS = (
@@ -25,157 +19,199 @@ PROXY_VARS = (
     "http_proxy",
     "all_proxy",
 )
-
-NO_PROXY_VARS = ("NO_PROXY", "no_proxy")
-
-DOWNLOAD_TOOLS_RE = re.compile(
-    r"\b(aria2c|wget|axel|rclone|aws|gsutil|huggingface-cli|hf)\b",
-    re.IGNORECASE,
-)
-
-COMMAND_DOWNLOAD_RE = re.compile(
-    r"\bcurl\b(?=[^;&|]*\s(?:-O\b|--remote-name\b|-o\b|--output\b|--output-dir\b))",
-    re.IGNORECASE,
-)
-
-SCRIPT_DOWNLOAD_RE = re.compile(
-    r"(^|[\s;&|()])("
-    r"(?:bash|zsh|sh)\s+[^;&|]*\bdown(?:load)?\.sh\b"
-    r"|RUN_DOWNLOAD=1\b"
-    r"|conda\s+env\s+create\b"
-    r"|mamba\s+(?:install|create)\b"
-    r"|pip\s+install\s+-r\b"
-    r"|uv\s+sync\b"
-    r"|npm\s+install\b"
-    r"|pnpm\s+install\b"
+APPROVAL_MARKER = "CODEX_APPROVED_PROXY_DOWNLOAD"
+CONTROL_TOKEN_RE = re.compile(r"^[;&|()]+$")
+ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=(.*)$", re.DOTALL)
+LARGE_MARKER_RE = re.compile(
+    r"(?:"
+    r"\.(?:tar\.gz|tgz|tar|zip|7z|rar|zst|gz|bz2|xz|h5|h5ad|loom|"
+    r"mtx|tsv\.gz|csv\.gz|bed\.gz|fastq\.gz|fq\.gz|safetensors|"
+    r"pt|pth|ckpt|bin|onnx|parquet|arrow)(?:$|[?#])"
+    r"|(?:^|[/\\])(?:data|datasets|checkpoints|models|weights|raw|artifacts)(?:[/\\]|$)"
     r")",
     re.IGNORECASE,
 )
 
-LARGE_FILE_RE = re.compile(
-    r"\.(?:"
-    r"tar\.gz|tgz|tar|zip|7z|rar|zst|gz|bz2|xz|"
-    r"h5|h5ad|loom|mtx|tsv\.gz|csv\.gz|bed\.gz|fastq\.gz|fq\.gz|"
-    r"safetensors|pt|pth|ckpt|bin|onnx|parquet|arrow"
-    r")\b",
-    re.IGNORECASE,
-)
 
-LARGE_DATA_PATH_RE = re.compile(
-    r"\b(data|datasets|checkpoints|models|weights|raw|paired)/",
-    re.IGNORECASE,
-)
-
-PROXY_OFF_RE = re.compile(r"(^|[;&|()])\s*proxy_off(\s|[;&|)]|$)")
-ENV_COMMAND_RE = re.compile(r"(^|[;&|()])\s*env\b([^;&|]*)")
-UNSET_COMMAND_RE = re.compile(r"(^|[;&|()])\s*unset\s+([^;&|]*)")
-
-
-def shell_words(text: str) -> list[str]:
+def load_event() -> dict[str, Any]:
     try:
-        return shlex.split(text)
+        value = json.load(sys.stdin)
+    except json.JSONDecodeError as exc:
+        print(f"[direct-download-guard] invalid input JSON: {exc}", file=sys.stderr)
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def command_text(event: dict[str, Any]) -> str | None:
+    if event.get("tool_name") != "Bash":
+        return None
+    tool_input = event.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return None
+    value = tool_input.get("command")
+    return value if isinstance(value, str) else None
+
+
+def shell_segments(command: str) -> list[list[str]]:
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|()")
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        tokens = list(lexer)
     except ValueError:
-        return text.split()
+        return []
+
+    segments: list[list[str]] = []
+    current: list[str] = []
+    for token in tokens:
+        if CONTROL_TOKEN_RE.fullmatch(token):
+            if current:
+                segments.append(current)
+                current = []
+            continue
+        current.append(token)
+    if current:
+        segments.append(current)
+    return segments
 
 
-def first_download_index(command: str) -> int:
-    starts = []
-    for pattern in (DOWNLOAD_TOOLS_RE, COMMAND_DOWNLOAD_RE, SCRIPT_DOWNLOAD_RE):
-        match = pattern.search(command)
-        if match:
-            starts.append(match.start())
-    return min(starts) if starts else len(command)
+def assignment(tokens: list[str], index: int) -> tuple[str, str] | None:
+    if index >= len(tokens):
+        return None
+    token = tokens[index]
+    match = ASSIGNMENT_RE.fullmatch(token)
+    if not match:
+        return None
+    return token.split("=", 1)[0], match.group(1)
 
 
-def explicitly_unset_proxy_vars(command: str, before_index: int) -> set[str]:
+def unwrap_segment(tokens: list[str]) -> tuple[list[str], set[str], bool, bool]:
+    """Return command tokens, explicitly unset vars, proxy_off, approval."""
+
+    index = 0
     unset_vars: set[str] = set()
+    proxy_off = False
+    approved = False
 
-    for match in ENV_COMMAND_RE.finditer(command):
-        if match.start() > before_index:
-            continue
-        words = shell_words(match.group(2))
-        index = 0
-        while index < len(words):
-            word = words[index]
-            if word == "-u" and index + 1 < len(words):
-                unset_vars.add(words[index + 1])
+    while (item := assignment(tokens, index)) is not None:
+        name, value = item
+        if name == APPROVAL_MARKER and value.casefold() in {"1", "true", "yes"}:
+            approved = True
+        index += 1
+
+    if index < len(tokens) and tokens[index] == "env":
+        index += 1
+        while index < len(tokens):
+            token = tokens[index]
+            if token == "--":
+                index += 1
+                break
+            if token in {"-u", "--unset"} and index + 1 < len(tokens):
+                unset_vars.add(tokens[index + 1])
                 index += 2
                 continue
-            if word == "--unset" and index + 1 < len(words):
-                unset_vars.add(words[index + 1])
-                index += 2
+            if token.startswith("--unset="):
+                unset_vars.add(token.split("=", 1)[1])
+                index += 1
                 continue
-            if word.startswith("--unset="):
-                unset_vars.add(word.split("=", 1)[1])
-            index += 1
+            item = assignment(tokens, index)
+            if item is not None:
+                name, value = item
+                if name == APPROVAL_MARKER and value.casefold() in {"1", "true", "yes"}:
+                    approved = True
+                index += 1
+                continue
+            if token.startswith("-"):
+                index += 1
+                continue
+            break
 
-    for match in UNSET_COMMAND_RE.finditer(command):
-        if match.start() > before_index:
-            continue
-        for word in shell_words(match.group(2)):
-            if not word.startswith("-"):
-                unset_vars.add(word)
+    if index < len(tokens) and tokens[index] == "proxy_off":
+        proxy_off = True
+        index += 1
 
-    return unset_vars
+    return tokens[index:], unset_vars, proxy_off, approved
 
 
-def explicitly_direct(command: str, before_index: int) -> bool:
-    proxy_off_match = PROXY_OFF_RE.search(command)
-    if proxy_off_match and proxy_off_match.start() <= before_index:
+def curl_download(tokens: list[str]) -> bool:
+    for token in tokens[1:]:
+        if token in {"-o", "-O", "--output", "--output-dir", "--remote-name"}:
+            return True
+        if token.startswith(("--output=", "--output-dir=")):
+            return True
+        if re.fullmatch(r"-[A-Za-z]*[oO][A-Za-z]*", token):
+            return True
+    return False
+
+
+def transfer_kind(tokens: list[str]) -> str | None:
+    if not tokens:
+        return None
+    command = tokens[0].rsplit("/", 1)[-1].casefold()
+    args = [token.casefold() for token in tokens[1:]]
+    if command in {"wget", "aria2c", "axel"}:
+        return command
+    if command == "curl" and curl_download(tokens):
+        return command
+    if command in {"hf", "huggingface-cli"} and args[:1] == ["download"]:
+        return "huggingface"
+    if command == "aws" and len(args) >= 2 and args[0] == "s3" and args[1] in {"cp", "sync"}:
+        return "aws"
+    if command == "gsutil" and args[:1] and args[0] in {"cp", "rsync"}:
+        return "gsutil"
+    if command == "rclone" and args[:1] and args[0] in {"copy", "copyto", "move", "sync"}:
+        return "rclone"
+    return None
+
+
+def is_large_transfer(tokens: list[str], kind: str) -> bool:
+    if kind == "huggingface":
         return True
-    unset_vars = explicitly_unset_proxy_vars(command, before_index)
-    return all(name in unset_vars for name in PROXY_VARS)
+    return LARGE_MARKER_RE.search("\n".join(tokens)) is not None
+
+
+def risky_segments(command: str) -> list[list[str]]:
+    risky: list[list[str]] = []
+    for segment in shell_segments(command):
+        command_tokens, unset_vars, proxy_off, approved = unwrap_segment(segment)
+        kind = transfer_kind(command_tokens)
+        if kind is None or not is_large_transfer(command_tokens, kind):
+            continue
+        explicitly_direct = proxy_off or all(name in unset_vars for name in PROXY_VARS)
+        if not explicitly_direct and not approved:
+            risky.append(command_tokens)
+    return risky
+
+
+def emit_deny() -> None:
+    unset_flags = " ".join(f"-u {name}" for name in PROXY_VARS)
+    reason = (
+        "A likely large transfer would inherit active proxy variables. Retry the "
+        "same transfer as `proxy_off <download-command>` or "
+        f"`env {unset_flags} <download-command>` to test direct access first. "
+        f"Only after explicit user approval for proxy bandwidth, prefix the command "
+        f"with `{APPROVAL_MARKER}=1`."
+    )
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": reason,
+                }
+            }
+        )
+    )
 
 
 def main() -> int:
-    try:
-        event = json.load(sys.stdin)
-    except json.JSONDecodeError:
+    event = load_event()
+    command = command_text(event)
+    if not command or not any(os.environ.get(name) for name in PROXY_VARS):
         return 0
-
-    tool_input = event.get("tool_input") or {}
-    command = tool_input.get("command")
-    if not isinstance(command, str) or not command.strip():
-        return 0
-
-    has_proxy = any(os.environ.get(name) for name in PROXY_VARS)
-    if not has_proxy:
-        return 0
-
-    looks_like_download = bool(
-        DOWNLOAD_TOOLS_RE.search(command)
-        or COMMAND_DOWNLOAD_RE.search(command)
-        or SCRIPT_DOWNLOAD_RE.search(command)
-    )
-    looks_large = bool(
-        LARGE_FILE_RE.search(command)
-        or LARGE_DATA_PATH_RE.search(command)
-        or SCRIPT_DOWNLOAD_RE.search(command)
-    )
-    if looks_like_download and looks_large and not explicitly_direct(command, first_download_index(command)):
-        unset_flags = " ".join(f"-u {name}" for name in (*PROXY_VARS, *NO_PROXY_VARS))
-        reason = (
-            "Large dataset/model download blocked because proxy environment "
-            "variables are currently set. Retry with direct networking first "
-            "and explicitly unset all proxy variables, "
-            "for example:\n\n"
-            f"  env {unset_flags} {command}\n\n"
-            "If direct access fails, report the failure to the user instead of "
-            "falling back to proxy automatically."
-        )
-        print(
-            json.dumps(
-                {
-                    "hookSpecificOutput": {
-                        "hookEventName": "PreToolUse",
-                        "permissionDecision": "deny",
-                        "permissionDecisionReason": reason,
-                    }
-                }
-            )
-        )
-        return 0
-
+    if risky_segments(command):
+        emit_deny()
     return 0
 
 

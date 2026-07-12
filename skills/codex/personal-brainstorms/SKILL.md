@@ -1,75 +1,153 @@
 ---
 name: personal-brainstorms
-description: Use before implementing new features, behavior changes, complex refactors, UI changes, or multi-step plans when goal, scope, acceptance criteria, brainstormed ideas, design tradeoffs, or implementation direction are not yet concrete.
+description: Use to shape a bounded design before consequential feature, behavior, UI, refactor, or multi-step implementation decisions, and for explicit concern discussion; skip simple explicit low-risk edits.
 ---
 
 # Personal Brainstorms
 
-Clarify just enough before changing behavior. Do not turn simple edits into a
-ceremony.
+Turn consequential uncertainty into a bounded design through lightweight
+dialogue. Do not add ceremony to simple, explicit, low-risk work.
 
-## Lock Before Editing
+## Scope Gate
 
-- Goal: what should be true when done.
-- Scope: files/modules likely affected and explicit non-goals.
-- Acceptance: commands, tests, UI states, or output artifacts that prove success.
-- Risk: shared APIs, data migrations, user-visible behavior, long jobs, or
-  credentials.
+Before detailed questions, use existing context and inspect only what is needed
+to classify the request:
 
-## Approach
+- **Direct handoff:** The goal, scope, acceptance, and implementation direction
+  are concrete, and no consequential risk needs discussion. Yield to the
+  appropriate implementation workflow without inventing alternatives or a
+  second approval gate.
+- **Bounded brainstorm:** One coherent change has unresolved consequential
+  choices or risk assumptions. Use the workflow below.
+- **Decompose first:** The request spans multiple independently deliverable
+  subsystems. Name the units, their dependencies, and a recommended order.
+  Brainstorm one bounded slice instead of refining the entire system at once.
 
-- Prefer existing project patterns over new abstractions.
-- If multiple approaches are plausible, state the tradeoff and choose the
-  conservative path unless the user asked otherwise.
-- Use the built-in plan tool for short multi-step work.
-- Create persistent planning files only via `personal-planning-with-files-zh`.
-- Treat plans shown to the user for confirmation, implementation, or handoff as
-  user-facing text. Follow the user's language preference for that surrounding
-  plan even when the plan is about generating Codex-facing artifacts such as
-  `AGENTS.md`, `SKILL.md`, plugin metadata, or workflow notes.
+If only `personal-grilling` is explicitly invoked, yield rigorous requirements
+interrogation to that skill. If both skills are explicitly invoked, keep
+brainstorming as the design coordinator and use grilling as the quality gate for
+critical decisions.
 
-## Lightweight Brainstorm
+If repository facts needed for the design are unclear, perform only bounded
+inspection or use `personal-repo-intake`. Do not scan files or history by
+default when the relevant context is already known.
 
-- Start with bounded local context: relevant instructions, manifests, entry
-  points, nearby code, or examples. Skip broad scans when the likely edit
-  surface is already clear.
-- Shape the idea into goal, success criteria, constraints, and risks before
-  proposing implementation work.
-- Ask only questions that could change product behavior, output shape, data
-  safety, dependency choice, environment, or acceptance criteria.
-- When direction is open, offer 2-3 realistic approaches with tradeoffs and a
-  recommended default. Keep the recommendation compatible with existing project
-  patterns and the user's stated preferences.
-- End with a compact plan or locked assumptions. Do not require a design doc,
-  commit, worktree, or formal ceremony unless the user asks or the risk justifies
-  it.
+## Composition With Personal Grilling
 
-## Concern Discussion Mode
+When both skills are invoked, brainstorming owns scope decomposition, evidence
+synthesis, alternatives, recommendations, component boundaries, and final
+design synthesis. `personal-grilling` owns critical-question admission, answer
+lockability, and the blocking-decision gate.
 
-- Treat phrases such as `我的concern`, `讨论`, `不是命令`,
-  `不一定要按我的`, `你觉得呢`, or similar uncertainty markers as a request for
-  thought partnership rather than immediate execution.
-- In this mode, first state your judgment, explain the relevant tradeoffs, name
-  risks or hidden assumptions, and push back when the proposed direction seems
-  unsafe, over-scoped, brittle, or inconsistent with the project.
-- Offer 2-3 concrete options only when choices are genuinely live. Recommend a
-  default, but keep it open for the user to revise.
-- Convert concerns into one of: locked assumptions, a risk register, a decision
-  checklist, or an implementation plan. Do not edit files or start jobs unless
-  the user explicitly transitions from discussion to implementation.
-- If the same prompt contains both a concern and an implementation request,
-  clarify the plan/risk interpretation first; proceed only when execution intent
-  and acceptance criteria are clear enough.
+Maintain a lightweight shared decision state only when it helps:
 
-## Stop Conditions
+- `open`: material but not yet decided.
+- `blocking`: planning would be unreliable without an answer.
+- `locked`: fixed by the user or sufficient evidence.
+- `assumption`: resolved with an explicit, low-risk, reversible default.
+- `deferred`: intentionally outside the current delivery slice.
 
-- Ask the user before decisions that affect product behavior, data safety,
-  credentials, installation, large downloads, long jobs, external publishing, or
-  other high-risk outcomes.
-- Ask when uncertainty would change the implementation direction, acceptance
-  criteria, output shape, environment, dependency choice, or user-visible
-  behavior.
-- Make low-risk, local, easily reversible choices independently, and record the
-  assumption when useful.
-- The user is happy to help; do not guess brittle details just to appear
-  autonomous.
+Do not require a formal decision table for lightweight work.
+
+Before sending a question through the grilling gate, confirm that:
+
+- The answer is not discoverable from available evidence.
+- It would materially change scope, behavior, safety, cost, architecture,
+  environment, output, or acceptance.
+- A low-risk reversible default is not sufficient.
+- The reason for deciding now can be stated.
+- A recommended default and its material tradeoff can be offered.
+
+Ask one blocking question at a time. After each answer, update the shared
+decision state and the design instead of beginning a separate interview. Do not
+repeat locked decisions, grill non-blocking implementation details, or run an
+exhaustive checklist disconnected from the current design.
+
+While a blocking decision remains unresolved, do not present the design as
+ready for planning. When the grilling workflow releases its gate, return to
+brainstorming for design synthesis, inline self-review, and the authorized
+handoff.
+
+## Workflow
+
+1. **Frame the decision.** State the current goal, scope, non-goals, acceptance
+   evidence, constraints, and material unknowns.
+2. **Clarify selectively.** Ask only questions whose answers would change
+   behavior, scope, safety, cost, environment, output, or acceptance. Ask one
+   blocking question at a time. Do not ask facts discoverable from available
+   evidence. When `personal-grilling` is also active, send candidate questions
+   through its admission and lockability gate before asking the user.
+3. **Compare real alternatives.** When multiple approaches are genuinely
+   viable, present 2-3 with the recommendation first and explain the material
+   tradeoff. If one path clearly fits, say why instead of inventing options.
+4. **Present a bounded design.** Scale detail to complexity. For complex work,
+   cover component responsibilities, interfaces and dependencies, data or
+   control flow, failure behavior, and verification.
+5. **Review the design inline.** Fix placeholders, contradictions, ambiguous
+   requirements, unnecessary scope, weak component boundaries, and acceptance
+   criteria that do not prove the requested outcome.
+6. **Apply the execution gate.** Continue only according to the authorization
+   already present in the request.
+
+Prefer existing project patterns. Include a nearby structural improvement only
+when it directly supports the requested outcome; do not turn the design into an
+unrelated refactor.
+
+For each significant component, be able to answer:
+
+- What does it own?
+- How do consumers use it?
+- What does it depend on?
+- Can its behavior be understood and tested without reading unrelated internals?
+
+## Execution Gate
+
+- For discussion or evaluation only, stop after the recommendation, decision,
+  or bounded design. Discussion output is not implementation authorization.
+- For a planning request, hand the locked design to the appropriate planning
+  workflow, but do not infer implementation authority.
+- For an explicit implementation request, brainstorming is a preflight rather
+  than an automatic second approval gate. Continue within the original scope
+  once material choices are lockable.
+- If a question or presented alternative requires the user's decision, wait for
+  the answer. Do not silently select an option after asking.
+- When `personal-grilling` is active, an unresolved blocking decision overrides
+  the ordinary handoff. Once its gate is released, preserve the authorization
+  already present in the original request.
+- Reopen only a new consequential decision; do not re-ask for an unchanged,
+  already approved design.
+
+Use the built-in plan for ordinary multi-step implementation. Use
+`personal-planning-with-files-zh` only when file-backed, durable, or
+cross-session planning is explicitly required. Do not create a design document,
+worktree, commit, or persistent planning file merely because brainstorming ran.
+
+## Concern Mode
+
+`AGENTS.md` owns recognition of discussion signals. Once routed here:
+
+- Lead with judgment, consequences, and a recommendation.
+- Surface hidden assumptions and push back on unsafe, brittle, or over-scoped
+  directions.
+- Convert the concern into locked assumptions, a decision, a bounded risk list,
+  or a design change.
+- If the same request also authorizes implementation, resolve the material
+  concern first and then follow the execution gate.
+
+## Visual Assistance
+
+Use the smallest visual only when relationships, sequence, state, layout, or
+side-by-side options are materially clearer than prose:
+
+- Use a table for exact mappings or tradeoffs.
+- Use Mermaid for multi-component flow, hierarchy, or state transitions.
+- Use a compact wireframe for layout decisions.
+
+Keep textual requirements and ordinary technical choices in prose. Do not start
+an external visual-companion server or create persistent visual artifacts unless
+the user asks.
+
+## Resources
+
+Read `references/source-notes.md` only when auditing provenance or refreshing
+this skill from upstream. It is not needed during an ordinary brainstorm.

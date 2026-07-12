@@ -3,11 +3,9 @@ name: block-base-conda-install
 enabled: true
 event: bash
 action: block
-pattern: (?i)(^|[\s;&|()])((conda|mamba)\s+install\b[^\n;&|]*\s(-n|--name)\s+base\b|(conda|mamba)\s+install\b[^\n;&|]*\s(-p|--prefix)\s+[^ \n;&|]*/(mini)?conda[0-9A-Za-z_.-]*\b|(conda|mamba)\s+install\b[^\n;&|]*\s(-p|--prefix)\s+[^ \n;&|]*/anaconda3\b|conda\s+activate\s+base\b[^\n;&|]*(pip|conda|mamba)\s+install\b)
+pattern: (?i)(^|[\s;&|()])(?:(?:conda|mamba)\s+(?:env\s+create|install|create)\b[^\n;&|]*(?:(?:-n|--name)(?:\s+|=)base\b|(?:-p|--prefix)(?:\s+|=)[^ \n;&|]*/(?:(?:mini)?conda[0-9A-Za-z_.-]*|anaconda3)\b(?=$|["'\s;&|)]))|conda\s+run\b[^\n;&|]*(?:-n|--name)(?:\s+|=)base\b[^\n;&|]*(?:pip3?|python3?\s+-m\s+pip|conda|mamba)\s+install\b|conda\s+activate\s+base\b[^\n;&|]*(?:&&|;)\s*(?:pip3?|python3?\s+-m\s+pip|conda|mamba)\s+install\b)
 ---
 
-Install into the `base` conda environment is blocked.
-
-Keep `base` minimal. Use or create a project-specific environment, preferably
-under the host's project environment directory, and ask the user if the intended environment
-is unclear.
+An install explicitly targets the Conda `base` environment. Keep `base`
+minimal. Use the project's explicit environment or the host-documented Codex
+fallback when its bounded authorization applies.

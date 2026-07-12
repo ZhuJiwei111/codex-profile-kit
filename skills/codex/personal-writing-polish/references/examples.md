@@ -1,94 +1,87 @@
-# Examples
+# Regression Examples
 
-Use these examples to calibrate the user's preferred style.
+These examples define semantic and routing expectations. `Protected` items are test oracles, not optional suggestions.
 
-## Direct and bounded
+## Proposition-equivalent anti-defensive rewrite
 
-Input:
+**Request:** Make the sentence more direct.
 
-> 这不是为了证明这个方案一定更好，只是从一个有限角度说明它可能有帮助。
+**Source:** “The change is not intended to alter inference results; it only reduces serialization overhead.”
 
-Rewrite:
+**Protected:** inference results are unchanged; serialization overhead is reduced; no broader performance claim.
 
-> 这一步检验当前条件下这个方案是否带来可观测收益。它不能证明方案普遍更优，但能决定下一阶段是否值得继续投入。
+**Safe rewrite:** “The change reduces serialization overhead while leaving inference results unchanged.”
 
-Why:
+The two clauses retain the same propositions. Do not expand this into a claim about end-to-end latency or reliability.
 
-- Leads with the test being performed.
-- Keeps the evidence boundary.
-- Connects the boundary to the next decision.
+## Necessary negation stays
 
-## Boundary focus
+**Request:** Remove defensive wording.
 
-Input:
+**Source:** “This observational analysis does not establish that treatment A caused the survival difference.”
 
-> 这个改动显著提升了整体工作流的清晰度、稳定性和可维护性，为后续工作奠定了坚实基础。
+**Protected:** observational design; no causal conclusion; treatment A; survival difference.
 
-Rewrite:
+**Safe rewrite:** “Because the analysis is observational, it does not establish that treatment A caused the survival difference.”
 
-> 这个改动让多线协作的状态边界更清楚：每条线有明确的 worktree、owner、handoff 和 intake 状态。下一次多 worktree 任务可以用它验证是否减少上下文恢复和协调错误。
+The negation is the evidence boundary. A positive-sounding causal or associational substitute would change the claim unless the source supplies it.
 
-Why:
+## Voice calibration without invention
 
-- Replaces broad praise with concrete state boundaries.
-- Names the verification condition.
-- Avoids casual personification.
+**Voice sample:** “先说结论：吞吐没有变化。真正的问题在数据加载。”
 
-## Judgment plain
+**Target:** “实验结果表明，在当前设置下，模型精度保持不变，而训练耗时由数据预处理阶段主导。”
 
-Input:
+**Protected:** current setting; accuracy unchanged; preprocessing dominates training time.
 
-> 这个结果比较复杂。部分指标改善，部分指标没有变化，因此后续还需要进一步分析。
+**Safe rewrite:** “先说结论：当前设置下，模型精度没有变化。训练耗时主要卡在数据预处理。”
 
-Rewrite:
+The rewrite matches directness and cadence. It does not add a cause, metric, opinion, or personal experience.
 
-> 这个结果不能简单判为通过。指标改善集中在 A，B 基本没有变化，所以它支持“局部有效”，还不支持“整体方案成立”。下一步应先查 B 为什么没有响应。
+## Cluster-based humanize
 
-Why:
+**Request:** Make this less AI-like.
 
-- Gives judgment without drama.
-- Separates supported and unsupported claims.
-- Ends with the next check.
+**Source:** “It is important to note that the update represents a pivotal improvement. Moreover, it serves as a testament to the team's commitment. In conclusion, the command now exits with status 1 when validation fails.”
 
-## Uncertainty with next test
+**Protected:** the update is claimed to be pivotal; it is claimed to reflect team commitment; the command exits with status 1 when validation fails. The excerpt does not establish whether the first two claims are supported or removable.
 
-Input:
+**Safe response:** “The excerpt does not provide support for the value and commitment claims, so I have preserved rather than silently removed them. Closest safe rewrite: ‘The update is a pivotal improvement that reflects the team's commitment. The command now exits with status 1 when validation fails.’”
 
-> 这个结果可能说明模型用到了这个通道，但目前还不能完全证明机制成立。
+The generic transitions can be removed, but the two substantive claims remain protected until the content owner marks them as unsupported and removable. The diagnosis still comes from the passage-level cluster, not a banned-word list.
 
-Rewrite:
+## Unsupported praise is a content blocker
 
-> 这个结果可能说明模型用到了这个通道，但目前还不能完全证明机制成立。下一步需要加入 shuffle 或匹配难例，检查模型是否依赖正确样本上的信息，而不是只依赖通道本身的存在。
+**Request:** Strengthen this paragraph.
 
-Why:
+**Source:** “The refactor creates a robust foundation for future scalability, reliability, and maintainability.”
 
-- Keeps the cautious tone.
-- Adds the next test that can resolve the uncertainty.
+**Protected:** the source claims that the refactor provides a robust foundation for future scalability, reliability, and maintainability; no supporting behavior or comparison appears in the excerpt.
 
-## English anti-defensive
+**Safe response:** “The excerpt does not support these benefit claims, so I cannot safely strengthen or delete them. Closest semantic-preserving rewrite: ‘The refactor provides a robust foundation for future scalability, reliability, and maintainability.’ Ask the content owner whether the claims are supported or should be removed.”
 
-Input:
+Do not replace vague praise with new architectural benefits, downgrade it into a different claim, delete it silently, or invent a validation plan.
 
-> We do not claim that this model is superior in every situation.
+## Metrics, citations, Markdown, and LaTeX remain literal
 
-Rewrite:
+**Request:** Polish for an academic report.
 
-> The model is most useful when the task requires interpretable comparisons across cases.
+**Source:** “At 10% traffic, p99 decreased from 480 ms to 330 ms after 20 min; `error_rate=0.7%` [@lee2025]. We have not verified backfill behavior. The objective is $L = L_{task} + 0.1L_{aux}$.”
 
-Why:
+**Protected:** `10%`, `p99`, `480 ms`, `330 ms`, `20 min`, ``error_rate=0.7%``, `[@lee2025]`, the unknown backfill behavior, and `$L = L_{task} + 0.1L_{aux}$`.
 
-- Converts a defensive non-claim into positive scope.
+**Safe rewrite:** “At 10% traffic, p99 decreased from 480 ms to 330 ms after 20 min, with `error_rate=0.7%` [@lee2025]. Backfill behavior remains unverified. The objective is $L = L_{task} + 0.1L_{aux}$.”
 
-## English technical humanizer
+## Route substantive work before polishing
 
-Input:
+**Request:** “A improved, but B did not move. Explain why, design the next experiment, and make the answer polished.”
 
-> This change is a crucial enhancement that significantly improves robustness, maintainability, and long-term scalability.
+**Expected routing:** Do not use this skill to generate hypotheses or experiments. A research or analysis workflow owns that content. Once the explanation and experiment plan are supported and locked, this skill may polish their expression.
 
-Rewrite:
+**Request:** “Decide whether we should accept this review comment and rewrite our reply.”
 
-> This change reduces one failure mode: the worker state and handoff state now come from the same registry. The next multi-worktree task can show whether that reduces coordination errors.
+**Expected routing:** `personal-review-response` decides `accepted`, `rejected`, or `needs-clarification`; this skill may then polish the locked reply.
 
-Why:
+**Request:** “Draft a rebuttal to Reviewer 2 and make it less defensive.”
 
-- Replaces inflated value language with a concrete consequence and verification path.
+**Expected routing:** `awesome-rebuttal` owns venue constraints, strategy, and substantive response. This skill is only a final expression pass over an approved draft.

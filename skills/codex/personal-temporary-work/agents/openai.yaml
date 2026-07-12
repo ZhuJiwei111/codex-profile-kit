@@ -1,4 +1,4 @@
 interface:
-  display_name: "Temporary Work"
-  short_description: "Keep one-off scripts out of production code"
-  default_prompt: "Use $personal-temporary-work to handle a one-off check, statistic, or artifact post-processing task without polluting project code."
+  display_name: "Durable vs Temporary Work"
+  short_description: "Keep one-off transition logic out of maintained code"
+  default_prompt: "Use $personal-temporary-work to separate this one-off transition from the minimal durable change and manage its helper artifacts."

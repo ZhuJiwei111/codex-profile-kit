@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Evidence Debugging"
-  short_description: "Debug from concrete symptoms"
-  default_prompt: "Use $personal-evidence-debugging to diagnose a failing test, runtime error, or repeated command failure."
+  short_description: "Trace failures to root cause before fixes"
+  default_prompt: "Use $personal-evidence-debugging to reproduce the failure, trace its root cause, test one hypothesis at a time, and stop for architecture review after three independent failed fixes."

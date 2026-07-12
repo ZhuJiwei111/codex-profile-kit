@@ -1,79 +1,137 @@
 ---
 name: personal-grilling
-description: Use only when the user explicitly invokes $personal-grilling to rigorously clarify unclear requirements, goals, scope, constraints, risks, tradeoffs, or acceptance criteria before planning or implementation, with strict answer discipline and hard gates for unresolved key questions. Manual invocation only; do not use implicitly for ordinary ambiguity, normal brainstorming, implementation, code review, debugging, or execution.
+description: Manual only. Use $personal-grilling to pressure-test a plan or design with one decision-changing question at a time, research facts first, and block planning until material decisions are locked; pair with $personal-brainstorms for design synthesis.
 ---
 
 # Personal Grilling
 
-## Overview
+Pressure-test requirements with the fewest questions needed to make planning
+reliable. Be rigorous, not exhaustive; direct, not theatrical or hostile.
 
-Interview the user rigorously about every aspect of an unclear plan, design, or request until there is a shared understanding. The goal is strict answer discipline, not hostile tone: do not accept vague, evasive, unverifiable, or tradeoff-free answers as decisions.
+## Contract
 
-Stay in clarification mode. Do not implement, edit files, launch jobs, or produce an implementation plan unless the user explicitly asks in a later request after the grilling brief is locked.
+- Run only after explicit invocation. Do not turn ordinary ambiguity into a
+  grilling session.
+- Separate facts from decisions. Research discoverable facts before asking. Put
+  every admitted material decision to the user and wait for the answer.
+- Do not answer a material decision on the user's behalf merely because a
+  plausible recommendation exists. Only a non-material, low-risk, reversible
+  implementation detail may become an explicit `assumption`.
+- Grill decisions, not generic themes. Every question must pass the admission
+  gate below.
+- Do not edit files, launch jobs, or implement while the grilling gate is
+  active. After release, downstream workflows follow the original request's
+  authorization.
+
+## Question Admission
+
+Ask only when all of these are true:
+
+- The answer is neither already locked nor a fact discoverable from available
+  evidence.
+- It would materially change goal, scope, behavior, safety, cost, architecture,
+  environment, output, or acceptance.
+- It is needed before the current planning boundary and cannot be deferred.
+- The item cannot be represented as a non-material, low-risk, reversible
+  implementation assumption without changing the requested outcome.
+- You can state why the decision matters now, a recommended default, and its
+  material tradeoff.
+
+If a candidate fails this gate, inspect the evidence, record an explicit
+assumption, defer it, or omit it instead of questioning the user.
 
 ## Workflow
 
-- Start by stating the current hypothesis about what the user wants and the first theme to grill.
-- If a question can be answered from local files, code, config, or existing context, inspect that evidence before asking.
-- Walk down the design tree, resolving dependencies between decisions theme by theme.
-- Read `references/answer-discipline.md` whenever the user's answer is vague, skips a key decision, lacks acceptance criteria, ignores constraints, avoids tradeoffs, contradicts evidence, or cannot be verified.
-- Use critical one-by-one pacing for gate questions: ask one key question, wait for the answer, judge whether it is lockable, and only then move on.
-- Use compact groups only for low-risk enumeration questions where ambiguity will not block goal, scope, constraints, acceptance, safety, or implementation direction.
-- For each question, include a recommended answer or default assumption and the tradeoff it implies.
-- After the user answers, decide whether the answer is lockable. If it is not lockable, run the invalid-answer loop instead of smoothing over the gap.
-- Keep grilling until goal, scope, non-goals, acceptance criteria, key decisions, risks, and remaining open questions are explicit enough to hand to a planner.
+1. State the current hypothesis and build or reuse a decision state using
+   `open`, `blocking`, `locked`, `assumption`, and `deferred`.
+2. Order unresolved decisions by dependency and select the highest blocking one.
+3. Ask one blocking question with the reason it matters, the minimum lockable
+   answer, and a recommended default or 2-3 real options with tradeoffs. Wait for
+   the answer before asking anything else.
+4. Judge the answer against the exact decision. Lock it, record a safe default,
+   defer it, or run the invalid-answer loop.
+5. Update the decision state and repeat until no blocking item remains.
 
-## Invalid-Answer Loop
+Ask exactly one admitted decision per turn. Do not set a numeric question limit.
+Continue while admitted blocking decisions remain, and stop when every blocker
+is locked or removed from the current scope, or when the user asks to stop. The
+admission gate controls question quality; the question count does not define
+completion.
 
-When an answer is still too vague to use:
+If the user stops early, summarize `locked`, `assumption`, `deferred`, and
+remaining `blocking` items without presenting the requirements as fully locked.
 
-1. State that the answer is not yet lockable.
-2. Name the exact failure: missing decision, missing acceptance criterion, missing constraint, missing tradeoff, unsupported assumption, scope drift, unverifiable wording, or contradiction with evidence.
-3. Re-ask the same critical question in a narrower form.
-4. Provide 2-3 concrete answer options or one recommended default with its tradeoff.
-5. Continue the loop until the answer is lockable or mark it as a blocking open question.
+## Answer Discipline
 
-Do not turn "都可以", "看情况", "先这样", "应该差不多", "后面再说", or similar answers into decisions. Either force a choice, define the default, or record the item as blocking.
+A lockable answer resolves the current decision through an explicit choice,
+default, measurable acceptance criterion, bounded scope, concrete constraint, or
+evidence path. A blocking open question is a valid state, not a locked answer.
 
-## Hard Gate
+When an answer is not lockable, read
+`references/answer-discipline.md`, name the exact failure, and re-ask the same
+decision more narrowly. Do not move to a new theme or smooth over the gap.
 
-Do not output an implementation plan, execution checklist, or "ready to implement" summary while a critical requirement remains unresolved.
+## Composition With Personal Brainstorms
 
-If blocked, stop with:
+When both skills are invoked, accept the scope, evidence, alternatives, and
+shared decision state from `personal-brainstorms`. Do not restart discovery or
+repeat locked decisions.
 
-- The unresolved critical question.
-- Why the current answer is insufficient.
-- The minimum answer needed to proceed.
-- The recommended default, if one exists, and the risk of accepting it.
+Grilling owns question admission, answer lockability, and the blocking gate.
+Brainstorming owns alternatives, component boundaries, and design synthesis.
+When the gate is released, return the updated decision state to brainstorming in
+the same turn.
 
-## Language
+## Gate And Handoff
 
-- Use Chinese by default for all user-facing grilling questions, follow-ups, summaries, recommendations, and locked requirements briefs.
-- Keep exact commands, file paths, API names, type names, metrics, and established domain terms in English or code style when that is clearer.
-- If the user explicitly asks for another language or format, follow that request for the current grilling session.
+While any `blocking` item remains:
 
-## Question Standards
+- Do not produce an implementation plan, execution checklist, or ready claim.
+- Continue with the next admitted question, or stop with:
+  `阻断问题`, `阻断原因`, `最低所需答案`, `推荐默认`, and
+  `擅自假设的风险`.
 
-- Be rigorous, not theatrical: press on vague words, missing users, hidden constraints, data safety, cost, reversibility, verification, and failure modes.
-- Use a firm direct tone when an answer is insufficient: direct, specific, and unsentimental, without humiliation, exaggeration, or performative aggression.
-- Do not force all questions into one-question-at-a-time pacing. Use one-by-one pacing for critical gates and compact question groups only for low-risk enumeration.
-- Do not ask discoverable facts. Use local inspection for repository shape, commands, nearby docs, schemas, types, or existing behavior when relevant.
-- Do not broaden into unrelated design work. Every question should change requirements, scope, risk, acceptance, or a major tradeoff.
-- Push back when the user's draft goal is over-scoped, under-specified, unsafe, or inconsistent with evidence.
-- Require lockable answers: explicit choice, explicit default, measurable acceptance criterion, bounded scope, named non-goal, evidence path, or blocking open question.
+When no `blocking` item remains, produce the Chinese requirements brief below.
+Release the grilling gate only when one of these is also true:
 
-## Stop Point
+- The user confirms that the shared understanding is complete.
+- The invoking request explicitly preauthorizes planning or implementation once
+  every blocker is locked.
 
-End with a locked requirements brief and stop. Use this structure:
+The second condition avoids asking for redundant confirmation after the user
+already requested grilling followed by planning in the same turn. If neither
+condition is satisfied, ask the user to confirm the brief and stop.
 
-- **Goal**
-- **Scope**
-- **Non-goals**
-- **Acceptance Criteria**
-- **Key Decisions**
-- **Risks**
-- **Remaining Open Questions**
+After release:
 
-If the brief still contains material open questions, say what decision or evidence is needed next instead of smoothing over the gap.
+- When paired with `personal-brainstorms`, return the shared decision state for
+  design synthesis and its authorized handoff.
+- Otherwise, enter the appropriate planning workflow when the original request
+  authorized planning or implementation.
+- If no downstream work was requested, stop after the brief.
+- Grilling itself does not edit, launch, or implement; the downstream workflow
+  applies the original authorization boundary.
 
-If a material open question blocks planning, label it as blocking and do not present a plan.
+## Chinese Requirements Brief
+
+Use these headings by default:
+
+- **目标**
+- **范围**
+- **非目标**
+- **验收标准**
+- **关键决定**
+- **默认与假设**
+- **风险与回退**
+- **未决问题**
+
+Label every remaining item `blocking`, `non-blocking`, or `deferred`. Do not call
+the brief locked while a blocking item remains. Follow an explicitly requested
+language or format for the current session.
+
+## Resources
+
+Read `references/answer-discipline.md` only after an answer fails lockability or
+when the precise failure taxonomy or blocking format is needed. Read
+`references/source-notes.md` only when auditing provenance or refreshing this
+skill from upstream.

@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Risk Verification"
-  short_description: "Scale verification to change risk"
-  default_prompt: "Use $personal-risk-verification before claiming local changes are complete."
+  short_description: "Gate completion claims on fresh local evidence"
+  default_prompt: "Use $personal-risk-verification as the final local completion gate: map each scoped claim to fresh evidence after its last relevant change, inspect exit status and the final diff, and report any unmet or unrun checks."

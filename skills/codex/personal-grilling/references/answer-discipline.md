@@ -4,18 +4,25 @@ Use this reference when a grilling answer is too vague, evasive, broad, optimist
 
 ## Operating Rule
 
-Do not convert ambiguity into a decision. A lockable answer must contain at least one of:
+A decision is lockable only when the answer resolves the exact question with
+one or more relevant elements:
 
 - an explicit choice
 - an explicit default
 - a measurable acceptance criterion
 - a bounded scope or named non-goal
 - a concrete constraint
-- a named tradeoff
+- an acknowledged tradeoff
 - an evidence path or verification method
-- a blocking open question
 
-When the answer is not lockable, say so directly, name the failure, and re-ask the narrowest version of the same question.
+A `blocking` open question is not a lockable answer. It is a valid decision
+state that prevents planning until resolved or explicitly removed from the
+current scope.
+
+Before treating evidence as missing, inspect any source, path, command, test,
+metric, or existing behavior that is cheaply discoverable. Ask the user only
+when the required evidence or authority cannot be obtained within the current
+scope.
 
 ## Failure Types
 
@@ -93,11 +100,15 @@ Detect terms like "更好", "更优雅", "更稳定", "足够", "简单一点", 
 
 ### Risk Not Acknowledged
 
-Detect when the answer chooses an option but does not acknowledge the obvious downside, reversibility, failure mode, or mitigation.
+Detect when a chosen option has an obvious downside, reversibility limit,
+failure mode, or mitigation that is absent from the decision state.
 
-- Point out: "这个选择可以成立，但风险没有被确认。"
-- Re-ask: "你接受的主要风险是什么？失败时怎么回退或止损？"
-- Block when: the risk affects data safety, cost, long-running jobs, user-visible behavior, credentials, or irreversible changes.
+- Record and state a risk that follows directly from available evidence.
+- Ask the user to accept or choose around the risk only when that acceptance
+  materially changes whether the plan is safe or in scope.
+- Re-ask: "这个选择的主要风险是 X。你要接受它、改选 Y，还是把该项移出本轮范围？"
+- Block when: proceeding requires explicit acceptance of an irreversible,
+  safety-critical, high-cost, or otherwise non-defaultable consequence.
 
 ## Blocking Open Questions
 
@@ -121,12 +132,14 @@ Risk if assumed: <risk>
 
 ## Non-Blocking Defaults
 
-Use a recommended default only when:
+Record an `assumption` without another question only when:
 
 - the default is reversible
 - the blast radius is small
-- the user has already expressed a compatible preference
-- the default is stated explicitly in the locked brief
-- the risk is recorded
+- it matches the user's stated preferences and current evidence
+- it does not change a material acceptance criterion
+- its consequence can be recorded clearly in the requirements brief
 
-Even then, do not silently assume. Say: "我建议默认 X，因为 Y；代价是 Z。"
+State consequential defaults and their tradeoffs, but do not ask for
+confirmation merely to demonstrate grilling. If any condition above is false,
+return the item to question admission and mark it `blocking` when necessary.

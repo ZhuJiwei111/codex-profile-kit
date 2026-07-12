@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Code Documentation"
+  short_description: "Explain code and create evidence-based technical docs"
+  default_prompt: "Use $personal-code-documentation to explain this codebase or create the requested technical documentation for a defined audience and artifact, using verified evidence and only useful visuals."

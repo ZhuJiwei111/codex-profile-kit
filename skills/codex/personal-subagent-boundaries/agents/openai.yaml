@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Subagent Boundaries"
-  short_description: "Safe bounded delegation for agents"
-  default_prompt: "Use $personal-subagent-boundaries when delegating work to subagents."
+  short_description: "Bounded delegation and worker contracts"
+  default_prompt: "Use $personal-subagent-boundaries to decide whether to delegate, select an execution profile, define exclusive worker boundaries, and intake evidence without granting final authority."

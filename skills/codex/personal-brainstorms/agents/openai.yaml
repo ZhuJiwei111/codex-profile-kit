@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Brainstorms"
-  short_description: "Clarify scope, concerns, and tradeoffs"
-  default_prompt: "Use $personal-brainstorms to discuss concerns, clarify scope, and reason through tradeoffs before implementing unclear or high-risk work."
+  short_description: "Shape consequential work into a bounded design"
+  default_prompt: "Use $personal-brainstorms to clarify consequential choices, compare viable approaches, and shape a bounded design before implementation."

@@ -6,25 +6,14 @@ action: warn
 conditions:
   - field: command
     operator: regex_match
-    pattern: (?i)(^|[\s;&|()])(torchrun|deepspeed|accelerate\s+launch|python3?\s+[^;\n]*\b(train|finetune|fine_tune|pretrain|eval|evaluate|inference|run_experiment|experiment)[^;\n]*\.py|bash\s+[^;\n]*(train|run|eval|experiment)[^;\n]*\.sh)(\s|$)
+    pattern: (?i)(^|[\s;&|()])(?:torchrun|deepspeed|accelerate\s+launch|python3?\s+[^;\n]*\b(?:train|finetune|fine_tune|pretrain|eval|evaluate|inference|run_experiment|experiment)[A-Za-z0-9_.-]*\.py|bash\s+[^;\n]*(?:train|run|eval|experiment)[^;\n]*\.sh)\b
   - field: command
-    operator: not_contains
-    pattern: tmux
+    operator: regex_not_match
+    pattern: (?i)(^|[\s;&|()])(?:tmux|nohup|screen|systemd-run|setsid)(?:\s|$)
   - field: command
-    operator: not_contains
-    pattern: nohup
+    operator: regex_not_match
+    pattern: (?i)(?:--help|-h|--version|--dry-run)(?:\s|$)
 ---
 
-Command looks like a job that may run longer than 10 minutes.
-
-For long-running jobs, default to a detached launcher instead of keeping the job
-attached to a Codex tool session. Prefer `tmux` when reattachment or interaction
-matters, and `nohup` for simple one-command runs. Include explicit log/output
-paths, expected artifacts, and hand off the session or process id.
-
-After detached launch, the main process may run a read-only startup guard by
-default, but it must be capped at 10 minutes and limited to launch validation.
-If the startup guard finds immediate failure, missing launch evidence, no first
-progress signal after warmup, resource errors, or unexplained GPU abnormalities,
-report the anomaly instead of extending the guard. Long-term monitoring requires
-current-stage user authorization and an inline monitoring contract.
+This command may be a long job launched in the foreground. If it is expected to
+exceed 10 minutes, use detached execution and only a bounded startup guard.

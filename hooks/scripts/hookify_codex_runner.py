@@ -1,29 +1,70 @@
 #!/usr/bin/env python3
-"""Run Hookify-style markdown rules as Codex native hooks.
+"""Apply controlled global Markdown rules to Codex PreToolUse payloads.
 
-Rule locations:
-- Global: ~/.codex/hookify/*.md
-- Project: .codex/hookify*.md and .codex/hookify/*.md
-
-Supported frontmatter fields:
-- name, enabled, event, action, pattern
-- conditions: list of {field, operator, pattern}
+The adapter intentionally loads only ``~/.codex/hookify/*.md``. Repository
+hooks must use Codex native project discovery and trust through
+``<repo>/.codex/hooks.json`` or ``<repo>/.codex/config.toml``.
 """
 
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import json
-import os
 from pathlib import Path
 import re
 import sys
 from typing import Any
 
 
-FILE_TOOLS = {"Edit", "Write", "MultiEdit", "apply_patch", "functions.apply_patch"}
-BASH_TOOLS = {"Bash", "bash", "exec_command", "functions.exec_command"}
+RULE_DIR = Path.home() / ".codex" / "hookify"
 PATCH_FILE_RE = re.compile(r"^\*\*\* (?:Add|Update|Delete) File: (.+)$", re.MULTILINE)
+SUPPORTED_EVENTS = {"bash", "file"}
+SUPPORTED_ACTIONS = {"warn", "block"}
+SUPPORTED_OPERATORS = {
+    "contains",
+    "ends_with",
+    "equals",
+    "not_contains",
+    "regex_match",
+    "regex_not_match",
+    "starts_with",
+}
+SUPPORTED_FIELDS = {
+    "all",
+    "command",
+    "content",
+    "file_path",
+    "new_text",
+    "old_text",
+    "patch",
+    "tool_name",
+}
+SUPPORTED_META = {"action", "conditions", "enabled", "event", "name", "pattern"}
+RULE_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+class RuleError(ValueError):
+    """Raised when a Markdown rule is malformed."""
+
+
+@dataclass(frozen=True)
+class Condition:
+    field: str
+    operator: str
+    pattern: str
+    regex: re.Pattern[str] | None = None
+
+
+@dataclass(frozen=True)
+class Rule:
+    name: str
+    event: str
+    action: str
+    body: str
+    pattern: re.Pattern[str] | None
+    conditions: tuple[Condition, ...]
+    path: Path
 
 
 def parse_scalar(value: str) -> Any:
@@ -41,19 +82,18 @@ def parse_scalar(value: str) -> Any:
 
 def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     if not text.startswith("---\n"):
-        return {}, text
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return {}, text
-    raw_meta = parts[1].strip("\n")
-    body = parts[2].lstrip("\n")
+        raise RuleError("missing opening YAML frontmatter delimiter")
+    closing = text.find("\n---", 4)
+    if closing < 0:
+        raise RuleError("missing closing YAML frontmatter delimiter")
+    raw_meta = text[4:closing]
+    body = text[closing + 4 :].lstrip("\n")
     meta: dict[str, Any] = {}
     current_condition: dict[str, Any] | None = None
     in_conditions = False
 
     for raw_line in raw_meta.splitlines():
-        line = raw_line.rstrip()
-        stripped = line.strip()
+        stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
             continue
         if stripped == "conditions:":
@@ -63,245 +103,290 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
             continue
         if in_conditions and stripped.startswith("- "):
             current_condition = {}
-            meta.setdefault("conditions", []).append(current_condition)
+            meta["conditions"].append(current_condition)
             rest = stripped[2:].strip()
-            if ":" in rest:
+            if rest:
+                if ":" not in rest:
+                    raise RuleError(f"invalid condition line: {stripped}")
                 key, value = rest.split(":", 1)
                 current_condition[key.strip()] = parse_scalar(value)
             continue
-        if in_conditions and raw_line.startswith(" ") and current_condition is not None:
-            if ":" in stripped:
-                key, value = stripped.split(":", 1)
-                current_condition[key.strip()] = parse_scalar(value)
+        if in_conditions and raw_line[:1].isspace() and current_condition is not None:
+            if ":" not in stripped:
+                raise RuleError(f"invalid condition field: {stripped}")
+            key, value = stripped.split(":", 1)
+            current_condition[key.strip()] = parse_scalar(value)
             continue
         in_conditions = False
         current_condition = None
-        if ":" in stripped:
-            key, value = stripped.split(":", 1)
-            meta[key.strip()] = parse_scalar(value)
+        if ":" not in stripped:
+            raise RuleError(f"invalid frontmatter line: {stripped}")
+        key, value = stripped.split(":", 1)
+        meta[key.strip()] = parse_scalar(value)
     return meta, body
 
 
-def rule_files(cwd: Path) -> list[Path]:
-    candidates: list[Path] = []
-    location_patterns = [
-        (Path.home() / ".codex" / "hookify", ("*.md",)),
-        (cwd / ".codex", ("hookify*.md", "*.local.md")),
-        (cwd / ".codex" / "hookify", ("*.md",)),
-    ]
-    for location, patterns in location_patterns:
-        if not location.is_dir():
+def compile_regex(pattern: str) -> re.Pattern[str]:
+    return re.compile(pattern, flags=re.MULTILINE)
+
+
+def compile_rule(path: Path) -> Rule | None:
+    meta, body = parse_frontmatter(path.read_text(encoding="utf-8"))
+    unknown = sorted(set(meta) - SUPPORTED_META)
+    if unknown:
+        raise RuleError(f"unsupported frontmatter field(s): {', '.join(unknown)}")
+
+    enabled = meta.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise RuleError("enabled must be true or false")
+    if not enabled:
+        return None
+
+    name = meta.get("name")
+    if not isinstance(name, str) or not RULE_NAME_RE.fullmatch(name):
+        raise RuleError("name must be non-empty kebab-case")
+    event = meta.get("event")
+    if event not in SUPPORTED_EVENTS:
+        raise RuleError("event must be bash or file")
+    action = meta.get("action", "warn")
+    if action not in SUPPORTED_ACTIONS:
+        raise RuleError("action must be warn or block")
+    body = body.strip()
+    if not body:
+        raise RuleError("message body must not be empty")
+
+    raw_pattern = meta.get("pattern")
+    raw_conditions = meta.get("conditions")
+    if raw_pattern is not None and raw_conditions:
+        raise RuleError("use pattern or conditions, not both")
+    if raw_pattern is None and not raw_conditions:
+        raise RuleError("rule requires pattern or conditions")
+
+    pattern: re.Pattern[str] | None = None
+    conditions: list[Condition] = []
+    if raw_pattern is not None:
+        if not isinstance(raw_pattern, str) or not raw_pattern:
+            raise RuleError("pattern must be a non-empty string")
+        pattern = compile_regex(raw_pattern)
+    else:
+        if not isinstance(raw_conditions, list):
+            raise RuleError("conditions must be a list")
+        for index, raw in enumerate(raw_conditions):
+            if not isinstance(raw, dict):
+                raise RuleError(f"condition {index + 1} must be a mapping")
+            unknown_condition = sorted(set(raw) - {"field", "operator", "pattern"})
+            if unknown_condition:
+                raise RuleError(
+                    f"condition {index + 1} has unsupported field(s): "
+                    + ", ".join(unknown_condition)
+                )
+            field = raw.get("field")
+            operator = raw.get("operator", "regex_match")
+            condition_pattern = raw.get("pattern")
+            if field not in SUPPORTED_FIELDS:
+                raise RuleError(f"condition {index + 1} uses unsupported field: {field}")
+            if operator not in SUPPORTED_OPERATORS:
+                raise RuleError(
+                    f"condition {index + 1} uses unsupported operator: {operator}"
+                )
+            if not isinstance(condition_pattern, str):
+                raise RuleError(f"condition {index + 1} pattern must be a string")
+            regex = None
+            if operator in {"regex_match", "regex_not_match"}:
+                regex = compile_regex(condition_pattern)
+            conditions.append(
+                Condition(
+                    field=str(field),
+                    operator=str(operator),
+                    pattern=condition_pattern,
+                    regex=regex,
+                )
+            )
+
+    return Rule(
+        name=name,
+        event=event,
+        action=action,
+        body=body,
+        pattern=pattern,
+        conditions=tuple(conditions),
+        path=path,
+    )
+
+
+def load_rules() -> tuple[list[Rule], list[str]]:
+    rules: list[Rule] = []
+    diagnostics: list[str] = []
+    names: set[str] = set()
+    if not RULE_DIR.is_dir():
+        return rules, diagnostics
+
+    for path in sorted(RULE_DIR.glob("*.md")):
+        if path.name.casefold() == "readme.md":
             continue
-        for pattern in patterns:
-            candidates.extend(sorted(location.glob(pattern)))
-    seen: set[Path] = set()
-    unique: list[Path] = []
-    for path in candidates:
-        resolved = path.resolve()
-        if resolved not in seen and path.is_file():
-            seen.add(resolved)
-            unique.append(path)
-    return unique
+        try:
+            rule = compile_rule(path)
+            if rule is None:
+                continue
+            if rule.name in names:
+                raise RuleError(f"duplicate enabled rule name: {rule.name}")
+            names.add(rule.name)
+            rules.append(rule)
+        except (OSError, RuleError, re.error) as exc:
+            diagnostics.append(f"{path}: {exc}")
+    return rules, diagnostics
 
 
 def load_event() -> dict[str, Any]:
     try:
-        payload = json.load(sys.stdin)
-    except json.JSONDecodeError:
+        value = json.load(sys.stdin)
+    except json.JSONDecodeError as exc:
+        print(f"[codex-hook-rules] invalid input JSON: {exc}", file=sys.stderr)
         return {}
-    return payload if isinstance(payload, dict) else {}
+    if not isinstance(value, dict):
+        print("[codex-hook-rules] input must be a JSON object", file=sys.stderr)
+        return {}
+    return value
 
 
-def tool_name(event: dict[str, Any]) -> str:
-    value = event.get("tool_name") or event.get("tool") or event.get("name")
-    if isinstance(value, str):
-        return value
-    tool_input = event.get("tool_input")
-    if isinstance(tool_input, dict):
-        value = tool_input.get("tool_name") or tool_input.get("name")
-        if isinstance(value, str):
-            return value
+def event_kind(event: dict[str, Any]) -> str:
+    tool_name = event.get("tool_name")
+    if tool_name == "Bash":
+        return "bash"
+    if tool_name == "apply_patch":
+        return "file"
     return ""
 
 
-def tool_input_text(event: dict[str, Any]) -> tuple[dict[str, Any], str]:
-    tool_input = event.get("tool_input") or {}
-    if isinstance(tool_input, str):
-        return {"content": tool_input, "patch": tool_input}, tool_input
-    if isinstance(tool_input, dict):
-        return tool_input, json.dumps(tool_input, ensure_ascii=False)
-    return {}, ""
+def command_text(event: dict[str, Any]) -> str | None:
+    tool_input = event.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return None
+    value = tool_input.get("command")
+    return value if isinstance(value, str) else None
 
 
 def patch_file_paths(text: str) -> list[str]:
     return [match.strip() for match in PATCH_FILE_RE.findall(text) if match.strip()]
 
 
-def field_map(event: dict[str, Any]) -> dict[str, str]:
-    tool_input, serialized = tool_input_text(event)
-    file_path_values: list[str] = []
-    if isinstance(tool_input, dict):
-        for key in ("file_path", "path", "filename"):
-            value = tool_input.get(key)
-            if isinstance(value, str) and value:
-                file_path_values.append(value)
-        patch_text = tool_input.get("patch") or tool_input.get("content") or ""
-        if isinstance(patch_text, str):
-            file_path_values.extend(patch_file_paths(patch_text))
-    prompt = (
-        event.get("user_prompt")
-        or event.get("prompt")
-        or event.get("message")
-        or tool_input.get("user_prompt")
-        or ""
-    )
-    command = tool_input.get("command") or tool_input.get("cmd") or ""
-    content = (
-        tool_input.get("content")
-        or tool_input.get("patch")
-        or tool_input.get("new_text")
-        or tool_input.get("text")
-        or serialized
-    )
+def field_map(event: dict[str, Any], kind: str, text: str) -> dict[str, str]:
+    paths = patch_file_paths(text) if kind == "file" else []
     return {
-        "command": str(command),
-        "file_path": "\n".join(file_path_values),
-        "new_text": str(tool_input.get("new_text") or tool_input.get("content") or ""),
-        "old_text": str(tool_input.get("old_text") or ""),
-        "content": str(content),
-        "patch": str(tool_input.get("patch") or content),
-        "user_prompt": str(prompt),
-        "tool_name": tool_name(event),
-        "all": "\n".join(str(v) for v in tool_input.values())
-        if isinstance(tool_input, dict)
-        else serialized,
+        "all": text,
+        "command": text if kind == "bash" else "",
+        "content": text,
+        "file_path": "\n".join(paths),
+        "new_text": text if kind == "file" else "",
+        "old_text": "",
+        "patch": text if kind == "file" else "",
+        "tool_name": str(event.get("tool_name") or ""),
     }
 
 
-def applies_to_event(rule_event: str, codex_event: str, event: dict[str, Any]) -> bool:
-    wanted = rule_event.lower()
-    if wanted == "all":
-        return True
-    actual = codex_event.lower()
-    name = tool_name(event)
-    fields = field_map(event)
-    if wanted == "bash":
-        return actual in {"pretooluse", "posttooluse"} and (
-            name in BASH_TOOLS or bool(fields["command"])
-        )
-    if wanted == "file":
-        return actual in {"pretooluse", "posttooluse"} and (
-            name in FILE_TOOLS or bool(fields["file_path"]) or bool(fields["patch"])
-        )
-    if wanted == "prompt":
-        return actual == "userpromptsubmit"
-    if wanted == "stop":
-        return actual == "stop"
-    return wanted == actual
-
-
-def operator_matches(value: str, operator: str, pattern: str) -> bool:
-    if operator == "regex_match":
-        return re.search(pattern, value, flags=re.MULTILINE) is not None
-    if operator == "contains":
-        return pattern in value
-    if operator == "equals":
-        return value == pattern
-    if operator == "not_contains":
-        return pattern not in value
-    if operator == "starts_with":
-        return value.startswith(pattern)
-    if operator == "ends_with":
-        return value.endswith(pattern)
+def condition_matches(condition: Condition, value: str) -> bool:
+    if condition.operator == "regex_match":
+        assert condition.regex is not None
+        return condition.regex.search(value) is not None
+    if condition.operator == "regex_not_match":
+        assert condition.regex is not None
+        return condition.regex.search(value) is None
+    if condition.operator == "contains":
+        return condition.pattern in value
+    if condition.operator == "not_contains":
+        return condition.pattern not in value
+    if condition.operator == "equals":
+        return value == condition.pattern
+    if condition.operator == "starts_with":
+        return value.startswith(condition.pattern)
+    if condition.operator == "ends_with":
+        return value.endswith(condition.pattern)
     return False
 
 
-def rule_matches(meta: dict[str, Any], codex_event: str, event: dict[str, Any]) -> bool:
-    if meta.get("enabled", True) is False:
+def rule_matches(rule: Rule, kind: str, fields: dict[str, str]) -> bool:
+    if rule.event != kind:
         return False
-    if not applies_to_event(str(meta.get("event", "all")), codex_event, event):
-        return False
-    fields = field_map(event)
-    conditions = meta.get("conditions")
-    if isinstance(conditions, list) and conditions:
-        for condition in conditions:
-            if not isinstance(condition, dict):
-                return False
-            field = str(condition.get("field", "all"))
-            operator = str(condition.get("operator", "regex_match"))
-            pattern = str(condition.get("pattern", ""))
-            if not operator_matches(fields.get(field, ""), operator, pattern):
-                return False
-        return True
-    pattern = meta.get("pattern")
-    if pattern is None:
-        return False
-    rule_event = str(meta.get("event", "all")).lower()
-    target_field = {
-        "bash": "command",
-        "file": "all",
-        "prompt": "user_prompt",
-        "stop": "all",
-    }.get(rule_event, "all")
-    return re.search(str(pattern), fields.get(target_field, ""), flags=re.MULTILINE) is not None
+    if rule.pattern is not None:
+        target = fields["command"] if kind == "bash" else fields["all"]
+        return rule.pattern.search(target) is not None
+    return all(
+        condition_matches(condition, fields.get(condition.field, ""))
+        for condition in rule.conditions
+    )
 
 
-def emit_block(codex_event: str, message: str) -> None:
-    if codex_event == "PreToolUse":
-        print(
-            json.dumps(
-                {
-                    "hookSpecificOutput": {
-                        "hookEventName": "PreToolUse",
-                        "permissionDecision": "deny",
-                        "permissionDecisionReason": message,
-                    }
-                },
-                ensure_ascii=False,
-            )
+def rule_message(rule: Rule) -> str:
+    return f"[codex-hook-rule:{rule.name}]\n{rule.body}"
+
+
+def emit_invalid_payload(tool_name: str) -> None:
+    print(
+        json.dumps(
+            {
+                "systemMessage": (
+                    "Codex hook rules skipped an unsupported "
+                    f"{tool_name} payload: expected tool_input.command to be a string."
+                )
+            },
+            ensure_ascii=False,
         )
+    )
+
+
+def emit_matches(blocks: list[str], warnings: list[str]) -> None:
+    if blocks:
+        value = {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": "\n\n".join(blocks),
+            }
+        }
+    elif warnings:
+        value = {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "additionalContext": "\n\n".join(warnings),
+            }
+        }
     else:
-        print(message)
+        return
+    print(json.dumps(value, ensure_ascii=False))
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--event", required=True)
     args = parser.parse_args()
-
-    event = load_event()
-    cwd_text = event.get("cwd") or event.get("workdir") or os.getcwd()
-    cwd = Path(str(cwd_text)).expanduser()
-    matched: list[tuple[dict[str, Any], str, Path]] = []
-
-    for path in rule_files(cwd):
-        try:
-            meta, body = parse_frontmatter(path.read_text(encoding="utf-8"))
-        except OSError:
-            continue
-        try:
-            if rule_matches(meta, args.event, event):
-                matched.append((meta, body.strip(), path))
-        except re.error as exc:
-            print(f"[hookify-codex] Invalid regex in {path}: {exc}")
-
-    if not matched:
+    if args.event != "PreToolUse":
         return 0
 
-    blocks = []
-    warnings = []
-    for meta, body, path in matched:
-        label = meta.get("name") or path.name
-        message = f"[hookify-codex:{label}]\n{body}".strip()
-        if str(meta.get("action", "warn")).lower() == "block":
+    event = load_event()
+    kind = event_kind(event)
+    if not kind:
+        return 0
+    text = command_text(event)
+    if text is None:
+        emit_invalid_payload(str(event.get("tool_name") or "unknown"))
+        return 0
+
+    rules, diagnostics = load_rules()
+    for diagnostic in diagnostics:
+        print(f"[codex-hook-rules] {diagnostic}", file=sys.stderr)
+
+    fields = field_map(event, kind, text)
+    blocks: list[str] = []
+    warnings: list[str] = []
+    for rule in rules:
+        if not rule_matches(rule, kind, fields):
+            continue
+        message = rule_message(rule)
+        if rule.action == "block":
             blocks.append(message)
         else:
             warnings.append(message)
-
-    if blocks:
-        emit_block(args.event, "\n\n".join(blocks))
-    elif warnings:
-        print("\n\n".join(warnings))
+    emit_matches(blocks, warnings)
     return 0
 
 

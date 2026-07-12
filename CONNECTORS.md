@@ -17,6 +17,16 @@ caches from the source machine.
 - Keep credentials out of `AGENTS.md`, skills, hooks, templates, and migration
   reports.
 
+## Portable MCP Servers
+
+- Review the public, secret-free MCP declarations in
+  `templates/config.toml.template` and merge only the servers intended for the
+  target host.
+- The template may carry a public endpoint identity and enabled state. Recreate
+  environment bindings or interactive authentication on the target machine;
+  never copy credential values, authenticated headers, or runtime auth state.
+- Verify each configured server with a low-risk capability or metadata read.
+
 ## Smoke Check
 
 Ask Codex to summarize available connector capabilities without printing secret

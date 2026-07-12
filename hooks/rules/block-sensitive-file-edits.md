@@ -6,11 +6,8 @@ action: block
 conditions:
   - field: file_path
     operator: regex_match
-    pattern: (?i)(^|/)(\.env(\.[^/]*)?|\.netrc|\.npmrc|\.pypirc|id_(rsa|dsa|ecdsa|ed25519)|.*\.(pem|key|p12|pfx)|cookies?\.txt|credentials?(\.(json|ya?ml|toml|ini))?|secrets?[/._-]|\.secrets/env|\.codex/(auth|auth\.json|credentials|tokens?|session|sessions)(/|$))
+    pattern: (?im)(^|/)(?:\.netrc|id_(?:rsa|dsa|ecdsa|ed25519)(?:\.[^/\n]+)?|[^/\n]*private[^/\n]*\.pem|[^/\n]+\.(?:key|p12|pfx)|\.secrets(?:/.*)?|\.codex/(?:auth(?:\.json)?|credentials|tokens?|sessions?|archived_sessions|history\.jsonl|session_index\.jsonl)(?:/.*)?)$
 ---
 
-Sensitive file edit detected.
-
-Do not write credentials, tokens, private keys, cookies, authenticated proxy
-URLs, or Codex auth/session files. Ask the user for explicit approval and use a
-narrow, redacted workflow before touching this file.
+Editing credential stores, Codex auth/session data, `.netrc`, or private-key
+material is blocked. Use a dedicated user-controlled credential workflow.

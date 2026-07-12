@@ -1,10 +1,15 @@
-model = "gpt-5.5"
-model_reasoning_effort = "xhigh"
 sandbox_mode = "workspace-write"
 personality = "friendly"
 service_tier = "default"
 
+[agents]
+max_depth = 1
+
 [plugins."github@openai-curated"]
+enabled = true
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
 enabled = true
 
 [features]

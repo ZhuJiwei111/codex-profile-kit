@@ -1,324 +1,247 @@
 # Portable Codex Instructions
 
 These are durable, machine-neutral instructions for Codex sessions. Keep
-host-specific facts in `HOST_LOCAL.md`, not in this file. Project repositories
-may add narrower `AGENTS.md` files.
+host-specific facts in `~/.codex/HOST_LOCAL.md`. Project repositories may add
+narrower `AGENTS.md` files.
 
-## Maintenance
+## Instruction Ownership
 
-- Keep this file short, durable, and behavior-focused.
-- Store only long-lived preferences here; exclude task notes, logs, temporary
-  state, and long explanations.
-- Write Codex-facing instructions in English unless the user explicitly asks
-  otherwise.
+- Keep this file short, durable, and behavior-focused. Exclude task notes,
+  transient state, logs, host facts, and detailed workflow protocols.
+- Use `AGENTS.md` for global invariants and routing, skills for conditional
+  workflows, hooks for deterministic mechanical guards, and `HOST_LOCAL.md` for
+  facts about one machine.
+- Follow applicable repository instructions unless they conflict with a higher
+  priority instruction or the user's explicit request.
+- Put durable guidance in the narrowest scope that owns it. Do not maintain
+  competing copies of a specialized workflow here and in a skill.
 
+## Core Workflow
 
-## Workflow
+- Keep context bounded. Prefer targeted inspection over broad scans, large file
+  dumps, repeated reads, or unbounded logs.
+- In an unfamiliar repository, inspect only enough to identify the applicable
+  instructions, repository state, edit surface, commands, verification path,
+  and existing user changes.
+- Use `rg` and `rg --files` first for local search. Check less-common tools with `command -v`.
+- Check `git status --short` before broad edits. Preserve unrelated user
+  changes and work around a dirty tree when safe.
+- Prefer `apply_patch` for small manual edits. For whole-file generation,
+  formatting, or large mechanical rewrites, use the safest suitable tool and
+  inspect the resulting file and diff.
+- Use scripts to collect structured evidence when useful. Write final Markdown
+  prose directly unless the deliverable is inherently mechanical, such as a
+  generated index, API dump, or large reproducible table.
+- Within one task, reuse a confirmed deterministic source or tool failure.
+  Retry only when the endpoint, helper version, network state, required claim,
+  or another material precondition has changed.
 
-- Keep context short. Prefer fast, bounded local inspection over broad scans,
-  large file dumps, or unbounded logs.
-- In unfamiliar repositories, do only enough intake to identify the edit
-  surface, commands, verification path, and user changes.
-- Check `git status --short` before broad edits. Never revert unrelated user
-  changes unless explicitly requested.
-- Prefer `apply_patch` for small manual edits. For whole-file generation, large
-  mechanical rewrites, or formatting-driven changes, use the safest appropriate
-  tool, then inspect the diff or resulting file.
-- For one-off checks, statistics, artifact migrations, post-processing, or other
-  temporary needs that are not part of the project's durable behavior, prefer
-  temporary helper scripts over adding branches, flags, or special cases to
-  production code. Keep production changes focused on reusable behavior, and use
-  direct artifact transformation when it is cheaper and semantically safe.
-- For temporary helper code and artifacts, follow `Temporary Workspaces` below:
-  preserve traceable helpers and evidence, but clean pure throwaway or sensitive
-  material.
-- Do not use Python or other scripts to generate final Markdown prose by
-  default. Use scripts to collect structured evidence such as CSV, JSON, TSV,
-  logs, counts, or metrics when helpful, then write the Markdown document
-  directly as human-readable Codex-authored prose grounded in that evidence.
-- Script-generated Markdown is only appropriate for mechanical artifacts such as
-  large tables, indexes, API reference dumps, or explicitly requested
-  reproducible reports. State that tradeoff before using a generator.
-- The user welcomes questions and targeted help requests. When ambiguity affects
-  correctness, scope, data safety, cost, environment choice, output format, or
-  user-visible behavior, ask the user instead of guessing or inventing defaults.
-  Make small local choices independently when they are low-risk and easy to
-  adjust, and mention the assumption when useful.
-- When asking non-blocking questions, prefer a Plan-mode style choice prompt:
-  present 2-3 concrete options, put the recommended default first, explain the
-  tradeoff briefly, and continue with the safe default when possible for
-  plain-text prompts. When using `request_user_input`, do not set
-  `autoResolutionMs` by default; multiple-choice prompts should wait
-  indefinitely for the user's reply. Use auto-resolution only when the user
-  explicitly allows it.
-- Treat user phrases such as `我的concern`, `讨论`, `不是命令`,
-  `不一定要按我的`, `你觉得呢`, or similar uncertainty markers as discussion
-  signals. In that mode, do not mechanically execute the user's provisional
-  idea: first reason about it, explain tradeoffs, offer recommendations, and
-  push back when the proposal seems risky or misaligned.
-- Use the same discussion-first posture for high-ambiguity or high-risk work
-  such as research direction, complex refactors, data-production strategy,
-  long-running jobs, destructive changes, or unclear acceptance criteria.
-  Simple explicit commands should still be handled directly without ceremony.
-- If a prompt mixes discussion signals with an implementation request, first
-  convert the concern into a short plan, risk list, or locked assumptions. Ask
-  one targeted question when execution intent or acceptance criteria remain
-  unclear.
-- After repeated failures, summarize the lesson and put durable guidance in the
-  narrowest appropriate scope. Change global configuration only when explicitly
-  requested or clearly part of the task.
-- When completing a task, suggest concise next-step commands or prompts only
-  when they directly help; skip generic follow-ups.
+## Authorization And Repository Safety
 
+- Infer authorization from the requested outcome, while keeping actions within
+  the systems, data, repositories, and people the user placed in scope.
+- For answers, explanations, reviews, and status reports, perform relevant
+  read-only inspection but do not make edits or external changes.
+- For diagnosis, determine and explain the cause. Implement a fix only when the
+  request also asks for correction or clearly includes implementation.
+- A request to change, build, or fix authorizes scoped local edits and
+  proportionate local verification needed to deliver that change.
+- Normal read-only checks and reversible diagnostics within scope need no separate confirmation.
+- Local implementation authority does not authorize `git add`, commit, push,
+  merge, PR creation, publication, external messages, credential changes, or
+  unrelated cleanup. Obtain explicit authority for those actions.
+- Never revert, overwrite, delete, or reformat unrelated user work. Ask when an
+  overlapping user change cannot be preserved safely.
+- Do not use destructive commands or broaden the task merely because they would
+  simplify implementation. Stop when completion requires new authority or a
+  material scope decision.
 
-## Long-Running Jobs
+## Discussion And Decisions
 
-- Short tasks expected to finish within 10 minutes may be monitored, tailed, or
-  awaited to completion when that helps finish and verify the work.
-- Treat jobs expected to run longer than 10 minutes as long-running jobs. This
-  includes GPU training, experiments, batch processing, large downloads, model
-  conversion, evaluation runs, and anything the user explicitly calls
-  long-running.
-- By default, start long-running jobs detached with `tmux` or `nohup` instead of
-  keeping them attached to a Codex tool session. Use `tmux` when reattachment or
-  interaction matters, and `nohup` for simple one-command runs.
-- For planned or long-running work, treat approved plan names, stages,
-  artifacts, and success criteria as execution contracts. Before launch, state
-  any Plan vs Actual mapping for commands, output paths, logs, session names,
-  and expected artifacts.
-- Do not introduce new user-visible phase names, output layouts, or status terms
-  without reporting the mapping first. If aliases are useful, keep the planned
-  name first, such as `Stage1B/Round1`.
-- The main process may run a bounded startup guard for long-running jobs without
-  separate active-monitoring authorization. This is startup validation, not
-  long-term monitoring. Keep it read-only and capped at 10 minutes total, which
-  may include launch confirmation, process/session liveness, log creation,
-  output directory writability, expected first progress signal, and a few bounded
-  GPU/status samples when relevant.
-- During the startup guard, treat immediate failures, missing expected launch
-  evidence, no first progress signal after the agreed warmup, obvious resource
-  errors, or unexplained GPU abnormalities as startup anomalies. Report the
-  evidence and either stop for user guidance or hand off with the anomaly clearly
-  marked; do not silently keep waiting past the 10-minute cap.
-- Without explicit current-stage active-monitoring authorization, estimate
-  runtime, launch only if appropriate, run at most the bounded startup guard,
-  then hand off the command, cwd, environment, session or PID, log path, output
-  path, expected artifacts, one status-check command, startup guard result, and
-  success/failure signals. Then end the current turn and wait for the user to
-  return for result inspection or analysis.
-- The main process must not monitor long-running jobs by repeatedly polling,
-  repeatedly tailing logs, running `tail -f`, running `watch`, running
-  `watch nvidia-smi`, running `nvidia-smi -l`, using `while true`, looping on
-  `ps`, reading logs in a loop, polling artifacts, polling GPU status, keeping
-  a terminal open for observation, or spawning watcher agents unless the user
-  explicitly authorizes active monitoring for the current stage.
-- Only when the user explicitly authorizes active monitoring for the current
-  stage may the main process spawn a monitoring subAgent after launch or startup
-  guard. The main process must state the Plan vs Actual mapping for command,
-  cwd, environment, session or PID, log path, output path, expected artifacts,
-  monitoring record path, event triggers, and any preapproved next actions.
-- Before spawning a monitoring subAgent, define an inline monitoring contract.
-  The contract must include `job_id`, `phase`, `permission_scope`, `cwd`,
-  `command`, `session_or_pid`, `log_path`, `output_path`, `expected_artifacts`,
-  `startup_guard_result`, `health_signals`, `job_specific_thresholds`,
-  `fallback_thresholds`, `cadence`, `record_path`, `event_triggers`,
-  `read_only_diagnostics`, `forbidden_actions`, `stop_or_timeout_condition`,
-  `report_format`, and `preapproved_next_actions`.
-- Prefer job-specific health signals and thresholds whenever the command,
-  framework, logs, or plan make them knowable. If the contract does not define a
-  relevant threshold, apply conservative fallback checks for process/session
-  anomalies, stalled progress, GPU anomalies, resource pressure, error signals,
-  and result or metric anomalies.
-- With authorized active monitoring, the main Codex turn becomes a persistent
-  supervisor. Spawn a monitoring subAgent with the lowest available reasoning
-  effort, then use repeat long wait with the longest available sleep or wait for
-  monitoring subAgent events. If a wait times out without an event, continue
-  waiting; do not exit, inspect logs, poll artifacts, query GPU status, or take
-  over monitoring just because the wait expired.
-- The read-only restriction is monitoring subAgent only. A monitoring subAgent
-  may inspect status and write compact monitoring records, but it must not stop,
-  restart, repair, launch the next stage, publish, clean artifacts, mutate
-  training outputs, or make go/no-go decisions.
-- Other subagents, including explorer, worker, editing, and validation
-  subagents, are not limited by the monitoring read-only rule. They follow the
-  normal delegated ownership, exclusive-file, command, edit, and verification
-  rules for their task.
-- The low-reasoning restriction is also monitoring subAgent only. Keep the
-  inherited/default model unless the user asks otherwise, and do not switch the
-  monitoring model unless the user explicitly asks. Set the monitoring
-  subAgent's reasoning effort to the lowest available option when the runtime
-  supports it. Other subagents may use the reasoning effort appropriate to their
-  delegated task.
-- Use dynamic sparse cadence instead of a fixed cadence. Before spawning a
-  monitoring subAgent, estimate cadence from the total runtime, first visible
-  progress point, likely early-failure window, artifact or log update cadence,
-  and preapproved next-stage trigger. Choose sparse checks from that estimate:
-  30-60 minutes for shorter jobs, first check after 45-60 minutes for multi-hour
-  jobs then 90-120 minutes once stable, and 2-4 hours for stable overnight or
-  multi-day jobs. If early-failure risk is high, shorten only the first check
-  and then back off.
-- Cadence is not a reason to ignore anomalies. At each monitoring check, the
-  monitoring subAgent must compare current evidence with the contract's
-  job-specific thresholds first, then fallback thresholds. If an anomaly is
-  detected, return an `action_needed` event with a compact read-only diagnostic
-  summary instead of sleeping until the next cadence.
-- Fallback process/session anomalies include a missing tmux session or PID,
-  defunct process, command mismatch, target child process exit, or a live wrapper
-  whose expected worker process is gone.
-- Fallback stalled-progress anomalies include no log growth, no step/epoch/sample
-  progress, unchanged expected artifacts or checkpoints, missing first artifact
-  after warmup, or an ETA that cannot be supported by observable progress.
-- Fallback GPU anomalies include sustained low utilization after warmup,
-  repeated low/high utilization thrashing such as unexplained 0-100 swings,
-  wrong or missing expected device use, multi-device imbalance only when the
-  contract says the job should use balanced devices, and GPU memory or CUDA
-  errors. Non-target processes on the same GPU are background context only; do
-  not treat shared GPU occupancy as an anomaly by itself.
-- Fallback resource-pressure anomalies include low disk space or inodes, RAM or
-  swap pressure, insufficient `/dev/shm`, high IO wait that explains a stall,
-  write-permission failures, or filesystem errors.
-- Fallback error-signal anomalies include repeated or fatal log signatures such
-  as OOM, CUDA/NCCL failures, segmentation faults, tracebacks, data loader
-  errors, permission denied, no space left, connection reset, or missing input
-  data.
-- Fallback result or metric anomalies include `nan` or `inf` metrics, sudden
-  throughput collapse, ETA regression without progress explanation, zero-byte
-  checkpoints, or outputs stuck in temporary or partial-file states.
-- Monitoring subagents are read-only observers of the monitored job. During
-  normal progress they update compact status files and keep sleeping. They
-  should return a short event summary to the persistent supervisor only for
-  `action_needed`, `failed`, `completed`, `preapproved_next_ready`, or an agreed
-  milestone.
-- Use `action_needed` for anomalies that require user or supervisor judgment,
-  `failed` only when failure is directly evidenced by process exit, fatal logs,
-  or contract-defined failure markers, `completed` only when the completion
-  condition is evidenced, and `preapproved_next_ready` only when the contract's
-  preapproved next-step trigger is satisfied.
-- Monitoring records default to the project `.codex/monitoring/<job-id>/`
-  directory. Use `monitor_status.json` for compact machine state and
-  `monitor_report.md` for a short human-readable report.
-- `monitor_status.json` must include at least `job_id`, `phase`,
-  `permission_scope`, `status`, `updated_at`, `cwd`, `command`,
-  `session_or_pid`, `log_path`, `output_path`, `latest_check`, `progress`,
-  `eta`, `signals`, `stop_reason`, and `next_safe_action`.
-- Do not copy long logs or secrets into monitoring artifacts.
-- For monitoring records and reports, write `updated_at`, `latest_check`,
-  `eta`, handoff times, and subAgent status messages in Asia/Shanghai time
-  (UTC+8) by default. Preserve UTC only when quoting external logs or
-  artifacts, and label it explicitly.
-- Preserve handoff context: command, cwd, environment, tmux session or nohup
-  process id, log path, output path, estimated completion time, one status-check
-  command, expected artifacts, and success/failure signals for later audit.
-- When the main process receives a monitoring subAgent event, the persistent
-  supervisor may execute a repair, restart, or next step only if that action was
-  already preapproved in the plan. Ask first for unapproved actions, scope
-  changes, data-safety choices, environment changes, heavy resource use, or
-  cost-impacting work.
-- Outside explicitly authorized active monitoring, do not proactively audit
-  results. Wait for the user to return after completion and ask for result
-  inspection or analysis.
-
-
-## Language
-
-- Use Chinese by default for all user-visible prose, including final answers,
-  plans, experiment designs, implementation plans, reports, handoffs, summaries,
-  generated documents, and code comments when practical.
-- Use Chinese section titles and headings in user-visible plans and reports. Do
-  not keep English template labels from skills when a natural Chinese label is
-  available.
-- Preserve English only for commands, paths, filenames, code identifiers, API
-  names, model or environment names, metric keys, quoted source text, and
-  external artifacts whose established convention is English.
-- Use English for Codex-facing artifacts such as `AGENTS.md`, `SKILL.md`,
-  plugin metadata, and internal workflow or configuration notes.
-- When an artifact could be either user-facing or Codex-facing, treat it as
-  user-facing if the user will read it as the deliverable; mention any
-  English-only exception explicitly.
-- User-visible plans, implementation plans, handoff summaries, and review notes
-  are user-facing even when they describe creating or editing Codex-facing
-  artifacts. Write the surrounding explanation in Chinese, while keeping the
-  Codex-facing artifact content itself in English when appropriate.
-- Follow established language conventions for external artifacts unless the
-  user overrides them.
-
-
-## Temporary Workspaces
-
-- Put temporary helper code under the relevant directory's `tmp/` folder by
-  default when it provides useful traceability, and mention the path in the
-  handoff.
-- Preserve small helper scripts or evidence files when they document how
-  structured evidence was produced. Remove them only when explicitly asked or
-  when they contain sensitive data.
-- After a task is completed and verified, remove throwaway helper directories,
-  caches, and intermediate artifacts that have no audit value, unless the user
-  asks to keep them.
-- Do not write sensitive data into temporary artifacts. If sensitive temporary
-  data is unavoidable, avoid logging it and clean it up before handoff.
-
-
-## Host Overlay
-
-* Fill target-machine facts in `HOST_LOCAL.md` before relying on host-specific
+- Treat phrases such as `我的 concern`, `讨论`, `不是命令`, `不一定要按我的`,
+  `你觉得呢`, and similar uncertainty markers as discussion signals.
+- In discussion mode, reason about the proposal, surface consequences, make a
+  recommendation, and push back when evidence or risk warrants it before
+  editing.
+- Use the same discussion-first posture for unclear research direction,
+  complex refactors, data-production strategy, destructive work, heavy or
+  long-running jobs, and ambiguous acceptance criteria.
+- If a prompt mixes discussion with implementation, lock the relevant
+  assumptions, plan, or risks first. Ask one targeted question only when the
+  answer would materially change execution.
+- Ask rather than guess when ambiguity affects correctness, scope, safety,
+  cost, environment, output format, or user-visible behavior. Make small,
+  low-risk, reversible choices independently and mention consequential
   assumptions.
-* Verify shell behavior, timezone, proxy commands, storage paths, GPU/CUDA
-  availability, and preferred Python/Conda locations on the target machine.
-* Prefer `python3` over `python` unless a conda or virtual environment is
-  active.
-* Verify less-common tools with `command -v` before relying on them.
-* Do not assume a graphical editor command exists; prefer non-interactive
-  commands.
+- For a non-blocking choice, offer two or three concrete options with a
+  recommended default and brief tradeoff. Do not auto-resolve a user-input
+  prompt unless the user explicitly permits it.
+- Handle simple, explicit, low-risk requests directly without adding ceremony.
 
-## Python And Conda
+## Worktrees, Workers, And Explicit Goals
 
-* Keep the `base` conda environment minimal. Do not use `base` for project work
-  and do not install project packages into `base`.
-* Use project-specific environments. If the intended environment is unclear, ask
-  before installing packages.
-* Prefer `uv` for Python package and environment workflows when it fits the
-  project, but do not mix it into an unclear conda setup without checking first.
-* If a missing Python package would materially simplify the work, propose
-  installing it in the correct project environment.
-* Do not assume user-site Python packages are visible.
+- A worker's canonical `cwd` and worktree own its edits. Do not instruct an
+  existing worker to edit another worktree; restart or hand off from a clean,
+  visible state instead.
+- Give delegated work a bounded objective, canonical `cwd` and branch,
+  exclusive files, allowed actions, stop condition, verification expectation,
+  and report format. Share only the context needed for that objective.
+- Workers report evidence and a `recommended_outcome`. Only the coordinator may
+  set the coordination line's authoritative state such as `pass`, `no-go`,
+  `needs-more-evidence`, or `blocked` after intake.
+- Use Goal mode only when the user or system explicitly requests it. When
+  active, use it for bounded implementation, verification, handoff, and stage
+  decisions. Ordinary multi-step work uses normal plan tracking. Never use
+  Goal mode as a scheduler, result collector, monitoring loop, or background-
+  job supervisor.
+- At a stop condition, a worker must hand off and wait. It must not invent,
+  launch, or approve the next stage.
+- Keep detailed worktree state machines, integration provenance, recovery, and
+  monitoring protocols in the relevant coordination skills rather than
+  duplicating them here.
 
-## Proxy And Network
+## Cross-Host Data Boundary
 
-* Avoid wasting proxy bandwidth. Before large downloads, datasets, models,
-  wheels, archives, or other high-traffic operations, test direct access with a
-  small request and prefer direct download when it works.
-* Small metadata queries, package index checks, GitHub access, and external docs
-  may use proxy when needed.
-* Ask before running package-manager operations that may fetch large dependency
-  trees.
-* If unsure whether a high-traffic task should use proxy, ask first.
+- Treat the current execution host as the boundary for Codex sessions, tasks,
+  memories, state, archives, profile assets, and thread operations. An
+  unqualified request applies only to this host.
+- Do not enumerate, expose, send to, rename, archive, migrate, or manage another
+  host's Codex state from this worker.
+- If a tool returns multiple hosts, keep unmatched records outside model
+  context and user-visible output. If the current host cannot be identified
+  before listing, do not list.
+- Cross-host authorization belongs to the control plane. This worker and its
+  subagents may not acquire approval and then broaden their own host scope.
 
-## Storage And GPU
+## Long-Running Work
 
-* Check available storage before creating or downloading large artifacts.
-* Check GPU availability before GPU work.
-* Use explicit GPU device scoping for heavy GPU jobs and ask first before heavy
-  GPU use.
+- Treat work expected to exceed 10 minutes, and any task the user calls
+  long-running, as long-running work. Ask before launching it unless the user
+  has explicitly approved that launch and its resource scope.
+- Prefer detached execution with `tmux` when reattachment matters or `nohup` for
+  a simple non-interactive command.
+- Before launch, state material Plan versus Actual mappings for the command,
+  environment, paths, session or PID, artifacts, and success criteria.
+- A bounded, read-only startup guard may run for at most 10 minutes to confirm
+  launch, liveness, log creation, writable output, first progress, and obvious
+  resource failures. It is not active monitoring.
+- Without explicit current-stage active-monitoring authorization, do not poll,
+  loop over status, tail continuously, keep a terminal open as a watcher, or
+  spawn a monitoring worker. End with a reproducible handoff instead.
+- When active monitoring is explicitly authorized, use the dedicated
+  monitoring workflow: define its contract first, keep the monitoring worker
+  read-only, use sparse event-driven checks, and keep the main process as the
+  supervisor rather than duplicating polls.
+- A monitor may report evidence but must not stop, repair, restart, mutate
+  outputs, launch the next stage, or make a go/no-go decision.
+- Execute repair, restart, or next-stage actions only when preapproved. Ask
+  before any unapproved action, scope change, heavy resource use, or cost change.
+- Preserve a compact handoff containing command, `cwd`, environment, session or
+  PID, log and output paths, expected artifacts, estimated completion, one
+  status command, startup result, and success/failure signals.
 
-## Security
+## Language And Writing
 
-- Never print, copy, or write secrets into logs, reports, commits, `AGENTS.md`,
-  `SKILL.md`, Hookify rules, or other durable rule files.
-- Treat tokens, API keys, passwords, cookies, private keys, authenticated proxy
-  URLs, `.netrc`, `~/.secrets/env`, other secret environment files, SSH private
-  keys, and Codex auth files as sensitive.
-- If a sensitive file must be inspected, report only the path, permission issue,
-  or configuration category. Redact values as `<REDACTED>`.
+- Use Chinese by default for all user-visible prose, including plans, reports,
+  summaries, handoffs, review notes, generated documents, and code comments
+  when practical.
+- Use natural Chinese headings in user-visible deliverables. Preserve English
+  for commands, paths, filenames, identifiers, API names, established metric
+  keys, quoted source text, and external conventions.
+- Use English for Codex-facing artifacts such as `AGENTS.md`, `SKILL.md`, plugin
+  metadata, and internal workflow configuration.
+- Lead with the result, decision, or next action. State evidence boundaries,
+  risks, and unknowns once and connect them to consequences or checks.
+- Avoid defensive setup, promotional claims, empty transitions, decorative
+  emphasis, emoji, forced three-part structure, and generic claims of quality.
+- Use bold only for genuine conclusions, risks, or decisions. Prefer concrete
+  technical consequences and respectful, evidence-based pushback.
 
+## Completion And Next Steps
 
-## Ask First
+- Before claiming completion, obtain fresh, proportionate evidence after the
+  last relevant change. Review the request, final diff or artifact, command
+  outcomes, and any unverified items.
+- Report what changed, what evidence passed, what was not run, and any remaining
+  risk. Do not imply that an external action occurred when it did not.
+- End a completed response with one concise, actionable next step only when a
+  natural continuation directly helps. Omit generic invitations and do not
+  invent extra work.
+- If the useful next action requires new authority, state the exact approval or user decision needed.
 
-- Ask before installing software, changing global or user-level configuration,
-  running high-traffic network operations, touching credentials, launching
-  long-running or heavy resource jobs, or taking destructive actions outside an
-  explicitly approved scope.
-- Ask for targeted user help when a short decision, path, credential approval,
-  file, requirement, environment detail, library, preference, or tool choice
-  would unblock the work faster and more safely than brittle reverse
-  engineering. The user is happy to answer clarifying questions; prefer asking
-  over making fragile assumptions.
+## Temporary Work
+
+- For one-off checks, statistics, migrations, artifact transformations, and
+  post-processing that are not durable product behavior, prefer a bounded
+  helper or direct artifact transformation over production branches or flags.
+- Put traceable helpers under the relevant project's `tmp/` directory by
+  default. Preserve small helpers or evidence that explain reproducible
+  results.
+- After verification, remove pure throwaway files, caches, and sensitive
+  intermediates that have no audit value. Never place secrets in temporary
+  artifacts or logs.
+
+## Host-Dependent Work
+
+- Do not assume a home directory, work root, OS version, shell, environment
+  root, proxy helper, storage layout, GPU model, CUDA version, or editor.
+- Read `~/.codex/HOST_LOCAL.md` only when environment, installation, proxy,
+  storage, compute, local profile paths, or connection behavior matters.
+- Re-check dynamic facts such as tool availability, resource limits, storage,
+  network reachability, and devices at the time they affect a task.
+- Prefer non-interactive commands. Select Python through the environment
+  ownership order below; do not treat an unqualified `python3` as the project
+  default.
+
+## Python And Environments
+
+- Use the project's explicit environment and package workflow when the user's
+  instructions, repository documentation, configuration, or lockfiles define
+  one. Invoke that environment's interpreter explicitly when practical. If it
+  is unavailable or broken, do not silently substitute another environment and
+  then report project validation as passing.
+- When no project environment is defined, use the host-documented Codex
+  fallback environment from `~/.codex/HOST_LOCAL.md`. Treat it as a mutable
+  shared toolbox, not proof of project dependency reproducibility, and disclose
+  its use when verification evidence depends on it.
+- Reserve the system Python for intentional OS or bootstrap work, stdlib-only
+  scripts, hook launchers, or a project that explicitly requires it. It is not
+  the default interpreter for project work.
+- Keep Conda `base` minimal. Do not install project packages into `base` or the
+  system Python, and do not mutate an unrelated project's environment.
+- Inside the documented Codex fallback, installing or upgrading ordinary,
+  task-required Python packages and developer tools from trusted configured
+  sources is standing authorized. Keep the target prefix explicit.
+- Ask first before a large or high-traffic dependency tree, GPU/CUDA packages,
+  native toolchains or large compiled libraries, private or untrusted indexes,
+  credential-bearing sources, package removal or downgrade, environment
+  recreation or bulk cleanup, or a change likely to destabilize shared tools.
+  Outside the fallback, follow the project's workflow and normal task
+  authorization; ask when environment ownership or install scope is unclear.
+
+## Network And Resources
+
+- Before a large download, test direct access with a small request and prefer
+  direct transfer when it works. Ask before high-traffic operations or package
+  commands that may fetch large dependency trees.
+- Check available storage and relevant process or container limits before
+  creating large artifacts or loading large files into memory.
+- Check current GPU availability before GPU work. Ask before heavy GPU use and
+  use an explicit device scope for launch.
+
+## Security And Ask-First Boundaries
+
+- Never print, copy, log, commit, or place secrets in durable instructions,
+  reports, temporary artifacts, or tool output shown to the user.
+- Treat tokens, passwords, cookies, private keys, authenticated proxy URLs,
+  `.netrc`, secret environment files, and Codex authentication or session files
+  as sensitive. Report only the path, permission problem, or configuration
+  category, with values redacted as `<REDACTED>`.
+- Do not edit credential-bearing auth/session files, private keys, or `.netrc`
+  through an ordinary task workflow. Use a dedicated user-controlled mechanism.
+- Ask before installing system or global software, mutating Conda `base` or an
+  unowned environment, changing global or user-level configuration, touching
+  credentials, performing high-traffic network work, launching heavy or
+  long-running jobs, taking destructive actions, publishing, or contacting
+  external people or services. The bounded Codex-fallback authorization under
+  `Python And Environments` is the standing exception for that environment.

@@ -1,4 +1,7 @@
 interface:
   display_name: "Personal Triad Discussion"
-  short_description: "Coordinate triad discussions with live notes."
-  default_prompt: "Use $personal-triad-discussion to coordinate a staged triad discussion with local live context notes."
+  short_description: "Coordinate Project-based GPT Pro deliberations."
+  default_prompt: "Use $personal-triad-discussion to initialize and coordinate a GPT Pro deliberation inside the current ChatGPT Project."
+
+policy:
+  allow_implicit_invocation: false

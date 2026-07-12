@@ -1,6 +1,6 @@
 interface:
-  display_name: "Writing Polish"
-  short_description: "Polish technical writing with evidence boundaries"
-  default_prompt: "Use $personal-writing-polish to audit and rewrite this text so it is direct, natural, and technically precise."
+  display_name: "Personal Writing Polish"
+  short_description: "Revise prose without changing claims or evidence"
+  default_prompt: "Use $personal-writing-polish to revise this locked text for the requested voice and artifact without changing claims, evidence, protected terms, or format constraints."
 policy:
   allow_implicit_invocation: true

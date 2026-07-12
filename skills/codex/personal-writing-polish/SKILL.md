@@ -1,57 +1,106 @@
 ---
 name: personal-writing-polish
-description: Polish user-visible technical, research, project, documentation, academic, or professional prose when the user asks to revise, rewrite, humanize, remove AI-like wording, remove defensive writing, strengthen expression, make text more natural, or make writing more direct while preserving evidence boundaries. Use for explicit writing-polish requests; do not replace task-specific explanation, code documentation, rebuttal, or project-output skills when the user is asking for substantive analysis rather than prose revision.
+description: Use only for explicit polishing, rewriting, humanizing, voice matching, or removal of defensive/AI-like phrasing from supplied or locked text while preserving claims and evidence; not for analysis, new content, review disposition, rebuttal strategy, or documentation ownership.
 ---
 
 # Personal Writing Polish
 
-## Overview
+## Purpose
 
-Use this skill as a prose editor, not as a substantive analyst. It combines anti-defensive writing and selected humanizer patterns for bilingual technical work: direct claims, concrete consequences, natural rhythm, and preserved evidence boundaries.
+Act as a semantic-preserving expression editor. Improve how locked content is written without taking ownership of its facts, reasoning, evidence, decisions, or document contract.
 
-## Trigger Boundary
+This is a transformation layer, not a content-generation workflow. The skill may change wording and rhythm; it may change ordering or compress content only when the edit contract authorizes that freedom. It must not silently change what the text claims or how strongly the evidence supports it.
 
-Use this skill when the user explicitly asks to:
+## Entry Gate
 
-- polish, revise, rewrite, strengthen, or tighten text
-- remove defensive writing, caveats, hedging, AI-like phrasing, or promotional language
-- make a draft more natural, human, direct, professional, concise, or readable
-- improve Chinese technical summaries, English documents, academic prose, README prose, reports, explanations, or professional writing
+Use this skill only when both conditions hold:
 
-Do not use this skill merely because the assistant is producing an ordinary answer. For project explanations, summaries, diagnostic reports, or handoffs where the user needs analysis, use the relevant task skill first, then apply these rules only if the user asks for prose polish.
+1. The user supplied or identified text whose substantive content is already available or locked.
+2. The user explicitly wants polishing, rewriting, humanizing, voice matching, tightening, or removal of defensive or AI-like phrasing. Natural-language intent is sufficient; the user need not name the skill.
 
-## Workflow
+Route out when the request primarily asks for analysis, an explanation, new prose from an undeveloped idea, research diagnosis, experiment design, review disposition, rebuttal strategy, or documentation ownership. Use the content-owning skill first. For a mixed request, complete and lock the facts, evidence, and structure there, then apply this editing layer.
 
-1. Identify the target language, audience, artifact type, and whether the user wants a draft only or file edits.
-2. Preserve meaning before style. Read enough surrounding context to avoid changing claims, evidence strength, terminology, metrics, paths, commands, risks, or unresolved questions.
-3. Read `references/style-rules.md` for the editing rules.
-4. Read `references/examples.md` when examples would clarify the rewrite direction or when the user asks for examples.
-5. Read `references/source-notes.md` when citing or comparing the original external skills.
-6. Produce a compact audit and rewrite by default.
+For this workflow, “locked” means that the content owner has settled the claims, evidence boundaries, decisions, and required structure for the editing pass. It does not mean that this skill has independently verified them. Content produced earlier in the same turn may be treated as locked only when no unresolved choice would materially change it; otherwise return to the content owner or ask for the missing decision.
 
-## Default Output
+Do not invoke this skill merely because an ordinary answer could sound better. Global writing conventions belong to `AGENTS.md`.
 
-Use `Compact Audit + Rewrite` unless the user asks for a different format:
+## Establish the Edit Contract
 
-```markdown
-Audit:
-- <2-4 concrete prose issues>
+Infer a compact contract from the request and surrounding artifact. Ask only when an unresolved choice would materially alter the output.
 
-Rewrite:
-<complete revised text>
+```yaml
+target:
+output_mode: rewrite_only | audit_only | audit_and_rewrite | file_edit
+language:
+audience:
+artifact:
+requested_lenses: []
+semantic_freedom: expression_only | structure_allowed | compression_allowed
+format_constraints: []
+voice_sample:
+protected_elements: []
 ```
 
-Keep the audit brief. Do not perform a line-by-line style trial unless the user asks for detailed editing notes.
+Defaults:
 
-## Authority
+- A pasted passage plus “polish” or “rewrite” means `rewrite_only` and `expression_only`.
+- Preserve the source language unless the user requests translation or bilingual output.
+- Treat venue, project, template, and user style requirements as binding.
+- Use a voice sample only when the user supplied or explicitly authorized it.
+- `expression_only` permits wording, syntax, punctuation, and local rhythm changes, but not reordering material propositions or changing the attachment of scope, conditions, or qualifications. `structure_allowed` permits sentence or paragraph reordering while the semantic fingerprint remains binding.
 
-Default to draft-first. If the user provides a file path, show the audit and rewritten draft first unless they explicitly ask to edit the file. When editing files, change only the requested text surface and inspect the diff.
+Read [editing-lenses.md](references/editing-lenses.md) to select and apply lenses. Read [examples.md](references/examples.md) for regression cases or ambiguous boundaries. Read [source-notes.md](references/source-notes.md) only for provenance or upstream comparison.
 
-## Hard Boundaries
+## Build a Semantic Fingerprint
 
-- Evidence first: do not strengthen claims beyond the available evidence.
-- Keep necessary scope, safety, legal, ethical, methodological, and technical limits.
-- Do not delete risk, uncertainty, or unknowns; turn them into evidence boundaries or next checks.
-- Do not rewrite commands, paths, metrics, identifiers, exact reviewer wording, API names, or domain terms unless the user explicitly asks.
-- Do not force personality into technical, legal, reference, or research text.
-- Do not convert this skill into a generic humanizer pass for every answer.
+Before rewriting, identify the protected meaning and literal tokens. Preserve:
+
+- facts, claims, stance, and the distinction between observation, inference, hypothesis, and recommendation;
+- evidence modality and causal strength;
+- scope, conditions, exceptions, negations, non-goals, uncertainties, and unknowns;
+- metrics, units, statistics, quantities, dates, and time windows;
+- quotations, citations, footnotes, links, and attribution boundaries;
+- code, commands, paths, APIs, identifiers, LaTeX, tables, and domain terms;
+- actions, decisions, obligations, deadlines, and exact reviewer or stakeholder wording;
+- venue, template, word-count, page-count, and formatting constraints.
+
+Do not invent facts, sources, experiments, explanations, next steps, causal links, judgments of adequacy or value, personal experience, opinions, or personality. If available evidence does not support an attractive source claim, flag the evidence conflict. Do not silently remove, weaken, or replace that claim merely because its support is absent from the supplied excerpt. Remove it only when the content owner explicitly marks it as unsupported and removable, or when it is demonstrably non-propositional repetition under the locked contract.
+
+## Apply Editing Lenses
+
+Choose only the lenses needed by the request:
+
+- **Clarity:** make actors, actions, referents, and consequences explicit using existing content.
+- **Anti-defensive:** classify the function of each caveat or negation. Rewrite it positively only when the new proposition is logically equivalent and equally supported; otherwise preserve it.
+- **Humanize:** address contextual clusters of mechanical prose instead of enforcing word blacklists or detector-oriented tricks.
+- **Voice match:** calibrate observable features of an authorized sample without inventing biography, attitude, or opinions.
+- **Compress:** remove true repetition only when compression is requested or clearly allowed.
+- **Artifact fit:** match the established conventions of the target academic, technical, project, or professional artifact.
+
+Patterns are evidence for editorial judgment, not automatic violations. A passive sentence, dash, hedge, formal term, title style, or three-item list may be exactly right.
+
+## Review the Semantic Delta
+
+Compare the rewrite against the fingerprint before returning or editing:
+
+1. Each material claim has the same truth conditions.
+2. Evidence and causal strength are unchanged.
+3. Scope, uncertainty, necessary negation, and non-goals remain intact.
+4. Protected literal elements and format constraints are preserved.
+5. No unsupported content was introduced through smoother wording.
+
+When a requested style change conflicts with semantic preservation, state the conflict briefly and provide the closest safe rewrite. Never make the substantive change silently.
+
+## Output and Edit Authority
+
+- Return only the rewritten text by default.
+- Return an audit only when requested; return both audit and rewrite only when requested.
+- Provide alternatives or a change rationale only when requested or when a semantic conflict must be surfaced.
+- A bare file path, “review,” or “suggest” request is read-only. Edit a file only when the user explicitly asks to change it.
+- For authorized file edits, touch only the requested prose surface, preserve surrounding structure, inspect the diff, and use `personal-risk-verification` after the last relevant edit.
+
+## Collaboration Boundaries
+
+- `personal-project-output-explainer`, `personal-code-documentation`, `personal-docs-sync-light`, and `personal-review-response` own their substantive content before this skill edits expression.
+- `awesome-rebuttal` always owns live submission rules, reviewer strategy, and rebuttal content; this skill may polish only a locked draft.
+- This skill grants no Git, publication, external-message, or broader file-edit authority.

@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Test First Changes"
-  short_description: "Risk-based test-first changes"
-  default_prompt: "Use $personal-test-first-changes before implementing a bug fix or behavior change."
+  short_description: "Valid RED or baseline before implementation"
+  default_prompt: "Use $personal-test-first-changes to establish a valid RED or refactor baseline, make the smallest coherent change, and verify focused GREEN evidence."

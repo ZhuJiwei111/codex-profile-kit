@@ -1,77 +1,94 @@
 ---
 name: personal-codex-audit
-description: "Audit, summarize, export, migrate, compare, and synchronize the user's reusable Codex profile: server-level AGENTS.md preferences, personal skills, Hookify/native hooks, profile-kit GitHub synchronization, and reusable workflow memory signals. Use when the user asks to summarize, audit, refresh, migrate, sync, push, pull, apply, compare, or improve Codex preferences, skills, hooks, Hookify rules, or the portable codex-profile-kit workflow."
+description: Use for current-host, whole-profile audit, drift comparison, export, apply, or sync across AGENTS.md, personal skills, hooks, and codex-profile-kit; not single-artifact work.
 ---
 
 # Personal Codex Audit
 
-## Overview
+## Contract
 
-Audit the current reusable Codex working profile and, when explicitly requested,
-help export or synchronize the portable `codex-profile-kit`. Treat plain audits
-as read-only. Treat export, apply, push, pull, or sync as configuration changes
-that require explicit user intent and verification.
+Own current-host, whole-profile inventory, drift analysis, and profile-kit
+transfer decisions.
 
-## Workflow
+- Keep audits, comparisons, `sync.py audit`, and dry runs read-only.
+- Require matching intent for export, confirmed apply, commit, push, or
+  publication; one stage does not authorize the next.
+- Distinguish files, configuration, enablement, trust, export state, and
+  verification instead of collapsing them into "installed" or "active."
+- Treat MCP declarations as configuration evidence only. Inventory their safe
+  public identity without collecting authentication or runtime state.
+- Preserve unrelated profile and repository changes.
 
-1. Start read-only. Do not edit `AGENTS.md`, skills, hooks, memory, config, migration kits, profile-kit repositories, or generated reports unless the user separately asks for a concrete modification.
-2. Read `references/source-policy.md` before gathering evidence. Follow its allowed sources, exclusions, and memory-filtering rules.
-3. Lock the host scope before gathering evidence. `Current profile`, `sessions`,
-   `memories`, and similar unqualified terms mean the current execution host
-   only. On a remote worker, do not inspect another host's thread titles,
-   previews, messages, memories, or session-derived summaries. Direct the user
-   to initiate cross-host Codex-state work from the Windows control plane, where
-   explicit authorization is required before discovery.
-4. Run `scripts/collect_codex_profile.py --home "$HOME"` when the local filesystem is available. Use the JSON as the current-state inventory for preferences, skills, hooks, and headings.
-5. Search memory lightly only for reusable, cross-task Codex workflow preferences. Do not summarize project-specific, platform-specific, experiment-specific, remote-host-specific, or task-log memory by default.
-6. Use script-derived counts for skills, Hookify rules, native hooks, and headings. Reconcile manual groupings against those counts before reporting.
-7. Write a concise Chinese report grounded in current files and any reusable memory signals. Clearly separate observed state from suggestions.
+## Scope Gate
+
+| Requested outcome | Primary owner |
+| --- | --- |
+| Audit or compare the whole reusable profile | `personal-codex-audit` |
+| Export, apply, or sync `codex-profile-kit` | `personal-codex-audit` |
+| Decide one skill, plugin, or hook lifecycle | `personal-skill-hygiene` |
+| Create or edit one skill | `skill-creator` |
+| Create, migrate, or test one hook or Markdown guard | `personal-codex-hook-rules` |
+| Discover/install a skill or create a plugin | The corresponding system skill |
+
+Do not expand single-artifact work into a profile audit. For mixed requests,
+finish the read-only profile finding, then hand each concrete change to its
+owning workflow and authorization gate.
+
+## Audit Workflow
+
+1. Lock the current host and requested profile surfaces. Tasks, threads,
+   sessions, and other-host state are not reusable-profile evidence.
+2. Read [references/source-policy.md](references/source-policy.md). Memory
+   content remains excluded unless the user requests a memory-informed audit.
+3. Run `scripts/collect_codex_profile.py --home "$HOME"`; treat its JSON as a
+   bounded inventory, not proof of runtime behavior.
+4. When Codex changed since the last verified baseline, read
+   [references/compatibility-policy.md](references/compatibility-policy.md)
+   and choose focused or broad revalidation from the affected contract, not
+   version inequality alone.
+5. For drift or transfer readiness, read
+   [references/sync-policy.md](references/sync-policy.md), then run `sync.py
+   audit` or an equivalent dry run before proposing a write.
+6. Apply [references/profile-state-model.md](references/profile-state-model.md)
+   and reconcile counts with the configuration sources actually in scope. Keep
+   `unknown`, `not-collected`, `user-reported`, and `product-confirmed` distinct.
+7. Report scope, inventory, drift, exclusions, unknowns, and recommendations
+   requiring approval. Label any opted-in memory evidence as memory-derived.
 
 ## Sync Workflow
 
-Use this only when the user explicitly asks to export, sync, push, pull, apply,
-or maintain the Codex profile kit.
+1. Establish direction and the furthest authorized stage. Inspect profile-kit
+   status and stop if a write could absorb unrelated changes.
+2. Run `python3 scripts/sync.py audit` before export, apply, or publication.
+3. After explicit export authority, run `export`, `verify`, and
+   `git status --short`; do not infer commit or push authority.
+4. Run `apply` without `--confirm` first. Confirm only after approval of its
+   target set and backup behavior.
+5. Treat commit and push as separate external actions. Do not run
+   `sync.py push --confirm` until both are authorized and the intended diff is
+   isolated.
 
-1. Read `references/sync-policy.md`.
-2. Treat active local config as source of truth for export. The default repo path is `~/codex-profile-kit`.
-3. Prefer `python3 ~/codex-profile-kit/scripts/sync.py audit` before deciding whether to export, push, or apply.
-4. For export/push from this machine, run `sync.py export`, then `sync.py verify`, then inspect `git status --short`. Push only after explicit user approval for GitHub publication.
-5. For apply from a repo to an active machine, run `sync.py apply` first. It is dry-run by default. Use `sync.py apply --confirm` only after the user approves the reported overwrite set.
-6. Pause for user judgment when differences affect `AGENTS.md`, `config.toml`, host facts, credentials, sensitive paths, memories, project trust, hook state, or any broad behavior rule.
-7. Never copy auth/session/cache/SQLite/memory/plugin state into the kit or from the kit into active config.
+## Hard Boundaries
 
-## Report Format
-
-Use these Chinese section labels unless the user asks for another format:
-
-- `当前偏好`: durable behavior rules visible in `AGENTS.md`, grouped by workflow area.
-- `当前 skills`: active personal/custom skills, their triggers, and any overlap or broad trigger risk.
-- `当前 hooks`: Hookify and native hooks, including enabled state and action type when visible.
-- `可共用记忆信号`: only reusable cross-task preferences or workflow lessons, with source caveats.
-- `同步状态`: profile-kit repo state, export/apply direction, dry-run diff, verification status, and GitHub publication state when sync was requested.
-- `漂移/冲突/过时风险`: stale wording, overlapping rules, overly broad triggers, missing validation, or host-specific assumptions.
-- `需要你批准的建议`: concrete next edits or cleanup steps that require user approval.
-
-## Safety Rules
-
-- Never print secrets, credentials, private keys, cookies, tokens, auth files, raw session logs, or long memory extracts.
-- Do not read `auth.json`, `history.jsonl`, `session_index.jsonl`, SQLite files, cache/plugin-cache directories, attachments, or session transcript directories.
-- Treat another host's thread titles, previews, metadata, messages, memories,
-  and session-derived summaries as cross-host data. A remote worker must not
-  access them; explicit authorization is handled by the Windows control plane.
-- For a current-host inventory, do not serialize the full result of an app-wide
-  thread listing. Filter inside tool orchestration by the known current host and
-  emit only matching records. Never call `read_thread` for an unmatched host.
-- Subagents inherit the locked host scope and may not expand it.
-- If a useful finding would require reading sensitive or high-noise sources, state the limitation and ask for explicit approval.
-- Prefer direct current files over stale memory. When memory is used, label it as memory-derived and possibly stale.
-- Keep recommendations narrow: update global/user-level configuration only when the user explicitly requests that next step.
-- Keep GitHub repositories private by default for personal Codex profile synchronization. Do not publish or push until the user explicitly authorizes it.
+- Never read or output credentials, auth/session files, raw transcripts,
+  SQLite state, caches, trust hashes, or approval history.
+- Never serialize MCP commands, arguments, environment entries, bearer-token
+  variable names or values, header names or values, OAuth state, or runtime
+  health. An auth mechanism category is the maximum default projection.
+- Never infer individual hook enablement or trust from files, registrations,
+  feature flags, hashes, or prior reports; direct the user to `/hooks`.
+- A memory feature flag may be inventoried; memory content remains opt-in and
+  outside ordinary export.
+- Do not edit audited profile assets or manage another host without separate,
+  concrete authority.
+- Do not stage, commit, push, publish, change visibility, or contact external
+  services without matching explicit authority.
 
 ## Resources
 
-- `scripts/collect_codex_profile.py`: Collect a safe JSON inventory from current files. It writes only to stdout.
-- `references/source-policy.md`: Source allowlist, default exclusions, and memory-filtering policy.
-- `references/sync-policy.md`: Profile-kit repository, export/apply, GitHub sync, and conflict policy.
-
-Use the script output as evidence, then apply judgment for the final Chinese summary.
+- `scripts/collect_codex_profile.py` and `scripts/test_collect_codex_profile.py`: emit and test the safe schema-v3 inventory, including redacted MCP declarations.
+- [references/source-policy.md](references/source-policy.md): allowed evidence, memory, symlink, host, and sensitive-source boundaries.
+- [references/sync-policy.md](references/sync-policy.md): audit, export, apply, commit, and push gates.
+- [references/profile-state-model.md](references/profile-state-model.md): consistent evidence and state labels.
+- [references/compatibility-policy.md](references/compatibility-policy.md): Codex baseline and contract-triggered revalidation.
+- [references/source-notes.md](references/source-notes.md): official sources, checked versions, and local deviations.

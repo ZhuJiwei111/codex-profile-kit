@@ -1,7 +1,7 @@
 interface:
-  display_name: "Personal Long Job Status"
-  short_description: "Manual one-shot job status check"
-  default_prompt: "Use $personal-long-job-status to manually check the current task or known local job status and estimate remaining time."
+  display_name: "One-shot Job Status"
+  short_description: "Check one known job or task without monitoring"
+  default_prompt: "Use $personal-long-job-status for one read-only status and evidence-grounded ETA check of this known job or observable Codex task."
 
 policy:
   allow_implicit_invocation: false

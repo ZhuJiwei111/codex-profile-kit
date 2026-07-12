@@ -1,29 +1,50 @@
-# Codex Hookify Rules
+# Controlled Global Markdown Hook Rules
 
-此目录存放 Hookify 风格的 Markdown 规则，并由 Codex 原生 hook
-`~/.codex/hooks/hookify_codex_runner.py` 执行。
+This directory contains small, deterministic rules evaluated by
+`~/.codex/hooks/hookify_codex_runner.py` for Codex `PreToolUse` events.
 
-规则文件示例：
+## Scope
+
+- `event: bash` matches only canonical `tool_name: "Bash"` payloads.
+- `event: file` matches only canonical `tool_name: "apply_patch"` payloads.
+- Rules may use `action: warn` or `action: block`.
+- `warn` emits `hookSpecificOutput.additionalContext`.
+- `block` emits `permissionDecision: "deny"` with a reason.
+- Prompt, Stop, PostToolUse, and catch-all rules are intentionally unsupported.
+
+Only Markdown files in this directory are loaded. Do not place project policy
+here or under a project's legacy Hookify paths. Use native project
+`.codex/hooks.json` or `.codex/config.toml` so Codex discovery and trust apply.
+
+## Rule Shape
 
 ```markdown
 ---
-name: warn-dangerous-command
+name: warn-example
 enabled: true
 event: bash
 action: warn
-pattern: rm\s+-rf
+pattern: example-command
 ---
 
-检测到危险命令。请确认路径和删除范围。
+Short action-oriented context for Codex.
 ```
 
-支持的事件别名：
+Instead of `pattern`, a rule may use `conditions`. Supported fields are
+`command`, `file_path`, `content`, `patch`, `new_text`, `old_text`, `tool_name`,
+and `all`. Supported operators are `regex_match`, `regex_not_match`, `contains`,
+`not_contains`, `equals`, `starts_with`, and `ends_with`. All conditions must
+match.
 
-- `bash`: 当前注册在 Codex `PreToolUse` 中的 Bash/shell 命令；runner
-  仍支持 `PostToolUse`，但本机默认不再对 Bash 命令重复运行 Post 检查。
-- `file`: Codex 文件编辑工具，例如 `Edit`、`Write`、`MultiEdit`、`apply_patch`。
-- `prompt`: Codex `UserPromptSubmit`。
-- `stop`: Codex `Stop`。
-- `all`: 所有事件。
+Rule names must be unique kebab-case. Invalid rules are reported on stderr and
+cannot prefix or corrupt the single JSON object written to stdout.
 
-`action: block` 只会在 `PreToolUse` 中转成 Codex 的 deny 决策；其他事件只输出提醒。
+## Validation
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
+  -s ~/.codex/hooks -p 'test_*.py' -v
+```
+
+Changing `hooks.json` requires review through `/hooks`. Do not edit persisted
+trust hashes manually.

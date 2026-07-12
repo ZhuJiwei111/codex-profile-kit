@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Planning With Files Zh"
-  short_description: "Durable Chinese file planning"
-  default_prompt: "Use $personal-planning-with-files-zh for long-running or cross-session work that needs task_plan.md, findings.md, and progress.md."
+  short_description: "Manage approved repo and task plan files"
+  default_prompt: "Use $personal-planning-with-files-zh to create or manage an explicitly requested cross-session repo or task plan with approved lifecycle changes."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Context Save Restore"
+  short_description: "Save and restore immutable context packets"
+  default_prompt: "Use $personal-context-save-restore to save or restore an immutable project-context packet without treating it as execution authority."

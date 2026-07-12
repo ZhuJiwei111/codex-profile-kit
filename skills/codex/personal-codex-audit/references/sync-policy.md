@@ -1,69 +1,117 @@
-# Sync Policy
+# Profile-Kit Sync Policy
 
-Use this policy when maintaining the user's portable Codex profile repository.
+Use this policy for the portable `codex-profile-kit`, not for general Git or
+single-skill lifecycle work.
+
+## Contents
+
+- Repository and stage authorization
+- Preflight and portable asset boundaries
+- Export and apply
+- Commit and push
 
 ## Repository Boundary
 
 - Default repository: `~/codex-profile-kit`.
 - Default remote: `ZhuJiwei111/codex-profile-kit`.
-- Visibility: private by default.
-- Source of truth: active local `~/.codex` and `~/.agents` configuration.
-- Repository role: portable, verified snapshot for sync and migration.
+- Visibility: private unless the user explicitly changes it.
+- Export source of truth: active current-host `~/.codex` and `~/.agents`
+  portable assets.
+- Apply source of truth: the reviewed profile-kit snapshot and its approved
+  target set.
 
-Do not turn the whole `~/.codex` directory into a Git repository. The profile kit
-contains exported portable assets only.
+Do not turn the complete Codex home into a Git repository.
 
-## Included Assets
+## Stage Authorization
 
-- Portable `rules/AGENTS.portable.md`.
-- Personal workflow Codex skills under `skills/codex/`, plus explicitly
-  allowlisted portable Codex skills. Do not export every locally installed
-  non-system skill by default.
-- Portable agent skills under `skills/agents/`.
-- Native hook scripts and hook docs under `hooks/`.
-- Hookify rules under `hooks/rules/`.
-- `templates/` for target-machine local rendering.
-- `scripts/sync.py`, README, install guide, connector checklist, manifest, and CI.
+| Stage | State change | Required authority |
+| --- | --- | --- |
+| `sync.py audit` | No durable profile write | Read-only audit request |
+| `sync.py export --dry-run` | No durable profile write | Read-only comparison request |
+| `sync.py export` | Writes profile-kit | Explicit export/local sync intent |
+| `sync.py verify` | No intended profile write | Normal verification after export or before apply |
+| `sync.py apply` | Dry-run only | Read-only apply comparison |
+| `sync.py apply --confirm` | Writes active profile and backup | Approval of the reported target set |
+| Commit | Changes local Git history | Explicit commit authority |
+| Push/publication | Changes external state | Explicit push/publication authority |
+
+Do not infer a later stage from an earlier one. In particular, export does not
+authorize commit or push.
+
+## Preflight
+
+1. Lock direction, repository path, current host, and furthest authorized
+   stage.
+2. Run `git status --short` before a profile-kit write. Preserve existing user
+   changes and stop if the intended command could absorb unrelated work.
+3. Run `python3 scripts/sync.py audit` and inspect the categorized diff.
+4. Pause when differences affect broad behavior, `AGENTS.md`, config templates,
+   host facts, hooks, trust-related state, memories, or sensitive paths.
+
+## Included Portable Assets
+
+- `rules/AGENTS.portable.md`.
+- Personal workflow skills and explicitly allowlisted portable skills.
+- Agent skills under `skills/agents/`.
+- Hook scripts, tests, safe hook documentation, and Hookify rules.
+- Portable templates, connector checklist, manifest, sync tooling, and CI.
+- Explicitly reviewed, public, non-secret MCP declarations in the manual config
+  template; never authenticated runtime state.
+- `HOST_LOCAL_TEMPLATE.md`, never the populated `HOST_LOCAL.md`.
 
 ## Excluded Assets
 
-Never export, commit, copy, print, or summarize secret values or runtime state:
+Never export, apply from a snapshot, commit, print, or summarize secret values
+or runtime state:
 
-- `auth.json`, tokens, cookies, passwords, private keys, `.netrc`, secret env files.
-- `history.jsonl`, `session_index.jsonl`, sessions, attachments, logs, pasted files.
-- SQLite state, WAL/SHM files, hook trusted hashes, approval history.
-- Codex memories and rollout summaries unless the user separately approves a memory migration design.
-- Plugin caches, connector OAuth state, app caches, model caches.
-- Project trust lists, conda environments, package caches, datasets, model weights, project outputs.
-- Locally installed non-personal skill suites, such as PaperSpine, unless the
-  user explicitly asks to include that suite in the profile kit.
-- Generated tarballs in Git history.
+- Auth/session/history files, tokens, cookies, passwords, private keys,
+  `.netrc`, or secret environment files.
+- SQLite state, attachments, logs, pasted files, memories, or rollout summaries.
+- Hook trust hashes, approval history, project trust, connector OAuth state, or
+  plugin/app/model caches.
+- MCP command lines, arguments, environment entries, bearer-token fields,
+  header material, OAuth/login state, runtime health, or tool output.
+- Conda environments, package caches, datasets, model weights, project outputs,
+  or generated tarballs in Git history.
+- Non-personal installed suites unless explicitly allowlisted.
 
-## Commands
+## Export
 
-Run from `~/codex-profile-kit`:
+After explicit export authority:
 
 ```bash
-python3 scripts/sync.py audit
-python3 scripts/sync.py export --dry-run
 python3 scripts/sync.py export
 python3 scripts/sync.py verify
-python3 scripts/sync.py push --confirm
-python3 scripts/sync.py apply
-python3 scripts/sync.py apply --confirm
+git status --short
 ```
 
-`apply` is dry-run by default. Use `--confirm` only after the user approves the
-reported overwrite set. The script must back up overwritten files first.
+Review the actual diff and confirm that no unrelated path was added. Do not
+stage, commit, or push as part of ordinary export.
 
-## Conflict Policy
+## Apply
 
-Ask the user before changing or applying:
+Run the dry run first:
 
-- `AGENTS.md` behavior rules, especially ask-first, language, long-job, sync, or safety rules.
-- `config.toml`, project trust, hook trusted hashes, memories, connector state, or host-specific paths.
-- Broad skill trigger descriptions or Hookify rules that may change everyday behavior.
-- Any GitHub push, repository visibility change, release publication, or automation.
+```bash
+python3 scripts/sync.py apply
+```
 
-Low-risk updates may be prepared independently but should still be reported with
-paths and verification evidence before completion.
+Use `apply --confirm` only after the user approves the listed targets and
+backup behavior. Re-check the backup path and verify the active files after the
+write. `AGENTS.portable.md` and config templates remain manual-review inputs,
+not automatic replacements for host-specific state.
+
+## Commit And Push
+
+`sync.py push --confirm` exports, verifies, stages with `git add -A`, commits,
+and pushes. Do not use it when the worktree contains unrelated or unapproved
+changes. Before using it, require all of the following:
+
+1. Explicit commit and push authority.
+2. A clean or intentionally isolated diff containing only approved profile
+   changes.
+3. Verification success after the final export.
+4. Confirmed private remote and intended branch.
+
+If those conditions are not all met, stop after local export and report the
+remaining external action.
