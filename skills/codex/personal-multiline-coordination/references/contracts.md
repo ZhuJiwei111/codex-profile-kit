@@ -183,6 +183,13 @@ ancestor after later lines are applied. The integration workspace `head_oid`
 is the final combined HEAD; do not substitute one per-line `integrated_oid` for
 that final identity.
 
+`method` records the provenance of the completed result. If a `cherry-pick` or
+`rebase` required a staged manual conflict resolution, use `method: manual`
+even when the operation completed with `--continue`. Add a full
+`preservation_ref` to the line that contains its `checkpoint_oid`; manual and
+squash records cannot mechanically establish source equivalence or cleanup
+eligibility without that preserved source.
+
 Only after an exact cleanup approval, add the named scope:
 
 ```json
@@ -194,9 +201,9 @@ Only after an exact cleanup approval, add the named scope:
 }
 ```
 
-For a rejected line that must still be removable, use a named
-`preservation_ref` containing its `checkpoint_oid`. Never treat an unreferenced
-or merely clean worktree as disposable.
+For a rejected or manually integrated line that must still be removable, use a
+named `preservation_ref` containing its `checkpoint_oid`. Never treat an
+unreferenced or merely clean worktree as disposable.
 
 ## Auditor Contract
 

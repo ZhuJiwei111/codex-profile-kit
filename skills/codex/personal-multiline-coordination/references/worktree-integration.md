@@ -96,6 +96,26 @@ coordinator:
 The grant must name allowed lines and stage scope. It must not become a generic
 `git add -A`, final commit, merge, push, PR, or publication permission.
 
+### Conflict-resolved provenance
+
+Record the mechanism that proves the final integration, not merely the command
+that started it. When `cherry-pick` or `rebase` stops for a conflict and the
+coordinator stages any manual resolution before continuing:
+
+- set the integration record to `method: manual`;
+- record the resulting integration commit as `integrated_oid`;
+- keep the source checkpoint reachable through a full named
+  `preservation_ref`, such as its worker branch;
+- verify the resolved content, final diff, requirements, and integration HEAD
+  directly; and
+- retain the auditor's equivalence warning instead of relabeling the record to
+  satisfy patch-ID validation.
+
+The source and integrated commits may express the same intended change while
+still producing different stable patch IDs because their surrounding context
+differs. A successful `cherry-pick --continue` does not restore mechanical
+patch equivalence after a manual resolution.
+
 ## Conflict Routing
 
 - Tiny, deterministic, fully understood conflict: coordinator resolves under

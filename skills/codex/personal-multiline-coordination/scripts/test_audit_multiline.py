@@ -524,6 +524,110 @@ class AuditMultilineTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("integration_patch_mismatch", self.finding_codes(report))
 
+    def test_manual_conflict_resolution_requires_manual_method_and_preserved_source(
+        self,
+    ) -> None:
+        (self.repo / "shared.txt").write_text(
+            "coordinator_slot=unset\nworker_slot=unset\n",
+            encoding="utf-8",
+        )
+        self.git("add", "shared.txt")
+        self.git("commit", "-q", "-m", "shared baseline")
+        self.base_oid = self.git("rev-parse", "HEAD").stdout.strip()
+
+        worker_path, worker_branch = self.add_worktree("line-a")
+        integration_path, integration_branch = self.add_integration_worktree()
+
+        (worker_path / "shared.txt").write_text(
+            "coordinator_slot=unset\nworker_slot=ready\n",
+            encoding="utf-8",
+        )
+        self.git("add", "shared.txt", cwd=worker_path)
+        self.git("commit", "-q", "-m", "worker checkpoint", cwd=worker_path)
+        checkpoint = self.git("rev-parse", "HEAD", cwd=worker_path).stdout.strip()
+
+        (integration_path / "shared.txt").write_text(
+            "coordinator_slot=ready\nworker_slot=unset\n",
+            encoding="utf-8",
+        )
+        self.git("add", "shared.txt", cwd=integration_path)
+        self.git("commit", "-q", "-m", "integration fixture", cwd=integration_path)
+
+        conflicted = self.git(
+            "cherry-pick",
+            checkpoint,
+            cwd=integration_path,
+            check=False,
+        )
+        self.assertNotEqual(conflicted.returncode, 0)
+        self.assertIn("CONFLICT", conflicted.stdout + conflicted.stderr)
+        (integration_path / "shared.txt").write_text(
+            "coordinator_slot=ready\nworker_slot=ready\n",
+            encoding="utf-8",
+        )
+        self.git("add", "shared.txt", cwd=integration_path)
+        self.git(
+            "-c",
+            "core.editor=true",
+            "cherry-pick",
+            "--continue",
+            cwd=integration_path,
+        )
+        integrated = self.git(
+            "rev-parse", "HEAD", cwd=integration_path
+        ).stdout.strip()
+
+        line = self.executing_line("line-a", worker_path, worker_branch)
+        line.update(
+            {
+                "phase": "closed",
+                "worker_state": "stopped",
+                "coordinator_decision": "pass",
+                "checkpoint_oid": checkpoint,
+                "preservation_ref": f"refs/heads/{worker_branch}",
+            }
+        )
+        line["workspace"]["head_oid"] = checkpoint
+        line["workspace"]["state"] = "cleanup_candidate"
+        snapshot = self.snapshot(line)
+        snapshot["integration"] = {
+            "workspace": {
+                "path": str(integration_path),
+                "branch": integration_branch,
+                "head_oid": integrated,
+                "location_source": "repo_sibling",
+            },
+            "records": [
+                {
+                    "line_id": "line-a",
+                    "source_oid": checkpoint,
+                    "integrated_oid": integrated,
+                    "method": "cherry-pick",
+                }
+            ],
+        }
+        self.grant_cleanup(snapshot, "line-a", worker_path)
+
+        result, report = self.invoke(snapshot=snapshot, check_mode=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("integration_patch_mismatch", self.finding_codes(report))
+
+        snapshot["integration"]["records"][0]["method"] = "manual"
+        del line["preservation_ref"]
+        result, report = self.invoke(snapshot=snapshot, check_mode=True)
+        self.assertEqual(result.returncode, 1)
+        codes = self.finding_codes(report)
+        self.assertIn("integration_equivalence_unverified", codes)
+        self.assertIn("cleanup_checkpoint_unpreserved", codes)
+
+        line["preservation_ref"] = f"refs/heads/{worker_branch}"
+        result, report = self.invoke(snapshot=snapshot, check_mode=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(report["summary"]["errors"], 0)
+        self.assertIn(
+            "integration_equivalence_unverified", self.finding_codes(report)
+        )
+
     def test_checkpoint_must_belong_to_worker_branch_and_target_base(self) -> None:
         worker_path, worker_branch = self.add_worktree("line-a")
         orphan = self.root / "orphan"

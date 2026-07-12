@@ -156,6 +156,12 @@ Only the coordinator may, under an explicit local integration grant:
   cherry-pick;
 - record the source checkpoint OID and resulting integrated OID.
 
+If a cherry-pick or rebase stops for a conflict and the coordinator stages any
+manual resolution, record the completed integration as `method: manual`, not
+as the command that initiated it. Preserve the source checkpoint with a named
+`preservation_ref`; manual integration cannot mechanically prove source-patch
+equivalence or make that checkpoint disposable by itself.
+
 An internal checkpoint is not final Git readiness and does not authorize a
 user-facing commit, merge, push, PR, or publication.
 
