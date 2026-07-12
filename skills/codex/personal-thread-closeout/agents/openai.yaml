@@ -1,0 +1,6 @@
+interface:
+  display_name: "Personal Thread Closeout"
+  short_description: "Close a target thread from an external controller"
+  default_prompt: "Use $personal-thread-closeout with this explicit target thread reference or ID to preserve worthwhile project lessons and archive only that target after every closeout gate passes."
+policy:
+  allow_implicit_invocation: false

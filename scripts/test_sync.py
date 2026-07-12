@@ -428,6 +428,29 @@ class WholeProfileContractTests(unittest.TestCase):
         self.assertIn("ordinary", debugging.lower())
         self.assertIn("ordinary", branch_finish.lower())
 
+    def test_thread_closeout_requires_an_external_controller(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills" / "codex"
+        closeout = (
+            skill_root / "personal-thread-closeout/SKILL.md"
+        ).read_text(encoding="utf-8")
+        metadata = (
+            skill_root / "personal-thread-closeout/agents/openai.yaml"
+        ).read_text(encoding="utf-8")
+        notes = (
+            skill_root / "personal-thread-closeout/references/source-notes.md"
+        ).read_text(encoding="utf-8")
+        normalized = " ".join(closeout.split()).lower()
+
+        self.assertIn("allow_implicit_invocation: false", metadata)
+        self.assertIn("target thread", metadata.lower())
+        self.assertIn("explicit target thread", normalized)
+        self.assertIn("must differ from the controller", normalized)
+        self.assertIn("never omit the target thread id", normalized)
+        self.assertNotIn("archiving the calling thread", normalized)
+        self.assertNotIn("omit `threadid`", normalized)
+        self.assertIn("interrupted", notes)
+        self.assertIn("external controller", notes.lower())
+
     def test_cross_session_coordination_does_not_imply_file_planning(self) -> None:
         skill_root = SYNC.REPO_ROOT / "skills" / "codex"
         multiline = (
@@ -494,7 +517,8 @@ class PortableSkillTests(unittest.TestCase):
         root = SYNC.REPO_ROOT / "skills" / "codex"
         personal = sorted(path for path in root.glob("personal-*") if path.is_dir())
 
-        self.assertEqual(len(personal), 25)
+        self.assertEqual(len(personal), 26)
+        self.assertIn("personal-thread-closeout", {skill.name for skill in personal})
         for skill in personal:
             with self.subTest(skill=skill.name):
                 source = skill / "references" / "source-notes.md"
