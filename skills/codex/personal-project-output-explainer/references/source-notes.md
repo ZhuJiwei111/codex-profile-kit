@@ -50,8 +50,9 @@ mechanistic limit needed to interpret the current result.
 
 The accepted core job is comprehension, not generic reporting. The skill
 decodes a supplied output by default and, when explicitly requested, synthesizes
-multi-stage evidence for a reader who did not follow the work. It uses narrow
-implicit triggering only when the user signals a need to understand or decode.
+multi-stage evidence for a reader who did not follow the work. It may be
+selected without the skill name only when the user explicitly signals a need to
+understand or decode existing output, evidence, or a decision.
 
 ## Baseline Observations
 
@@ -60,8 +61,11 @@ Read-only probes against the pre-rewrite skill showed:
 - a dense engineering-output request was translated successfully into plain
   meaning, local-term mappings, evidence gaps, and a defensible no-cutover
   decision; this core behavior is preserved;
-- a live progress and ETA request correctly routed to
-  `personal-long-job-status` rather than expanding into a project report;
+- a live progress and ETA request was correctly recognized as outside
+  comprehension; its former `personal-long-job-status` route is now retired, so
+  an unnamed request leaves specialist workflows and uses one bounded ordinary
+  read-only status check, while only explicit `$personal-long-job-status`
+  invocation enters that skill;
 - an under-evidenced CI error correctly routed to
   `personal-evidence-debugging` and refused to invent a root cause; and
 - the metadata description was 74 characters long, while the profile UI budget
@@ -90,8 +94,8 @@ progressive-disclosure references were still present.
 
 - A fixed “PhD student reporting to an advisor” persona.
 - Assuming every reader has advisor-level domain knowledge.
-- Treating common status, summary, report, handoff, or next-step wording as an
-  explanation trigger by itself.
+- Treating common status, summary, report, completion, handoff, or next-step
+  wording as an explanation trigger by itself.
 - Owning live status, ETA, diagnosis, review disposition, final verification,
   canonical documentation, persistence, or prose-only polishing.
 - Automatic broad inspection before explaining supplied text.
@@ -110,7 +114,7 @@ progressive-disclosure references were still present.
 - An explicitly requested audience or format overrides the personal default.
 - Adjacent workflows retain ownership of status, diagnosis, review,
   verification, Git readiness, docs, writing, persistence, design, and external
-  deliberation. This revision does not edit those skills.
+  deliberation. This skill does not claim those responsibilities.
 - No mechanical validator or reusable script is bundled. Metadata and link
   checks plus isolated engineering, AI-for-biology, multi-stage, missing-data,
   and adjacent-routing probes provide more proportionate evidence.

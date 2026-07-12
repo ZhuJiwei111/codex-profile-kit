@@ -123,8 +123,10 @@ patch equivalence after a manual resolution.
 - Ordinary bounded conflict needing independent analysis: managed subagent.
 - Substantive conflict requiring implementation rework or multiple turns:
   Desktop-visible worker in its own line/worktree.
-- Cross-line architecture or product choice: user decision, optionally through
-  `personal-brainstorms` and `personal-grilling`.
+- Cross-line architecture or product choice: ask the user a normal targeted
+  question, using `personal-brainstorms` when consequential. Route to
+  `personal-grilling` only when the user explicitly invokes
+  `$personal-grilling`.
 
 Do not use a conflict worker merely because a conflict exists. Choose the
 smallest surface that preserves ownership and evidence.

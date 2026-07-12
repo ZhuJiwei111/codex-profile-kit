@@ -33,7 +33,10 @@ python3 scripts/sync.py apply
 先把将覆盖的文件备份到 `~/codex-migration-archive/`。apply 在读取或写入目标前
 会拒绝 `--home` 之下的符号链接路径组件，避免沿链接越界覆盖；如果使用这种目录
 共享方式，需要先改成真实目录并人工核对。`verify` 也会拒绝受管 snapshot 内的
-符号链接，防止把跨目录引用迁移到目标 profile。
+符号链接，防止把跨目录引用迁移到目标 profile；同时验证 personal skill 的 UI
+metadata、skill 内相对资源链接，以及 personal descriptions 合计不超过 6,000
+字符。当前这项 metadata 合同只覆盖 personal skills，allowlist 中的第三方 skill
+仍由其独立生命周期负责。
 
 `export` 先在同一文件系统的临时候选副本中完成生成和 `verify`，随后只事务替换
 受管入口。验证失败或正常替换异常时，live snapshot 保持不变或自动回滚；这不等

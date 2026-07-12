@@ -51,6 +51,10 @@ expires_at: <stage-boundary>
 
 Do not copy credentials or authenticated URLs into the grant.
 
+`contingencies` describe actions that the supervisor or coordinator may
+execute after monitor evidence is reported and intake is complete. They never
+grant a monitoring observer permission to execute those actions.
+
 ## Long Jobs
 
 Before launch, map planned to actual command, environment, `cwd`, device,
@@ -60,6 +64,9 @@ rules for detached execution and the bounded startup guard.
 The coordinator schedules the line but does not become a polling loop. If
 active monitoring is not granted, return a reproducible handoff and one status
 command.
+
+Handle an ordinary one-shot status or ETA request through a bounded read-only
+inspection. It is neither active monitoring nor authority to mutate the job.
 
 ## Active Monitoring
 
@@ -73,9 +80,11 @@ When explicitly granted:
 - report only material transitions or requested status;
 - let the coordinator make the line decision.
 
-A monitor may not stop, repair, restart, mutate outputs, launch a next stage, or
-change resource scope. It may execute an exact contingency only when that
-action, trigger, and limit were preauthorized.
+A monitor may not stop, repair, restart, mutate outputs, launch a next stage,
+change resource scope, or make a line decision. This remains true even when an
+exact contingency, trigger, and limit were preauthorized. The monitor reports
+the trigger evidence; after intake, the supervisor or coordinator decides and
+executes only the separately authorized action.
 
 If model or reasoning controls are exposed, a mechanical monitor normally uses
 the least costly setting that can reliably classify its signals. Do not claim a

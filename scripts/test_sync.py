@@ -314,6 +314,38 @@ class WholeProfileContractTests(unittest.TestCase):
         self.assertNotIn("/root/", code_docs)
         self.assertNotIn("668a5bcf22a71948d2375caf4c2b5a7d2eb09d2c", code_docs)
 
+    def test_final_source_provenance_is_reproducible(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills" / "codex"
+        multiline = (
+            skill_root
+            / "personal-multiline-coordination/references/source-notes.md"
+        ).read_text(encoding="utf-8")
+        brainstorms = (
+            skill_root / "personal-brainstorms/references/source-notes.md"
+        ).read_text(encoding="utf-8")
+        hygiene = (
+            skill_root / "personal-skill-hygiene/references/source-notes.md"
+        ).read_text(encoding="utf-8")
+        hook_rules = (
+            skill_root / "personal-codex-hook-rules/references/source-notes.md"
+        ).read_text(encoding="utf-8")
+        repo_intake = (
+            skill_root / "personal-repo-intake/references/source-notes.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("5ad41a7157352724ac51ad24f87949e3e23cc694", multiline)
+        self.assertIn("`method: manual`", multiline)
+        self.assertIn("`preservation_ref`", multiline)
+        for notes in (brainstorms, hygiene):
+            self.assertIn("profile-kit revision", notes)
+            self.assertRegex(notes, r"SHA-256 `[0-9a-f]{64}`")
+            self.assertIn("not exported", notes)
+        self.assertIn("hooks/scripts/hookify_codex_runner.py", hook_rules)
+        self.assertIn("hooks/scripts/test_hookify_codex_runner.py", hook_rules)
+        self.assertIn("Git blob", hook_rules)
+        self.assertIn("mutable, unpinned `main`", repo_intake)
+        self.assertIn("not provenance evidence", repo_intake)
+
     def test_audit_skill_records_change_triggered_compatibility(self) -> None:
         policy = (
             SYNC.REPO_ROOT
@@ -324,6 +356,137 @@ class WholeProfileContractTests(unittest.TestCase):
         self.assertIn("patch", policy.lower())
         self.assertIn("contract", policy.lower())
         self.assertIn("focused", policy.lower())
+
+    def test_monitor_observer_never_executes_contingencies(self) -> None:
+        agents = (
+            SYNC.REPO_ROOT / "rules" / "AGENTS.portable.md"
+        ).read_text(encoding="utf-8")
+        subagent_monitoring = (
+            SYNC.REPO_ROOT
+            / "skills/codex/personal-subagent-boundaries/references/monitoring.md"
+        ).read_text(encoding="utf-8")
+        multiline = (
+            SYNC.REPO_ROOT
+            / "skills/codex/personal-multiline-coordination/SKILL.md"
+        ).read_text(encoding="utf-8")
+        grants = (
+            SYNC.REPO_ROOT
+            / "skills/codex/personal-multiline-coordination/references/resource-grants.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("must not stop, repair, restart", agents)
+        self.assertIn(
+            "does not authorize the monitoring observer to execute them",
+            subagent_monitoring,
+        )
+        self.assertNotIn("unless an exact contingency was preauthorized", multiline)
+        self.assertNotIn("It may execute an exact contingency", grants)
+        normalized = " ".join((multiline + "\n" + grants).split()).lower()
+        self.assertIn("even when an exact contingency was preauthorized", normalized)
+        self.assertRegex(
+            normalized,
+            r"supervisor or coordinator .{0,80}(?:execute|act)",
+        )
+
+    def test_manual_only_skill_routes_require_explicit_invocation(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills" / "codex"
+        grilling_meta = (
+            skill_root / "personal-grilling/agents/openai.yaml"
+        ).read_text(encoding="utf-8")
+        status_meta = (
+            skill_root / "personal-long-job-status/agents/openai.yaml"
+        ).read_text(encoding="utf-8")
+        triad_meta = (
+            skill_root / "personal-triad-discussion/agents/openai.yaml"
+        ).read_text(encoding="utf-8")
+        multiline_routing = (
+            skill_root / "personal-multiline-coordination/references/routing.md"
+        ).read_text(encoding="utf-8")
+        worktree_integration = (
+            skill_root
+            / "personal-multiline-coordination/references/worktree-integration.md"
+        ).read_text(encoding="utf-8")
+        debugging = (
+            skill_root / "personal-evidence-debugging/SKILL.md"
+        ).read_text(encoding="utf-8")
+        branch_finish = (
+            skill_root / "personal-branch-finish/SKILL.md"
+        ).read_text(encoding="utf-8")
+        output_explainer = (
+            skill_root / "personal-project-output-explainer/SKILL.md"
+        ).read_text(encoding="utf-8")
+
+        for metadata in (grilling_meta, status_meta, triad_meta):
+            self.assertIn("allow_implicit_invocation: false", metadata)
+        self.assertIn("$personal-grilling", multiline_routing)
+        self.assertIn("$personal-long-job-status", multiline_routing)
+        self.assertIn("$personal-grilling", worktree_integration)
+        self.assertIn("$personal-long-job-status", debugging)
+        self.assertIn("$personal-long-job-status", branch_finish)
+        self.assertIn("$personal-long-job-status", output_explainer)
+        self.assertIn("$personal-triad-discussion", output_explainer)
+        self.assertIn("ordinary", debugging.lower())
+        self.assertIn("ordinary", branch_finish.lower())
+
+    def test_cross_session_coordination_does_not_imply_file_planning(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills" / "codex"
+        multiline = (
+            skill_root / "personal-multiline-coordination/SKILL.md"
+        ).read_text(encoding="utf-8")
+        routing = (
+            skill_root / "personal-multiline-coordination/references/routing.md"
+        ).read_text(encoding="utf-8")
+        combined = " ".join((multiline + "\n" + routing).split()).lower()
+
+        self.assertNotIn("for cross-session work, promote", combined)
+        self.assertNotIn("when a coordination run must cross sessions, ask", combined)
+        self.assertRegex(
+            combined,
+            r"(?:alone does not|does not by itself) authorize",
+        )
+        self.assertIn("explicit file-backed planning", combined)
+
+    def test_output_explainer_routes_require_comprehension_intent(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills" / "codex"
+        files = (
+            skill_root / "personal-branch-finish/SKILL.md",
+            skill_root / "personal-docs-sync-light/SKILL.md",
+            skill_root / "personal-context-save-restore/SKILL.md",
+            skill_root / "personal-triad-discussion/SKILL.md",
+        )
+        combined = "\n".join(path.read_text(encoding="utf-8") for path in files)
+        normalized = " ".join(combined.split()).lower()
+
+        self.assertNotIn("ordinary completion or project explanations", normalized)
+        self.assertNotIn(
+            "explains project status, evidence, decisions, and next steps",
+            normalized,
+        )
+        self.assertNotIn("reader-oriented status and decision explanations", normalized)
+        self.assertNotIn("separate audience-facing report", normalized)
+        for path in files:
+            text = path.read_text(encoding="utf-8").lower()
+            self.assertTrue("compreh" in text or "decode" in text, path)
+
+    def test_context_packet_writes_use_the_final_verification_gate(self) -> None:
+        context_skill = (
+            SYNC.REPO_ROOT
+            / "skills/codex/personal-context-save-restore/SKILL.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("personal-risk-verification", context_skill)
+        self.assertRegex(
+            " ".join(context_skill.split()).lower(),
+            r"(?:packet|write).{0,160}personal-risk-verification",
+        )
+
+    def test_portable_mcp_enablement_is_documented_as_normalization(self) -> None:
+        template = SYNC.CONFIG_TEMPLATE.lower()
+        connectors = SYNC.CONNECTORS.lower()
+
+        self.assertIn("intentional portable", template)
+        self.assertIn("normative", connectors)
+        self.assertIn("enabled = true", template)
 
 
 class PortableSkillTests(unittest.TestCase):
@@ -365,6 +528,75 @@ class PortableSkillTests(unittest.TestCase):
     def test_renamed_code_documentation_replaces_legacy_allowlist_entry(self) -> None:
         self.assertTrue(SYNC.is_portable_codex_skill("personal-code-documentation"))
         self.assertFalse(SYNC.is_portable_codex_skill("code-documentation"))
+
+    def test_personal_skill_ui_metadata_is_validated(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills" / "codex" / "personal-sample"
+            (skill / "agents").mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                "---\nname: personal-sample\n"
+                "description: Use for one focused sample workflow.\n---\n",
+                encoding="utf-8",
+            )
+            (skill / "agents" / "openai.yaml").write_text(
+                "display_name: Sample\n"
+                "short_description: This flat legacy metadata must fail validation\n"
+                "default_prompt: Use sample.\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(SystemExit, "openai.yaml"):
+                SYNC.validate_skills(root)
+
+    def test_personal_skill_resource_links_are_validated(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills" / "codex" / "personal-sample"
+            (skill / "agents").mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                "---\nname: personal-sample\n"
+                "description: Use for one focused sample workflow.\n---\n\n"
+                "Read [missing](references/missing.md).\n",
+                encoding="utf-8",
+            )
+            (skill / "agents" / "openai.yaml").write_text(
+                "interface:\n"
+                "  display_name: \"Personal Sample\"\n"
+                "  short_description: \"Validate one focused sample workflow\"\n"
+                "  default_prompt: \"Use $personal-sample for this sample.\"\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(SystemExit, "missing skill resource"):
+                SYNC.validate_skills(root)
+
+    def test_personal_catalog_description_budget_is_enforced(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills" / "codex" / "personal-sample"
+            (skill / "agents").mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                "---\nname: personal-sample\n"
+                "description: Use for one focused sample workflow.\n---\n",
+                encoding="utf-8",
+            )
+            (skill / "agents" / "openai.yaml").write_text(
+                "interface:\n"
+                "  display_name: \"Personal Sample\"\n"
+                "  short_description: \"Validate one focused sample workflow\"\n"
+                "  default_prompt: \"Use $personal-sample for this sample.\"\n",
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(
+                SYNC,
+                "PERSONAL_SKILL_DESCRIPTION_BUDGET",
+                8,
+                create=True,
+            ):
+                with self.assertRaisesRegex(SystemExit, "description budget"):
+                    SYNC.validate_skills(root)
 
 
 class CustomAgentProfileTests(unittest.TestCase):

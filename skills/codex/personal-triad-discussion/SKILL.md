@@ -11,7 +11,8 @@ Coordinate one decision-focused discussion between the user, the current Codex
 task, and a separate GPT Pro chat created by the user inside the target ChatGPT
 Project.
 
-- Use this skill only after explicit `$personal-triad-discussion` invocation.
+- Keep this skill manual-only: use it only after explicit
+  `$personal-triad-discussion` invocation.
 - Keep the user as chair, final decision maker, and authority owner.
 - Keep Codex as the local evidence auditor, discussion coordinator, and final
   synthesizer.
@@ -154,11 +155,14 @@ Finish with one decision synthesis that states:
 - unverified items; and
 - the next discriminator or separately authorized workflow, if one exists.
 
-Use `personal-brainstorms` to shape the internal design and alternatives and
-`personal-grilling` only when it is explicitly invoked to close
-decision-changing gaps. Use `personal-project-output-explainer` only when the
-user needs a separate audience-facing report. If local changes follow the
-discussion, `personal-risk-verification` remains the only final completion gate.
+Use `personal-brainstorms` to shape the internal design and alternatives.
+Use manual-only `$personal-grilling` only when the user explicitly invokes it
+to close decision-changing gaps. Use `personal-project-output-explainer` only
+when the user explicitly asks to understand or decode an existing triad
+synthesis, evidence chain, or decision because comprehension is blocked. It
+does not own an ordinary triad status, summary, report, completion, or
+next-step output. If local changes follow the discussion,
+`personal-risk-verification` remains the only final completion gate.
 
 ## References
 

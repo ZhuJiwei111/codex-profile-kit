@@ -17,6 +17,11 @@
   writing and coordination skills”.
 - `codex-profile-kit` commit `30a4f90` (2026-07-04), “Sync Codex profile kit
   2026-07-04”.
+- `codex-profile-kit` commit `5ad41a7157352724ac51ad24f87949e3e23cc694`,
+  the local manual integration provenance change: conflict-resolved integration
+  uses `method: manual`, retains the source checkpoint through a named
+  `preservation_ref`, does not claim mechanical source-patch equivalence, and
+  includes the focused auditor regression test for that boundary.
 - Pre-rewrite active skill, references, metadata, and registry-based auditor.
 
 These commits are evidence of the local design lineage, not upstream APIs.
@@ -49,8 +54,13 @@ These commits are evidence of the local design lineage, not upstream APIs.
 - Repo-sibling fallback layout outside both the repository and `~/.codex`.
 - Controlled symlink binding for ignored, immutable, project-local heavy data.
 - App/Git/snapshot reconciliation with preservation-first recovery.
-- Optional schema-v2 snapshots and file-backed planning only for cross-session
-  persistence.
+- Strict observer/executor separation: monitors report trigger evidence, while
+  the supervisor or coordinator executes authorized contingencies after intake.
+- Manual-only routing for `personal-grilling` and
+  `personal-long-job-status`; normal questions, brainstorming, and bounded
+  one-shot status inspection remain the defaults.
+- Optional existing schema-v2 snapshots for machine-checkable handoff;
+  file-backed planning only after an explicit file-backed planning request.
 
 ## Rejected Or Retired
 
@@ -58,6 +68,7 @@ These commits are evidence of the local design lineage, not upstream APIs.
 - Legacy lifecycle, recovery queue, archive entry, and `finish_candidate`
   state machine.
 - Fixed concurrency targets and coordinator polling loops.
+- Monitor-executed contingencies, including preauthorized ones.
 - Worker-owned commits, integration, line `pass`, or next-stage launch.
 - Automatic `git add`, cleanup, force-removal, branch deletion, global prune,
   or permanent task deletion.
@@ -65,6 +76,7 @@ These commits are evidence of the local design lineage, not upstream APIs.
   data across writers.
 - Assuming a Desktop worker API, model, or reasoning-effort control that the
   active tool surface does not expose.
+- Creating `.planning` files merely because coordination crosses sessions.
 
 ## Local Deviations And Limits
 

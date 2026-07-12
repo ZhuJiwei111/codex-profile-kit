@@ -52,6 +52,13 @@ ALLOWED_SKILL_KEYS = {
     "metadata",
     "name",
 }
+PERSONAL_SKILL_DESCRIPTION_BUDGET = 6000
+REQUIRED_OPENAI_INTERFACE_KEYS = {
+    "display_name",
+    "short_description",
+    "default_prompt",
+}
+MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 PORTABLE_CODEX_SKILL_NAMES = {
     "awesome-rebuttal",
 }
@@ -216,6 +223,9 @@ max_depth = 1
 [plugins."github@openai-curated"]
 enabled = true
 
+# Intentional portable policy: explicitly enable this reviewed public,
+# unauthenticated Docs MCP. This template is normative, not a field-for-field
+# copy of a source host that may rely on the product default.
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
 enabled = true
@@ -252,9 +262,13 @@ caches from the source machine.
 - Review the public, secret-free MCP declarations in
   `templates/config.toml.template` and merge only the servers intended for the
   target host.
-- The template may carry a public endpoint identity and enabled state. Recreate
-  environment bindings or interactive authentication on the target machine;
-  never copy credential values, authenticated headers, or runtime auth state.
+- The template is a normative portable policy rather than a field-for-field
+  mirror of the source host. Its `enabled = true` explicitly enables the
+  reviewed public Docs MCP even when the source host omitted that field and
+  relied on the current product default.
+- Recreate environment bindings or interactive authentication on the target
+  machine; never copy credential values, authenticated headers, or runtime
+  auth state.
 - Verify each configured server with a low-risk capability or metadata read.
 
 ## Smoke Check
@@ -280,6 +294,8 @@ python3 scripts/sync.py verify
 
 Verification rejects symbolic links inside managed profile assets so a copied
 skill, hook, template, or custom agent cannot retain an out-of-profile target.
+It also validates personal-skill UI metadata, in-skill relative resource links,
+and the aggregate 6,000-character personal description budget.
 
 ## 2. Fill Host Facts
 
@@ -1341,6 +1357,8 @@ Generated for a clean Codex profile kit.
   MCP endpoint declarations with no authentication state.
 - `skills/codex/`: personal workflow skills plus explicitly allowlisted
   portable Codex skills from `~/.codex/skills`.
+  Verification checks personal-skill UI metadata, relative resource links, and
+  the aggregate 6,000-character personal description budget.
 - `skills/agents/find-skills/`: portable agent skill discovery helper.
 - `agents/codex/`: allowlisted custom Codex agent profiles from
   `~/.codex/agents`.
@@ -1445,6 +1463,7 @@ def validate_managed_snapshot_paths(root: Path) -> None:
 
 def validate_skills(root: Path) -> None:
     skill_roots = [root / "skills" / "codex", root / "skills" / "agents"]
+    personal_description_total = 0
     for skill_root in skill_roots:
         if not skill_root.is_dir():
             continue
@@ -1461,6 +1480,105 @@ def validate_skills(root: Path) -> None:
                 raise SystemExit(f"unexpected frontmatter keys in {rel(skill_file, root)}: {sorted(extra)}")
             if fm["name"] != skill_dir.name:
                 raise SystemExit(f"skill name/folder mismatch: {rel(skill_file, root)}")
+            if skill_dir.name.startswith("personal-"):
+                personal_description_total += len(fm["description"])
+                validate_personal_skill_openai_yaml(skill_dir, root)
+            validate_skill_resource_links(skill_dir, root)
+    if personal_description_total > PERSONAL_SKILL_DESCRIPTION_BUDGET:
+        raise SystemExit(
+            "personal skill description budget exceeded: "
+            f"{personal_description_total} > {PERSONAL_SKILL_DESCRIPTION_BUDGET}"
+        )
+
+
+def parse_openai_interface(path: Path) -> dict[str, str]:
+    """Parse the small, controlled interface mapping without a YAML dependency."""
+    interface: dict[str, str] = {}
+    in_interface = False
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        if "\t" in raw_line:
+            raise SystemExit(f"invalid tab indentation in {path}")
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        if not raw_line.startswith(" "):
+            in_interface = raw_line.strip() == "interface:"
+            continue
+        if not in_interface or not raw_line.startswith("  "):
+            continue
+        stripped = raw_line.strip()
+        if ":" not in stripped:
+            continue
+        key, raw_value = stripped.split(":", 1)
+        value = raw_value.strip()
+        if value.startswith('"'):
+            try:
+                parsed = json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise SystemExit(f"invalid quoted value in {path}: {key}") from exc
+            if not isinstance(parsed, str):
+                raise SystemExit(f"non-string interface value in {path}: {key}")
+            interface[key] = parsed
+        elif value.startswith("'") and value.endswith("'"):
+            interface[key] = value[1:-1].replace("''", "'")
+        else:
+            interface[key] = value
+    return interface
+
+
+def validate_personal_skill_openai_yaml(skill_dir: Path, root: Path) -> None:
+    metadata = skill_dir / "agents" / "openai.yaml"
+    if not metadata.is_file():
+        raise SystemExit(f"missing agents/openai.yaml: {rel(skill_dir, root)}")
+    interface = parse_openai_interface(metadata)
+    missing = REQUIRED_OPENAI_INTERFACE_KEYS - set(interface)
+    if missing:
+        raise SystemExit(
+            f"invalid agents/openai.yaml in {rel(skill_dir, root)}: "
+            f"missing interface keys {sorted(missing)}"
+        )
+    if not interface["display_name"].strip():
+        raise SystemExit(
+            f"invalid agents/openai.yaml in {rel(skill_dir, root)}: empty display_name"
+        )
+    short_length = len(interface["short_description"])
+    if not 25 <= short_length <= 64:
+        raise SystemExit(
+            f"invalid agents/openai.yaml in {rel(skill_dir, root)}: "
+            f"short_description length {short_length} is outside 25..64"
+        )
+    invocation = f"${skill_dir.name}"
+    if invocation not in interface["default_prompt"]:
+        raise SystemExit(
+            f"invalid agents/openai.yaml in {rel(skill_dir, root)}: "
+            f"default_prompt must contain {invocation}"
+        )
+
+
+def validate_skill_resource_links(skill_dir: Path, root: Path) -> None:
+    base = skill_dir.resolve()
+    for markdown in sorted(skill_dir.rglob("*.md")):
+        text = markdown.read_text(encoding="utf-8")
+        for raw_target in MARKDOWN_LINK_RE.findall(text):
+            target = raw_target.strip()
+            if target.startswith("<") and target.endswith(">"):
+                target = target[1:-1]
+            target = target.split("#", 1)[0]
+            if not target or target.startswith(("/", "#")):
+                continue
+            if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
+                continue
+            destination = (markdown.parent / target).resolve()
+            try:
+                destination.relative_to(base)
+            except ValueError as exc:
+                raise SystemExit(
+                    f"skill resource link escapes skill root: "
+                    f"{rel(markdown, root)} -> {raw_target}"
+                ) from exc
+            if not destination.exists():
+                raise SystemExit(
+                    f"missing skill resource: {rel(markdown, root)} -> {raw_target}"
+                )
 
 
 def validate_renamed_skills(root: Path) -> None:

@@ -8,9 +8,11 @@
 | Existing worker/worktree ambiguity without execution request | this skill, read-only audit only |
 | One bounded subagent delegation | `personal-subagent-boundaries` |
 | Consequential decomposition or architecture choice | `personal-brainstorms` |
-| Critical unresolved requirements | `personal-grilling` |
-| Cross-session planning files | `personal-planning-with-files-zh` |
-| One-time long-job status request | `personal-long-job-status` |
+| Ordinary unresolved requirements | normal targeted questions; `personal-brainstorms` when consequential |
+| Explicit `$personal-grilling` invocation | `personal-grilling` (manual-only) |
+| Explicit file-backed planning request | `personal-planning-with-files-zh` |
+| Ordinary one-time long-job status request | bounded read-only status path |
+| Explicit `$personal-long-job-status` invocation | `personal-long-job-status` (manual-only) |
 | Unexpected failure or failed repair attempt | `personal-evidence-debugging` |
 | Final evidence-backed completion decision | `personal-risk-verification` |
 | Formal Git readiness, user commit/PR choice, or handoff | `personal-branch-finish` |
@@ -31,9 +33,10 @@ worktree, resource, and intake decisions.
 ## Planning And Context
 
 - Current-task coordination needs no persistent registry.
-- When a coordination run must cross sessions, ask
-  `personal-planning-with-files-zh` to own the plan root and store a compact
-  brief plus optional snapshot there.
+- Cross-session coordination alone does not authorize `.planning` files.
+  Default to a reproducible handoff, optionally using an existing snapshot.
+- Route to `personal-planning-with-files-zh` only after an explicit request for
+  file-backed planning; that skill then owns the plan root and artifacts.
 - Use `personal-context-compression` to produce a compact continuation summary;
   it does not write or restore state.
 - Use `personal-context-save-restore` only for an explicit immutable
@@ -52,17 +55,20 @@ decisions. This skill does not push, open PRs, or merge.
 ## Long Jobs
 
 This skill schedules authorized long-job lines and records their resource
-contracts. Durable launch and monitoring rules still apply. Use
-`personal-long-job-status` only when the user asks for a one-time read-only
-status/ETA; it does not become the coordinator or monitor.
+contracts. Durable launch and monitoring rules still apply. Handle an ordinary
+one-time status or ETA request through a bounded read-only inspection. The
+manual-only `personal-long-job-status` skill requires the user to invoke
+`$personal-long-job-status` explicitly; it does not become the coordinator or
+monitor.
 
 ## Conflict Routing
 
 1. Tiny deterministic integration conflict: coordinator, within grant.
 2. Bounded independent conflict analysis: managed subagent.
 3. Substantive implementation rework: Desktop-visible worker.
-4. Cross-line design conflict: user decision, usually with
-   `personal-brainstorms`; use `personal-grilling` for decision-changing unknowns.
+4. Cross-line design conflict: ask the user a normal targeted question, using
+   `personal-brainstorms` when consequential. Route to `personal-grilling` only
+   when the user explicitly invokes `$personal-grilling`.
 
 The coordinator records the result and reschedules affected lines.
 

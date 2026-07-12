@@ -172,9 +172,11 @@ monitoring, repair/restart, and next-stage launch as separate resource actions.
 They may be granted per line or stage in the launch manifest; do not infer one
 from another.
 
-A monitoring worker is read-only. It reports evidence and never repairs,
-restarts, stops, mutates outputs, launches a next stage, or makes a line
-decision unless an exact contingency was preauthorized.
+A monitoring observer is always read-only. It reports trigger evidence and
+never stops, repairs, restarts, mutates outputs, launches a next stage, changes
+resource scope, or makes a line decision, even when an exact contingency was
+preauthorized. After intake, only the supervisor or coordinator may execute
+that preauthorized action and make the authoritative decision.
 
 Read `references/resource-grants.md` before scheduling constrained resources or
 long-running lines.
@@ -197,13 +199,16 @@ cleanup.
 
 ## Persistence
 
-Keep live coordination state in current task context when practical. Use a
-small schema-v2 snapshot only when reconciliation or handoff benefits from a
-machine-checkable view.
+Keep live coordination state in current task context when practical. Reuse a
+small existing schema-v2 snapshot when reconciliation or handoff benefits from
+a machine-checkable view; cross-session duration alone does not authorize
+creating or updating one.
 
-For cross-session work, promote the brief and snapshot into the approved
-`.planning/<plan-id>/` plan through `personal-planning-with-files-zh`. Do not
-create `.codex/multiline`, a shadow registry, or a second source of truth.
+Cross-session coordination alone does not authorize `.planning` files. Default
+to a reproducible handoff, optionally accompanied by an existing snapshot.
+Route to `personal-planning-with-files-zh` only after an explicit request for
+file-backed planning. Do not create `.codex/multiline`, a shadow registry, or a
+second source of truth.
 
 ## Output
 

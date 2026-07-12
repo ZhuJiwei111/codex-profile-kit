@@ -22,9 +22,13 @@ caches from the source machine.
 - Review the public, secret-free MCP declarations in
   `templates/config.toml.template` and merge only the servers intended for the
   target host.
-- The template may carry a public endpoint identity and enabled state. Recreate
-  environment bindings or interactive authentication on the target machine;
-  never copy credential values, authenticated headers, or runtime auth state.
+- The template is a normative portable policy rather than a field-for-field
+  mirror of the source host. Its `enabled = true` explicitly enables the
+  reviewed public Docs MCP even when the source host omitted that field and
+  relied on the current product default.
+- Recreate environment bindings or interactive authentication on the target
+  machine; never copy credential values, authenticated headers, or runtime
+  auth state.
 - Verify each configured server with a low-risk capability or metadata read.
 
 ## Smoke Check

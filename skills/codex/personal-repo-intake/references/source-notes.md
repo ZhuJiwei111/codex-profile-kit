@@ -13,12 +13,13 @@
 
 ## RigorPilot `repo-intake-and-plan`
 
-- User-supplied possible source:
+- User-reported historical locator: the fork's mutable, unpinned `main` URL
+  below is not provenance evidence:
   <https://github.com/camillanapoles/skill_RigorPilot-Skills/blob/main/skills/repo-intake-and-plan/SKILL.md>
 - Canonical upstream: <https://github.com/lllllllama/RigorPilot-Skills>
 - Audited repository head:
   `56bc41c40beabc42f5628f06bb2634a5196071f5`
-- Skill content pinned at:
+- Canonical pinned upstream provenance evidence:
   <https://github.com/lllllllama/RigorPilot-Skills/blob/d4ce1a3ee7ff9e72e236b0f7ef72567d819f82d9/skills/repo-intake-and-plan/SKILL.md>
 - Skill last-change commit:
   `d4ce1a3ee7ff9e72e236b0f7ef72567d819f82d9`

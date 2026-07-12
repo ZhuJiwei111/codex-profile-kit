@@ -12,6 +12,8 @@ Generated for a clean Codex profile kit.
   MCP endpoint declarations with no authentication state.
 - `skills/codex/`: personal workflow skills plus explicitly allowlisted
   portable Codex skills from `~/.codex/skills`.
+  Verification checks personal-skill UI metadata, relative resource links, and
+  the aggregate 6,000-character personal description budget.
 - `skills/agents/find-skills/`: portable agent skill discovery helper.
 - `agents/codex/`: allowlisted custom Codex agent profiles from
   `~/.codex/agents`.

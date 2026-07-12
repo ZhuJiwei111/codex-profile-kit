@@ -179,8 +179,10 @@ Keep `detached_HEAD` and `detached_job` distinct:
   after that state stabilizes. If it is independent, preserve it and include
   its known handoff fields without broad process discovery.
 
-Route an explicitly requested one-shot status or ETA check to
-`personal-long-job-status`. Branch finish does not acquire monitoring authority.
+For an unnamed ordinary status or ETA request, leave this specialist workflow
+and use one bounded ordinary read-only status check. Use
+`$personal-long-job-status` only after explicit skill invocation. Branch finish
+does not acquire monitoring authority.
 
 ## Execute Only The Authorized Action
 
@@ -253,11 +255,14 @@ that did not occur.
   type promotes its own recommended outcome.
 - `personal-review-response` owns review disposition, remote CI interpretation,
   replies, and thread state.
-- `personal-long-job-status` owns explicitly invoked one-shot job status and
-  ETA. Long-running launch and monitoring authorization remain outside this
-  skill.
-- `personal-project-output-explainer` owns ordinary completion or project
-  explanations that do not ask for Git readiness or repository handoff.
+- `$personal-long-job-status` owns one-shot job status and ETA only after
+  explicit skill invocation. For an unnamed ordinary request, leave specialist
+  workflows and use one bounded ordinary read-only status check. Long-running
+  launch and monitoring authorization remain outside this skill.
+- `personal-project-output-explainer` may decode an existing completion verdict
+  or repository handoff only when the user explicitly expresses a comprehension
+  need. It does not own ordinary status, summary, report, completion, or
+  next-step output.
 
 ## Source Provenance
 

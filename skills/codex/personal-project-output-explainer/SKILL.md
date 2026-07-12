@@ -1,6 +1,6 @@
 ---
 name: personal-project-output-explainer
-description: Use when the user explicitly asks to understand or decode an existing Codex response, project result, artifact summary, multi-stage evidence chain, or decision rationale because project-local jargon, cross-domain terminology, or missing context blocks comprehension. Do not use for ordinary status, summaries, diagnosis, canonical docs, review disposition, or prose polishing.
+description: Use when the user explicitly asks to understand or decode an existing Codex response, project result, artifact summary, multi-stage evidence chain, or decision rationale because project-local jargon, cross-domain terminology, or missing context blocks comprehension. Do not use for ordinary status, summary, report, completion, next-step output, diagnosis, canonical docs, review disposition, or prose polishing.
 ---
 
 # Personal Project Output Explainer
@@ -11,11 +11,13 @@ Translate an existing Codex or project output into a reader-oriented
 explanation. Make its terms, relationships, evidence boundary, and decision
 impact understandable without redoing the original task.
 
-- Trigger implicitly only when the user expresses a comprehension need. An
-  explicit `$personal-project-output-explainer` invocation also works.
+- Use this skill only when the user explicitly expresses a comprehension or
+  decode need for existing output, evidence, or a decision. An explicit
+  `$personal-project-output-explainer` invocation satisfies this when it
+  identifies the material to explain.
 - Decode a supplied response, result, artifact summary, evidence chain, or
-  decision rationale. Ordinary status, summary, report, or next-step wording
-  alone is not a comprehension request.
+  decision rationale. Ordinary status, summary, report, completion, or
+  next-step wording alone is not a comprehension request.
 - Keep source claims, verified facts, explainer interpretations, and unknowns
   distinct.
 - Preserve exact identifiers, metrics, paths, modes, and technical terms while
@@ -152,7 +154,9 @@ changes the reader's understanding of the conclusion or its boundary.
 
 ## Route Adjacent Requests
 
-- `personal-long-job-status`: explicitly requested live status and ETA.
+- For an unnamed ordinary status or ETA request, leave specialist workflows and
+  use one bounded ordinary read-only status check. Use
+  `$personal-long-job-status` only after explicit skill invocation.
 - `personal-evidence-debugging`: reproduction and root-cause work.
 - `personal-review-response`: review-feedback disposition.
 - `personal-risk-verification`: final completion verdict;
@@ -162,11 +166,14 @@ changes the reader's understanding of the conclusion or its boundary.
 - `personal-writing-polish`: expression-only revision after facts are locked.
 - `personal-context-compression` or `personal-context-save-restore`:
   continuation or persistence.
-- `personal-brainstorms` and explicit `personal-grilling`: unresolved design;
-  `personal-triad-discussion`: user-mediated GPT Pro deliberation.
+- `personal-brainstorms` and manual-only `$personal-grilling`: unresolved
+  design; manual-only `$personal-triad-discussion`: user-mediated GPT Pro
+  deliberation.
 
-An owning workflow may hand evidence or a verdict here for explanation. Do not
-change that owner's state, authority, or conclusion while translating it.
+Only after an explicit comprehension or decode request may an owning workflow
+hand evidence or a verdict here for explanation. The handoff alone does not
+trigger this skill. Do not change that owner's state, authority, or conclusion
+while translating it.
 
 ## References
 

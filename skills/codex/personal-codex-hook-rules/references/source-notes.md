@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-11
+Checked: 2026-07-12
 
 ## Sources
 
@@ -9,7 +9,9 @@ Checked: 2026-07-11
 | OpenAI Codex hooks documentation | Official documentation; no repository license asserted here | checked 2026-07-11 | Release behavior and trust guidance |
 | OpenAI Codex generated hook schemas | Apache-2.0 | `rust-v0.144.1`, commit `44918ea10c0f99151c6710411b4322c2f5c96bea` | Exact native input and output wire format |
 | Anthropic Claude Code Hookify `writing-rules` | MIT, as stated in the Hookify README | commit `15a21e1b4e240e2da6a4953d5f148a806c9c9bb2` | Historical Markdown rule design evidence only |
-| Local controlled adapter and tests | Local profile | hooks stage accepted before this skill revision | Actual supported Markdown DSL and behavior |
+| Local controlled Markdown adapter | Local profile | profile-kit revision `5ad41a7157352724ac51ad24f87949e3e23cc694`; repo path `hooks/scripts/hookify_codex_runner.py`; Git blob `b00b24d278a37a170d31c4b7e8a5d6eb6c36116c`; checked 2026-07-12 | Actual supported Markdown DSL and behavior |
+| Local adapter behavior tests | Local profile | profile-kit revision `5ad41a7157352724ac51ad24f87949e3e23cc694`; repo path `hooks/scripts/test_hookify_codex_runner.py`; Git blob `557c42d6532a741bf632bb22684f384d4dc0bcc1`; checked 2026-07-12 | Executable evidence for adapter payload, rule, and decision behavior |
+| Local hook configuration tests | Local profile | profile-kit revision `5ad41a7157352724ac51ad24f87949e3e23cc694`; repo path `hooks/scripts/test_hooks_configuration.py`; Git blob `66dd971965b2b42d91f4c63cbe8f598a51739a12`; checked 2026-07-12 | Executable evidence for adapter discovery and configured hook wiring |
 
 Primary links:
 

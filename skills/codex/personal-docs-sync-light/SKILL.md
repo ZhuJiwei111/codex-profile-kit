@@ -160,8 +160,11 @@ implementation evidence as proof that the later docs edit is complete.
   systems, and unresolved product or contract choices.
 - `personal-code-documentation` owns new or substantially rewritten standalone API,
   architecture, onboarding, tutorial, and walkthrough artifacts.
-- `personal-project-output-explainer` explains project status, evidence,
-  decisions, and next steps; it does not maintain canonical repository docs.
+- `personal-project-output-explainer` may decode existing documentation-sync
+  evidence or a decision only when the user explicitly expresses a
+  comprehension need. It does not own ordinary status, summary, report,
+  completion, or next-step output, and it does not maintain canonical
+  repository docs.
 - `personal-writing-polish` changes expression only after facts are locked and
   only when explicitly requested.
 - `personal-temporary-work` owns any approved one-off structured evidence scan;

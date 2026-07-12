@@ -8,6 +8,9 @@ max_depth = 1
 [plugins."github@openai-curated"]
 enabled = true
 
+# Intentional portable policy: explicitly enable this reviewed public,
+# unauthenticated Docs MCP. This template is normative, not a field-for-field
+# copy of a source host that may rely on the product default.
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
 enabled = true

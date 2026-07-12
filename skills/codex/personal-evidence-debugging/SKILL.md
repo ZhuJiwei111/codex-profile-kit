@@ -22,8 +22,9 @@ Set `diagnosis_scope` before acting:
 A verification-only failure does not automatically authorize diagnosis. Report
 it and stop unless diagnosis is already in scope. A reason-matched expected RED
 remains with `personal-test-first-changes`; a wrong-reason RED, flake, hang, or
-unexpected GREEN belongs here. Route status/ETA-only requests to
-`personal-long-job-status`.
+unexpected GREEN belongs here. For an unnamed ordinary status or ETA request,
+leave specialist workflows and use one bounded ordinary read-only status check.
+Use `$personal-long-job-status` only after explicit skill invocation.
 
 ## Keep A Failure Packet
 
@@ -177,9 +178,11 @@ that the whole architecture is wrong.
 ## Long-Running And Resource Boundaries
 
 - A failed long job does not authorize a restart.
-- For a live job, perform at most one bounded read-only log, artifact, or status
-  inspection within the diagnosis request. Do not tail, poll, create a watcher,
-  kill, repair, or restart it without the corresponding authorization.
+- When the request is only ordinary status or ETA, leave this workflow and use
+  one bounded ordinary read-only status check. Within an actual diagnosis
+  request, inspect at most one bounded read-only log, artifact, or status
+  surface. Do not tail, poll, create a watcher, kill, repair, or restart it
+  without the corresponding authorization.
 - Treat a reproduction or rerun expected to exceed 10 minutes as a new
   long-running launch. State its command, environment, resource scope, outputs,
   expected duration, and success signal before requesting approval.

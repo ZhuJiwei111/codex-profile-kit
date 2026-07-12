@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-11.
+Checked: 2026-07-12.
 
 This skill adapts selected design behaviors from upstream evidence while
 preserving the local Codex authorization model, lightweight scope gate, and
@@ -13,9 +13,13 @@ diagrams, or substantial prose.
 | --- | --- | --- | --- |
 | [Superpowers `brainstorming`](https://github.com/obra/superpowers/blob/v6.1.1/skills/brainstorming/SKILL.md) | Annotated tag object `c984ea2e7aeffdcc865784fd6c5e3ab75da0209a`; commit `d884ae04edebef577e82ff7c4e143debd0bbec99` | [MIT](https://github.com/obra/superpowers/blob/v6.1.1/LICENSE), Copyright (c) 2025 Jesse Vincent | Scope decomposition, component boundaries, inline spec review, goal-related nearby improvement, and just-in-time visual judgment |
 | [Superpowers v6.1.1 release](https://github.com/obra/superpowers/releases/tag/v6.1.1) | Immutable release dated 2026-07-02 | Upstream release evidence | Fixed comparison baseline; do not imply that every adopted brainstorming behavior was introduced by this release |
-| Local `skill-creator` | Current host copy checked 2026-07-11 | Built-in Codex skill | Progressive disclosure, trigger metadata, deterministic UI metadata, and forward-testing guidance |
-| Local `AGENTS.md` | Accepted portable revision checked 2026-07-11 | Personal profile instructions | Global authorization, discussion signals, ask-first boundaries, language, and simple-task handling |
-| Local `personal-grilling` | Current host copy plus user-approved composition design checked 2026-07-11 | Personal profile skill | Manual rigorous clarification, critical-question admission, answer lockability, and blocking decisions |
+| Local `skill-creator` snapshot | `codex-cli 0.144.1`; home-relative path `~/.codex/skills/.system/skill-creator/SKILL.md`; SHA-256 `da44c88f6b3845a8fa8c60792ec9a722110a55a9793c279757b48fefb11f819c`; checked 2026-07-12 | Built-in Codex skill; current-host evidence snapshot only | Progressive disclosure, trigger metadata, deterministic UI metadata, and forward-testing guidance |
+| Local portable `AGENTS.md` | profile-kit revision `5ad41a7157352724ac51ad24f87949e3e23cc694`; repo path `rules/AGENTS.portable.md`; Git blob `e20fa56361bee15b1187bb377fb50170ae722ffa`; checked 2026-07-12 | Repository-exported personal profile instructions | Global authorization, discussion signals, ask-first boundaries, language, and simple-task handling |
+| Local `personal-grilling` | profile-kit revision `5ad41a7157352724ac51ad24f87949e3e23cc694`; repo path `skills/codex/personal-grilling/SKILL.md`; Git blob `b33ad302ac13d0d3faf6a8a05293b9e6d96361f5`; checked 2026-07-12 | Repository-exported personal profile skill | Manual rigorous clarification, critical-question admission, answer lockability, and blocking decisions |
+
+The built-in `skill-creator` entry is a hash-addressed evidence snapshot of the
+current host. It is not exported by profile-kit and is not a distributed
+runtime dependency of this skill.
 
 ## Adopted
 
