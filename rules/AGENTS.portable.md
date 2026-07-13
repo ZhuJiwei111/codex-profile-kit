@@ -128,13 +128,24 @@ narrower `AGENTS.md` files.
 - A bounded, read-only startup guard may run for at most 10 minutes to confirm
   launch, liveness, log creation, writable output, first progress, and obvious
   resource failures. It is not active monitoring.
-- Without explicit current-stage active-monitoring authorization, do not poll,
-  loop over status, tail continuously, keep a terminal open as a watcher, or
-  spawn a monitoring worker. End with a reproducible handoff instead.
-- Phrases such as `允许监控`, and equivalent explicit current-stage
-  active-monitoring approval, also authorize spawning or assigning exactly one
-  read-only monitoring subagent for that stage; the user need not separately
-  request a subagent.
+- Without explicit active-monitoring authorization in the current task, do not
+  poll, loop over status, tail continuously, keep a terminal open as a watcher,
+  or spawn a monitoring worker. End with a reproducible handoff instead.
+- Unless the user narrows or revokes it, explicit active-monitoring approval
+  applies to later long-running jobs in the same Codex thread on the current
+  host. Each job or phase still requires a fresh monitoring contract, and this
+  thread-scoped permission never authorizes launch, repair, restart, resource
+  expansion, or stage progression.
+- Phrases such as `允许监控`, and equivalent explicit active-monitoring
+  approval, also authorize spawning or assigning exactly one read-only
+  monitoring subagent for the active monitored job; the user need not
+  separately request a subagent for later jobs in the same thread.
+- Before each monitored job, the main process estimates runtime, early failure
+  risk, first progress, evidence frequency, and the next useful decision point;
+  it records a cadence rationale and revises it only when observed evidence
+  materially changes the estimate. Reject checks that are unlikely to yield new
+  evidence and intervals that can miss the relevant failure window or delay a
+  useful terminal report.
 - When active monitoring is authorized, use the dedicated monitoring workflow:
   the main process must define its contract first and delegate recurring
   polling, log checks, and progress observation to that subagent, using sparse
@@ -147,6 +158,9 @@ narrower `AGENTS.md` files.
   and ask whether a one-off main-process check is acceptable.
 - A monitor may report evidence but must not stop, repair, restart, mutate
   outputs, launch the next stage, or make a go/no-go decision.
+- Monitoring reports use Chinese event names such as `里程碑`, `需要处理`,
+  `失败证据`, and `完成证据`; do not publish unchanged-status updates solely
+  because a timer expired.
 - Execute repair, restart, or next-stage actions only when preapproved. Ask
   before any unapproved action, scope change, heavy resource use, or cost change.
 - Preserve a compact handoff containing command, `cwd`, environment, session or

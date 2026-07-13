@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-12.
+Checked: 2026-07-13.
 
 Classification: hybrid. The initial skill is local-origin, while the current
 design deliberately internalizes selected Superpowers methods and official
@@ -39,10 +39,12 @@ Pinned design sources:
   different defaults.
 - [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference)
   documents `agents.<name>.config_file` and supported reasoning configuration.
-- Local check: `codex-cli 0.144.1` reported `multi_agent` as stable. The current
-  model catalog contained `gpt-5.6-terra` and `gpt-5.6-sol`; both supported the
-  reasoning levels selected by the local `monitor` and `reviewer` profiles on
-  the check date.
+- Local check: `codex-cli 0.144.1` reported `multi_agent` as stable. On
+  2026-07-12, the checked model catalog contained `gpt-5.6-terra` and
+  `gpt-5.6-sol`. On 2026-07-13 the user explicitly selected
+  `gpt-5.6-luna` with high reasoning for `monitor`; public documentation did
+  not establish that rollout slug, so effective availability remains a product
+  confirmation at the first real spawn.
 
 Official pages are current documentation rather than commit-pinned source. Recheck
 them and the local model catalog when auditing model names, reasoning levels, or
@@ -87,7 +89,7 @@ revision retains the useful contract in a progressive-disclosure reference.
   non-recursive `agents.max_depth = 1` default explicit.
 - Use scoped worker verification, coordinator intake, and
   `personal-risk-verification` as separate evidence layers.
-- Keep active-monitoring detail in a reference loaded only after current-stage
+- Keep active-monitoring detail in a reference loaded only after current-thread
   authorization.
 
 ## Rejected
@@ -116,6 +118,16 @@ revision retains the useful contract in a progressive-disclosure reference.
   `verify` cannot silently approve unreviewed configuration.
 - `monitor` is read-only and does not write a durable record. A separately
   authorized supervisor owns any persistent monitoring record.
+- Active-monitoring authorization defaults to the current Codex thread unless
+  the user narrows or revokes it. Each new job still receives a fresh contract;
+  thread scope grants observation, not launch, repair, restart, or next-stage
+  authority.
+- The supervisor estimates runtime and owns the cadence rationale. Numerical
+  ranges are non-binding sanity checks, and user-visible event reports use
+  Chinese names while optional machine-readable event types remain stable.
+- The local `monitor` profile is pinned to user-selected `gpt-5.6-luna` with
+  high reasoning. Parser acceptance is local evidence; effective model
+  selection remains product-confirmed at spawn time.
 - If the configured monitoring profile cannot be enforced, the default fallback
   is no watcher rather than silently inheriting an unknown parent profile.
 - Explorer, worker, validator, and diagnostic model choices remain

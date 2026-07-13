@@ -1,7 +1,7 @@
 # Active Monitoring Protocol
 
 Read this reference only after the user explicitly authorizes active monitoring
-for the current stage. It is not a trigger to create a watcher.
+in the current Codex thread. It is not a trigger to create a watcher.
 
 ## Entry Gate
 
@@ -10,9 +10,10 @@ execution, the bounded startup guard, and the handoff required when monitoring
 is not authorized. This protocol consumes the startup result; it does not
 extend or repeat the startup guard.
 
-Before spawning a monitoring observer, confirm:
+Before spawning or rearming a monitoring observer, confirm:
 
-- the current stage has explicit active-monitoring authorization;
+- the current Codex thread has explicit active-monitoring authorization, which
+  the user has not narrowed or revoked;
 - the job, phase, process or session, evidence paths, and completion condition
   are known;
 - checks can remain read-only with respect to the job and its outputs;
@@ -20,7 +21,12 @@ Before spawning a monitoring observer, confirm:
   reasoning effort, and read-only sandbox are verified; and
 - the supervisor will remain responsible for judgment and any later action.
 
-If the configured low-cost, read-only profile cannot be selected and verified,
+Thread-scoped authorization permits reuse of the monitoring capability without
+another user prompt, but it does not carry a prior PID, cadence, evidence path,
+or action authority into a new job. Create a fresh contract for every job or
+phase and keep at most one observer on the same monitored job.
+
+If the configured Luna/high, read-only profile cannot be selected and verified,
 default to no watcher. Use another profile only when the contract explicitly
 names a verified fallback and its cost and reasoning implications are accepted.
 
@@ -33,6 +39,8 @@ monitoring:
   job_id:
   phase:
   permission_scope:
+  authorization_scope: thread
+  authorization_source:
   cwd:
   command:
   session_or_pid:
@@ -40,10 +48,11 @@ monitoring:
   output_path:
   expected_artifacts: []
   startup_guard_result:
+  estimated_runtime:
   execution_profile:
     requested_role: monitor
-    requested_model:
-    requested_reasoning_effort: low
+    requested_model: gpt-5.6-luna
+    requested_reasoning_effort: high
     selection_mechanism: custom_agent | explicit_override | runtime_choice
     enforcement: verified
     fallback: no_monitor
@@ -51,6 +60,7 @@ monitoring:
   job_specific_thresholds: []
   fallback_thresholds: []
   cadence:
+  cadence_rationale:
   event_triggers: []
   read_only_diagnostics: []
   forbidden_actions: []
@@ -68,26 +78,35 @@ does not authorize the monitoring observer to execute them.
 
 ## Model And Reasoning Boundary
 
-The configured `monitor` role is for deterministic collection and threshold
-comparison at low reasoning effort. The parent agent's current profile is not
-the monitor's quality or cost baseline.
+The configured `monitor` role uses `gpt-5.6-luna` at high reasoning effort for
+bounded evidence synthesis while remaining a read-only observer. High reasoning
+does not authorize diagnosis, mutation, or a stage decision, and the parent
+agent's current profile is not the monitor's quality or cost baseline.
 
-When a monitoring contract requires ambiguous ETA inference, correlation of
-multiple weak signals, or causal analysis that cannot be expressed as bounded
-checks, choose a suitable balanced profile before launch or keep that analysis
-with the supervisor. Do not silently raise a running observer's model or
-reasoning effort. If the work becomes diagnosis, emit `action_needed` and hand
-off to a separately scoped diagnostic workflow.
+When a monitoring contract requires causal analysis that cannot be expressed as
+bounded checks, keep that analysis with the supervisor. Do not change a running
+observer's model or reasoning effort. If the work becomes diagnosis, emit
+`需要处理` with internal `event_type: action_needed` and hand off to a
+separately scoped diagnostic workflow.
 
 ## Cadence
 
-Derive cadence from the expected runtime, early failure window, first visible
-progress point, log or artifact update frequency, and next meaningful event.
+The supervisor owns the cadence decision. Before delegation or rearming, it
+estimates runtime and records a cadence rationale from the early failure window,
+first visible progress point, log or artifact update frequency, expected
+completion, and next meaningful evidence event. Do not require a fixed interval
+when the job supplies better timing evidence.
 
 - Prefer event-driven waits and sparse checks over polling loops.
 - Check earlier only when startup risk remains material after the startup
   guard.
 - Back off after stable evidence.
+- Treat a cadence as too frequent when another check is unlikely to observe new
+  evidence, and as too sparse when it can miss the relevant failure window or
+  delay terminal evidence beyond the next useful decision point.
+- Re-estimate only when observed throughput, progress, risk, or the expected
+  completion time changes materially; do not shorten cadence merely because a
+  timeout elapsed.
 - Do not read logs, artifacts, process state, and GPU state merely because a
   wait timeout elapsed; perform the next contract-defined check.
 - A sparse cadence never suppresses an anomaly found during an authorized
@@ -96,8 +115,9 @@ progress point, log or artifact update frequency, and next meaningful event.
 Do not encode one global numerical interval for all jobs. Record any numerical
 cadence in the job contract where its rationale can be reviewed.
 
-When the contract cannot derive a more meaningful event-based cadence, use the
-legacy ranges only as non-binding fallback estimates:
+When the supervisor cannot derive a more meaningful event-based cadence, use
+the legacy ranges only as non-binding sanity checks, never as a mandatory
+schedule:
 
 - shorter long-running jobs: check every 30-60 minutes;
 - multi-hour jobs: first check after 45-60 minutes, then every 90-120 minutes
@@ -138,15 +158,23 @@ credentials, authenticated URLs, or secret-bearing command output.
 
 ## Evidence Events
 
-Use non-authoritative event names:
+Write user-visible monitoring reports in Chinese. Use these non-authoritative
+event names, with the English value retained only as an internal `event_type`
+when machine-readable routing needs it:
 
-- `milestone`: a contract-defined progress boundary is evidenced;
-- `action_needed`: ambiguity or anomaly requires supervisor or user judgment;
-- `failure_evidence`: direct process, log, or contract-defined failure evidence
-  exists;
-- `completion_evidence`: the contract's completion condition is evidenced;
-- `preapproved_next_ready`: the trigger for a preapproved supervisor action is
-  evidenced.
+- `里程碑` (`milestone`): a contract-defined progress boundary is evidenced;
+- `需要处理` (`action_needed`): ambiguity or anomaly requires supervisor or
+  user judgment;
+- `失败证据` (`failure_evidence`): direct process, log, or contract-defined
+  failure evidence exists;
+- `完成证据` (`completion_evidence`): the contract's completion condition is
+  evidenced;
+- `已批准下一步就绪` (`preapproved_next_ready`): the trigger for a
+  preapproved supervisor action is evidenced.
+
+Use a compact Chinese report structure such as `事件`, `对象`, `证据`, `判断边界`,
+and `建议下一步`. Do not emit an unchanged-status report merely because a timer
+expired.
 
 An event never assigns a coordination-line state and never proves final task
 completion. The coordinator performs intake, and `personal-risk-verification`

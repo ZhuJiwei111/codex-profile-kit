@@ -193,14 +193,22 @@ verification needs direct support, or the user asks.
 Do not create a watcher by default. A one-shot status or ETA request is not a
 delegation trigger; handle it as one bounded read-only check, and use
 `personal-long-job-status` only when the user explicitly invokes that skill.
-Active monitoring requires explicit authorization for the current stage and an
-enforceable monitoring contract.
+Active monitoring requires explicit authorization in the current Codex thread
+and an enforceable per-job monitoring contract. Unless the user narrows or
+revokes it, that authorization remains valid for later long-running jobs in the
+same thread and on the same host. It authorizes observation only: every new job
+or phase still needs a fresh contract, and launch, repair, restart, and stage
+progression retain their own authority gates.
 
-When authorized, prefer the configured `monitor` custom agent. If its effective
-model, reasoning effort, and read-only sandbox cannot be selected and verified,
-default to no watcher unless the contract names another verified fallback. Read
-[the monitoring protocol](references/monitoring.md) before spawning. Monitoring
-events are evidence, never task completion or a go/no-go decision.
+When authorized, use the configured `monitor` custom agent with
+`gpt-5.6-luna`, high reasoning effort, and a read-only sandbox. If its effective
+model, reasoning effort, and sandbox cannot be selected and verified, default
+to no watcher unless the contract names another verified fallback. The
+supervisor estimates runtime and evidence timing, records the cadence rationale,
+and revises it only when observed evidence changes the estimate. Read [the
+monitoring protocol](references/monitoring.md) before spawning. User-visible
+monitoring reports use Chinese event names; monitoring events remain evidence,
+never task completion or a go/no-go decision.
 
 ## Collaboration Boundaries
 

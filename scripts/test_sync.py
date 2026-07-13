@@ -395,7 +395,7 @@ class WholeProfileContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("Do not encode one global numerical interval", monitoring)
-        self.assertIn("non-binding fallback estimates", monitoring)
+        self.assertIn("non-binding sanity checks", monitoring)
         for cadence in (
             "30-60 minutes",
             "45-60 minutes",
@@ -856,6 +856,16 @@ class PortableSkillTests(unittest.TestCase):
 
 
 class CustomAgentProfileTests(unittest.TestCase):
+    def test_monitor_profile_pins_luna_high(self) -> None:
+        self.assertEqual(
+            SYNC.PORTABLE_CODEX_AGENT_SETTINGS["monitor"],
+            {
+                "model": "gpt-5.6-luna",
+                "model_reasoning_effort": "high",
+                "sandbox_mode": "read-only",
+            },
+        )
+
     def test_portable_config_keeps_parent_model_session_dependent(self) -> None:
         self.assertNotRegex(SYNC.CONFIG_TEMPLATE, r"(?m)^model\s*=")
         self.assertNotRegex(SYNC.CONFIG_TEMPLATE, r"(?m)^model_reasoning_effort\s*=")
@@ -867,12 +877,14 @@ class CustomAgentProfileTests(unittest.TestCase):
         name: str,
         *,
         declared_name: str | None = None,
-        effort: str = "low",
+        effort: str | None = None,
         sandbox: str = "read-only",
     ) -> Path:
         path = root / "agents" / "codex" / f"{name}.toml"
         path.parent.mkdir(parents=True, exist_ok=True)
-        model = "gpt-5.6-sol" if name == "reviewer" else "gpt-5.6-terra"
+        settings = SYNC.PORTABLE_CODEX_AGENT_SETTINGS[name]
+        model = settings["model"]
+        effort = effort or settings["model_reasoning_effort"]
         path.write_text(
             "\n".join(
                 [
@@ -1145,8 +1157,8 @@ class CustomAgentProfileTests(unittest.TestCase):
                     [
                         'name = "monitor"',
                         'description = "monitor"',
-                        'model = "gpt-5.6-terra"',
-                        'model_reasoning_effort = "low"',
+                        'model = "gpt-5.6-luna"',
+                        'model_reasoning_effort = "high"',
                         'sandbox_mode = "read-only"',
                         'developer_instructions = "Bounded role."',
                         "",
@@ -1164,10 +1176,13 @@ class CustomAgentProfileTests(unittest.TestCase):
             codex = base / "home" / ".codex"
             export_root = base / "profile"
             source_root = codex / "agents"
-            for name, effort in (("monitor", "low"), ("reviewer", "high"), ("local-only", "medium")):
+            for name, model, effort in (
+                ("monitor", "gpt-5.6-luna", "high"),
+                ("reviewer", "gpt-5.6-sol", "high"),
+                ("local-only", "gpt-5.6-terra", "medium"),
+            ):
                 path = source_root / f"{name}.toml"
                 path.parent.mkdir(parents=True, exist_ok=True)
-                model = "gpt-5.6-sol" if name == "reviewer" else "gpt-5.6-terra"
                 path.write_text(
                     "\n".join(
                         [

@@ -66,8 +66,8 @@ PORTABLE_CODEX_SKILL_NAMES = {
 }
 PORTABLE_CODEX_AGENT_SETTINGS = {
     "monitor": {
-        "model": "gpt-5.6-terra",
-        "model_reasoning_effort": "low",
+        "model": "gpt-5.6-luna",
+        "model_reasoning_effort": "high",
         "sandbox_mode": "read-only",
     },
     "reviewer": {
