@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Grilling"
-  short_description: "Pressure-test only decisions that change the plan"
-  default_prompt: "Use $personal-grilling to research facts first, ask me one decision-changing question at a time in Chinese, and release planning after every blocker is locked."
+  short_description: "Close every material branch before planning"
+  default_prompt: "Use $personal-grilling to build a sourced coverage tree, investigate decision-changing facts, ask me one material decision at a time in Chinese, and require coverage, consistency, adversarial, risk, and confirmation closure before handoff."
 policy:
   allow_implicit_invocation: false

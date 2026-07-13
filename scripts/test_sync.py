@@ -462,6 +462,49 @@ class WholeProfileContractTests(unittest.TestCase):
         self.assertIn("ordinary", debugging.lower())
         self.assertIn("ordinary", branch_finish.lower())
 
+    def test_grilling_requires_sourced_three_pass_coverage_closure(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills" / "codex" / "personal-grilling"
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        coverage_path = skill_root / "references" / "coverage-model.md"
+        normalized = " ".join(skill.split()).lower()
+
+        self.assertNotIn("fewest questions needed", normalized)
+        self.assertTrue(coverage_path.is_file())
+        coverage = " ".join(coverage_path.read_text(encoding="utf-8").split()).lower()
+        for phrase in (
+            "coverage pass",
+            "consistency pass",
+            "adversarial pass",
+            "explicit coverage confirmation",
+        ):
+            self.assertIn(phrase, normalized)
+        for phrase in (
+            "universal core",
+            "task-type packs",
+            "source_type",
+            "risk_disposition",
+            "bootstrap",
+            "tombstone",
+            "concurrent writers",
+            "prediction-time information boundary",
+            "pseudoreplication",
+            "evaluation-selection boundary",
+            "multiplicity",
+        ):
+            with self.subTest(coverage_phrase=phrase):
+                self.assertIn(phrase, coverage)
+        self.assertIn("proportionate ledger", normalized)
+
+    def test_brainstorms_yields_to_grilling_coverage_when_paired(self) -> None:
+        brainstorms = (
+            SYNC.REPO_ROOT / "skills/codex/personal-brainstorms/SKILL.md"
+        ).read_text(encoding="utf-8")
+        normalized = " ".join(brainstorms.split()).lower()
+
+        self.assertIn("grilling coverage gate", normalized)
+        self.assertIn("does not apply while `personal-grilling` is active", normalized)
+        self.assertIn("reopen", normalized)
+
     def test_thread_closeout_requires_an_external_controller(self) -> None:
         skill_root = SYNC.REPO_ROOT / "skills" / "codex"
         closeout = (
