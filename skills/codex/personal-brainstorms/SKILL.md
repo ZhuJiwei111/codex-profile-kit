@@ -23,10 +23,15 @@ to classify the request:
   subsystems. Name the units, their dependencies, and a recommended order.
   Brainstorm one bounded slice instead of refining the entire system at once.
 
+The direct-handoff and lightweight classification above govern brainstorming
+when it runs alone. They do not release a simultaneously invoked
+`personal-grilling` gate; in the paired workflow, provide the initial
+decomposition and enter its coverage audit.
+
 If only `personal-grilling` is explicitly invoked, yield rigorous requirements
 interrogation to that skill. If both skills are explicitly invoked, keep
-brainstorming as the design coordinator and use grilling as the quality gate for
-critical decisions.
+brainstorming as the design coordinator and use grilling as an independent
+coverage gate over the shared decision tree.
 
 If repository facts needed for the design are unclear, perform only bounded
 inspection or use `personal-repo-intake`. Do not scan files or history by
@@ -34,49 +39,42 @@ default when the relevant context is already known.
 
 ## Composition With Personal Grilling
 
-When both skills are invoked, brainstorming owns scope decomposition, evidence
-synthesis, alternatives, recommendations, component boundaries, and final
-design synthesis. `personal-grilling` owns critical-question admission, answer
-lockability, and the blocking-decision gate.
+When both skills are invoked, brainstorming owns initial scope decomposition,
+evidence synthesis, alternatives, recommendations, component boundaries, and
+final design synthesis. `personal-grilling` independently owns coverage-tree
+construction, answer lockability, material-risk disposition, the three closure
+passes, and the explicit coverage-confirmation gate.
 
-Maintain a lightweight shared decision state only when it helps:
+Brainstorming supplies its current design hypothesis and decision state; it
+does not certify that the state is complete. Grilling may reopen a decision
+when coverage, evidence, dependency propagation, consistency, or adversarial
+review exposes a material gap. It should reuse sufficient evidence and avoid
+repeating an unchanged, already supported leaf.
 
-- `open`: material but not yet decided.
-- `blocking`: planning would be unreliable without an answer.
-- `locked`: fixed by the user or sufficient evidence.
-- `assumption`: resolved with an explicit, low-risk, reversible default.
-- `deferred`: intentionally outside the current delivery slice.
+Maintain one shared sourced ledger while grilling is active. Brainstorming must
+not filter out a material branch merely because its solo workflow would use a
+lighter clarification standard. Not every covered dimension becomes a user
+question: grilling closes discoverable facts, inherited constraints, safe
+non-material assumptions, explicit deferrals, and justified not-applicable
+branches under its own contract.
 
-Do not require a formal decision table for lightweight work.
-
-Before sending a question through the grilling gate, confirm that:
-
-- The answer is not discoverable from available evidence.
-- It would materially change scope, behavior, safety, cost, architecture,
-  environment, output, or acceptance.
-- A low-risk reversible default is not sufficient.
-- The reason for deciding now can be stated.
-- A recommended default and its material tradeoff can be offered.
-
-Ask one blocking question at a time. After each answer, update the shared
-decision state and the design instead of beginning a separate interview. Do not
-repeat locked decisions, grill non-blocking implementation details, or run an
-exhaustive checklist disconnected from the current design.
-
-While a blocking decision remains unresolved, do not present the design as
-ready for planning. When the grilling workflow releases its gate, return to
-brainstorming for design synthesis, inline self-review, and the authorized
-handoff.
+Ask one material decision at a time. After each answer, update the shared
+ledger and propagate consequences into the design instead of beginning a
+second interview. While the grilling coverage gate remains active, do not
+present the design as ready for planning. After its three closure passes and
+explicit user confirmation, return to brainstorming for synthesis, inline
+self-review, and the authorized handoff.
 
 ## Workflow
 
 1. **Frame the decision.** State the current goal, scope, non-goals, acceptance
    evidence, constraints, and material unknowns.
-2. **Clarify selectively.** Ask only questions whose answers would change
-   behavior, scope, safety, cost, environment, output, or acceptance. Ask one
-   blocking question at a time. Do not ask facts discoverable from available
-   evidence. When `personal-grilling` is also active, send candidate questions
-   through its admission and lockability gate before asking the user.
+2. **Clarify selectively.** When brainstorming runs alone, ask only questions
+   whose answers would change behavior, scope, safety, cost, environment,
+   output, or acceptance. Ask one blocking question at a time and do not ask
+   discoverable facts. This lightweight selective-question rule does not apply
+   while `personal-grilling` is active; provide the current decomposition and
+   let its coverage model discover, classify, and sequence material leaves.
 3. **Compare real alternatives.** When multiple approaches are genuinely
    viable, present 2-3 with the recommendation first and explain the material
    tradeoff. If one path clearly fits, say why instead of inventing options.
@@ -111,9 +109,10 @@ For each significant component, be able to answer:
   once material choices are lockable.
 - If a question or presented alternative requires the user's decision, wait for
   the answer. Do not silently select an option after asking.
-- When `personal-grilling` is active, an unresolved blocking decision overrides
-  the ordinary handoff. Once its gate is released, preserve the authorization
-  already present in the original request.
+- When `personal-grilling` is active, its coverage gate overrides the ordinary
+  handoff. Require its explicit coverage confirmation even when implementation
+  was preauthorized; after release, preserve the authorization already present
+  in the original request instead of asking for it again.
 - Reopen only a new consequential decision; do not re-ask for an unchanged,
   already approved design.
 

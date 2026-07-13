@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-12.
+Checked: 2026-07-13.
 
 This skill adapts selected design behaviors from upstream evidence while
 preserving the local Codex authorization model, lightweight scope gate, and
@@ -15,7 +15,7 @@ diagrams, or substantial prose.
 | [Superpowers v6.1.1 release](https://github.com/obra/superpowers/releases/tag/v6.1.1) | Immutable release dated 2026-07-02 | Upstream release evidence | Fixed comparison baseline; do not imply that every adopted brainstorming behavior was introduced by this release |
 | Local `skill-creator` snapshot | `codex-cli 0.144.1`; home-relative path `~/.codex/skills/.system/skill-creator/SKILL.md`; SHA-256 `da44c88f6b3845a8fa8c60792ec9a722110a55a9793c279757b48fefb11f819c`; checked 2026-07-12 | Built-in Codex skill; current-host evidence snapshot only | Progressive disclosure, trigger metadata, deterministic UI metadata, and forward-testing guidance |
 | Local portable `AGENTS.md` | profile-kit revision `5ad41a7157352724ac51ad24f87949e3e23cc694`; repo path `rules/AGENTS.portable.md`; Git blob `e20fa56361bee15b1187bb377fb50170ae722ffa`; checked 2026-07-12 | Repository-exported personal profile instructions | Global authorization, discussion signals, ask-first boundaries, language, and simple-task handling |
-| Local `personal-grilling` | profile-kit revision `5ad41a7157352724ac51ad24f87949e3e23cc694`; repo path `skills/codex/personal-grilling/SKILL.md`; Git blob `b33ad302ac13d0d3faf6a8a05293b9e6d96361f5`; checked 2026-07-12 | Repository-exported personal profile skill | Manual rigorous clarification, critical-question admission, answer lockability, and blocking decisions |
+| Local `personal-grilling` | Active path `~/.codex/skills/personal-grilling/SKILL.md`; profile-kit mirror `skills/codex/personal-grilling/SKILL.md`; strengthened local contract checked 2026-07-13 | Personal profile skill | Manual coverage-tree construction, sourced leaves, answer lockability, risk disposition, three closure passes, and explicit coverage confirmation |
 
 The built-in `skill-creator` entry is a hash-addressed evidence snapshot of the
 current host. It is not exported by profile-kit and is not a distributed
@@ -54,10 +54,16 @@ runtime dependency of this skill.
 - The original request supplies discussion, planning, or implementation
   authority; brainstorming does not create or revoke it.
 - When both personal skills are explicitly invoked, brainstorming coordinates
-  design while `personal-grilling` gates only critical questions and blocking
-  decisions. They share one decision state rather than running two interviews.
-- The reciprocal release and same-turn planning behavior remains owned by the
-  separately revised `personal-grilling` contract.
+  initial decomposition and final design synthesis while `personal-grilling`
+  acts as an independent coverage and adversarial gate over one shared sourced
+  ledger. It may reopen a material branch that brainstorming missed or closed
+  without sufficient evidence.
+- Brainstorming's solo lightweight-question filter does not restrict the paired
+  grilling coverage model. Grilling still asks only unresolved material user
+  decisions rather than turning every covered dimension into a question.
+- The reciprocal release, explicit coverage confirmation, risk disposition,
+  and same-scope authorization handoff remain owned by the separately revised
+  `personal-grilling` contract.
 - Ordinary planning uses the built-in plan; file-backed planning is routed to
   `personal-planning-with-files-zh` only when explicitly required.
 - Native tables, Mermaid, or compact wireframes replace the external visual
