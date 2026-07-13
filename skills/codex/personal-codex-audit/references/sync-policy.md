@@ -85,11 +85,13 @@ apply-only request remains limited to the named stage.
    approved paths and commit once. Do not make GitHub write authentication a
    prerequisite for the local commit. If a write-auth check is blocked,
    continue with the exact-path local Git commit.
-4. Attempt push through the host entrypoint after the commit. If authentication
-   is unavailable, preserve the commit for a later push and report remote
-   publication as blocked; do not describe the local commit as failed. Report a
-   commit failure only when the local Git commit itself fails. When push
-   succeeds, compare the resulting remote ref with `HEAD`.
+4. Attempt ordinary `git push` through the host entrypoint after the commit. Do
+   not make `gh` or GitHub connector authentication a prerequisite for `git
+   push`. If either higher-level path is unavailable, fall back to ordinary
+   `git push` through the host connection entrypoint. Report remote publication
+   failure only when `git push` itself fails; do not describe a successful local
+   commit as failed. When push succeeds, compare the resulting remote ref with
+   `HEAD`.
 
 ### Inbound
 
@@ -200,8 +202,10 @@ The routine outbound fast path already exported and verified its candidate, so
 do not call `sync.py push --confirm` after a completed export. Stage the exact
 reviewed paths and use ordinary commit/push commands through the host network
 entrypoint. Keep the local commit and remote push as separate outcomes: a
-GitHub authentication failure blocks publication, not the preceding authorized
-commit. Report a commit failure only when `git commit` itself fails.
+`gh` or connector authentication failure must fall back to ordinary `git push`
+through the host connection entrypoint. Report remote publication failure only
+when `git push` itself fails, and report a commit failure only when `git commit`
+itself fails.
 
 `sync.py push --confirm` remains a standalone all-in-one option only when no
 separate export has run and the entire worktree diff is intentionally approved;

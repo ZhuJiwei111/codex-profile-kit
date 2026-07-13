@@ -481,6 +481,18 @@ class WholeProfileContractTests(unittest.TestCase):
             "report a commit failure only when the local git commit itself fails",
             combined,
         )
+        self.assertIn(
+            "do not make `gh` or github connector authentication a prerequisite for `git push`",
+            combined,
+        )
+        self.assertIn(
+            "fall back to ordinary `git push` through the host connection entrypoint",
+            combined,
+        )
+        self.assertIn(
+            "report remote publication failure only when `git push` itself fails",
+            combined,
+        )
 
     def test_profile_sync_escalates_material_risk_instead_of_all_syncs(self) -> None:
         policy = (

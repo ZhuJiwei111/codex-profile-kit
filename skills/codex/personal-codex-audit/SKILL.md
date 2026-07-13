@@ -99,11 +99,13 @@ Run the smallest direction-specific chain:
    current host, clean ownership, and the host network entrypoint.
 2. For outbound sync, run `sync.py audit`, export once, inspect the exact diff,
    then stage exact paths and commit before attempting push. Do not make GitHub
-   write authentication a prerequisite for the local commit. If write
-   authentication is unavailable, continue with the exact-path local Git commit,
-   preserve it for a later push, and report only the remote publication as
-   blocked. Report a commit failure only when the local Git commit itself fails.
-   When push succeeds, confirm the remote ref.
+   write authentication a prerequisite for the local commit. If a preliminary
+   auth check is unavailable, continue with the exact-path local Git commit.
+   After commit, do not make `gh` or GitHub connector authentication a
+   prerequisite for `git push`; fall back to ordinary `git push` through the
+   host connection entrypoint. Report remote publication failure only when
+   `git push` itself fails, and report a commit failure only when the local Git
+   commit itself fails. When push succeeds, confirm the remote ref.
 3. For inbound sync, fetch, classify ancestry, integrate without conflict, run
    `sync.py audit` and one apply dry run, then apply the reviewed existing
    targets with backup and require a zero-drift post-apply audit.
