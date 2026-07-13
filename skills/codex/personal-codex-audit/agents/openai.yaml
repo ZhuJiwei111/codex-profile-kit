@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Codex Audit"
-  short_description: "Audit and synchronize a whole Codex profile"
-  default_prompt: "Use $personal-codex-audit to audit this host's whole reusable Codex profile and report drift before any export or apply."
+  short_description: "Audit or fast-sync a whole Codex profile"
+  default_prompt: "Use $personal-codex-audit to audit or directionally sync the reusable Codex profile on this host, choosing the routine fast path unless a material risk trigger requires deeper review."

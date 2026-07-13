@@ -11,8 +11,9 @@ Own current-host, whole-profile inventory, drift analysis, and profile-kit
 transfer decisions.
 
 - Keep audits, comparisons, `sync.py audit`, and dry runs read-only.
-- Require matching intent for export, confirmed apply, commit, push, or
-  publication; one stage does not authorize the next.
+- Require matching intent for writes and publication. Explicit directional sync
+  intent authorizes the bounded ordinary chain defined below; a bare audit,
+  comparison, export, or apply request does not authorize later stages.
 - Distinguish files, configuration, enablement, trust, export state, and
   verification instead of collapsing them into "installed" or "active."
 - Reconcile skill provenance, admission, activation, portability, and export
@@ -26,8 +27,8 @@ transfer decisions.
 
 | Requested outcome | Primary owner |
 | --- | --- |
-| Audit or compare the whole reusable profile | `personal-codex-audit` |
-| Export, apply, or sync `codex-profile-kit` | `personal-codex-audit` |
+| Audit or compare the whole reusable profile | Deep audit path in `personal-codex-audit` |
+| Routine directional sync to or from `codex-profile-kit` | Fast path in `personal-codex-audit` |
 | Decide one skill, plugin, or hook lifecycle | `personal-skill-hygiene` |
 | Admit one newly created or externally installed skill | `personal-skill-hygiene`, with the owning system author/installer for mechanics |
 | Create or edit one skill | `skill-creator` |
@@ -37,6 +38,18 @@ transfer decisions.
 Do not expand single-artifact work into a profile audit. For mixed requests,
 finish the read-only profile finding, then hand each concrete change to its
 owning workflow and authorization gate.
+
+## Path Selection
+
+- Use the deep audit path only for an audit request or when a sync escalation
+  trigger is present.
+- For a routine directional sync, read only
+  [references/sync-policy.md](references/sync-policy.md). Do not run the
+  whole-profile collector, compatibility reconciliation, or state-model report
+  unless the fast path escalates.
+- Before Git network access, read the current host connection contract when the
+  active instructions route to one, and use its documented entrypoint. Do not
+  improvise direct, proxy, API, or archive fallbacks first.
 
 ## Audit Workflow
 
@@ -64,22 +77,42 @@ owning workflow and authorization gate.
 8. Report scope, inventory, drift, exclusions, unknowns, and recommendations
    requiring approval. Label any opted-in memory evidence as memory-derived.
 
-## Sync Workflow
+## Routine Directional Sync
 
-1. Establish direction and the furthest authorized stage. Inspect profile-kit
-   status and stop if a write could absorb unrelated changes.
-2. Run `python3 scripts/sync.py audit` before export, apply, or publication.
-3. Before export, require every portable personal skill to have a source note
-   and every allowlisted vendor to match the reviewed third-party lock. A
-   host-only, unassessed, deferred, rejected, or unlocked candidate is not an
-   export source.
-4. After explicit export authority, run `export`, `verify`, and
-   `git status --short`; do not infer commit or push authority.
-5. Run `apply` without `--confirm` first. Confirm only after approval of its
-   target set and backup behavior.
-6. Treat commit and push as separate external actions. Do not run
-   `sync.py push --confirm` until both are authorized and the intended diff is
-   isolated.
+Treat these explicit outcomes as matching authority inside the configured
+repository, branch, current host, and safe envelope. Do not ask again at each
+internal stage:
+
+- **Sync to GitHub** authorizes audit, export, exact-path commit, and push of an
+  isolated portable diff to the existing remote and branch.
+- **Sync GitHub updates to this host** authorizes fetch, non-conflicting
+  integration, and confirmed apply of existing admitted portable targets with
+  the standard timestamped backup.
+
+Neither intent authorizes a pull request, visibility change, another repository
+or host, conflict resolution with ambiguous ownership, new admission, or
+excluded/sensitive state.
+
+Run the smallest direction-specific chain:
+
+1. Lock direction, repository, branch/upstream, visibility when publishing,
+   current host, clean ownership, and the host network entrypoint.
+2. For outbound sync, run `sync.py audit`, export once, inspect the exact diff,
+   then stage exact paths and commit before attempting push. Do not make GitHub
+   write authentication a prerequisite for the local commit. If write
+   authentication is unavailable, continue with the exact-path local Git commit,
+   preserve it for a later push, and report only the remote publication as
+   blocked. Report a commit failure only when the local Git commit itself fails.
+   When push succeeds, confirm the remote ref.
+3. For inbound sync, fetch, classify ancestry, integrate without conflict, run
+   `sync.py audit` and one apply dry run, then apply the reviewed existing
+   targets with backup and require a zero-drift post-apply audit.
+4. Use one verification pass per unchanged state. Export already verifies its
+   candidate and apply already verifies the repository; do not add a standalone
+   `verify` beside either command unless a later mutation invalidated evidence.
+5. Escalate according to `sync-policy.md`. Stop before a material mutation that
+   falls outside the fast-path authority instead of degrading into a broad
+   audit or repeated network experiments.
 
 ## Hard Boundaries
 
@@ -97,7 +130,8 @@ owning workflow and authorization gate.
 - Do not edit audited profile assets or manage another host without separate,
   concrete authority.
 - Do not stage, commit, push, publish, change visibility, or contact external
-  services without matching explicit authority.
+  services without matching explicit authority. The two directional sync
+  outcomes above are matching authority only for their bounded fast-path chain.
 
 ## Resources
 

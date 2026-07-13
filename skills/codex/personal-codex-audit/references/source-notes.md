@@ -39,6 +39,15 @@ state, task, or required claim materially changes.
 - `codex-profile-kit/scripts/sync.py` is the local transfer mechanism. Its
   `push --confirm` path stages with `git add -A`, so this skill adds a clean-diff
   authorization gate without modifying the sync script.
+- Current-host workflow evidence on 2026-07-14 separated routine execution cost
+  from orchestration delay: the documented network path completed fetch in
+  seconds, while repeated transport fallbacks, duplicated verification,
+  Git-state surprises, and per-stage authorization round trips dominated
+  elapsed time.
+- The user-approved directional fast path treats an explicit sync-to-GitHub or
+  sync-from-GitHub outcome as authority for its bounded ordinary chain. It
+  retains escalation gates for new assets, broad policy surfaces, conflicts,
+  visibility changes, credentials, compatibility, and sensitive state.
 - The user-approved 2026-07-14 admission design keeps `.system/skill-creator`
   and `.system/skill-installer` product-owned while adding local provenance,
   safety, trigger, portability, update, and rollback gates through
@@ -59,8 +68,9 @@ state, task, or required claim materially changes.
   memory feature is enabled.
 - Enumerating tasks, threads, sessions, or other-host state as reusable profile
   inventory.
-- Treating export as authorization to stage, commit, push, publish, or change
-  repository visibility.
+- Treating a bare export as authorization to stage, commit, push, publish, or
+  change repository visibility. Explicit bounded outbound-sync intent is
+  separately defined and still never authorizes a visibility change.
 - Treating successful creation, installation, discovery, enablement, or export
   as a skill-admission verdict.
 - Copying product-owned system skills into profile-kit to enforce local policy.

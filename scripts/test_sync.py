@@ -422,6 +422,83 @@ class WholeProfileContractTests(unittest.TestCase):
         self.assertIn("authorization to publish the isolated diff", policy)
         self.assertNotIn("Confirmed private remote", policy)
 
+    def test_profile_sync_has_a_routine_directional_fast_path(self) -> None:
+        skill_root = (
+            SYNC.REPO_ROOT / "skills/codex/personal-codex-audit"
+        )
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        policy = (skill_root / "references/sync-policy.md").read_text(
+            encoding="utf-8"
+        )
+        combined = " ".join((skill + "\n" + policy).split()).lower()
+
+        self.assertIn("routine directional sync", combined)
+        self.assertIn("do not run the whole-profile collector", combined)
+        self.assertIn("host connection contract", combined)
+        self.assertIn("one verification pass per unchanged state", combined)
+        self.assertIn(
+            "do not call `sync.py push --confirm` after a completed export",
+            combined,
+        )
+
+    def test_directional_sync_intent_authorizes_the_bounded_chain(self) -> None:
+        skill_root = (
+            SYNC.REPO_ROOT / "skills/codex/personal-codex-audit"
+        )
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        policy = (skill_root / "references/sync-policy.md").read_text(
+            encoding="utf-8"
+        )
+        metadata = (skill_root / "agents/openai.yaml").read_text(
+            encoding="utf-8"
+        )
+        combined = " ".join((skill + "\n" + policy).split()).lower()
+
+        self.assertIn("export, exact-path commit, and push", combined)
+        self.assertIn("fetch, non-conflicting integration, and confirmed apply", combined)
+        self.assertIn("do not ask again at each internal stage", combined)
+        self.assertIn("routine fast path", metadata.lower())
+
+    def test_outbound_sync_commits_before_reporting_push_auth_blockage(self) -> None:
+        skill_root = (
+            SYNC.REPO_ROOT / "skills/codex/personal-codex-audit"
+        )
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        policy = (skill_root / "references/sync-policy.md").read_text(
+            encoding="utf-8"
+        )
+        combined = " ".join((skill + "\n" + policy).split()).lower()
+
+        self.assertIn(
+            "do not make github write authentication a prerequisite for the local commit",
+            combined,
+        )
+        self.assertIn(
+            "continue with the exact-path local git commit",
+            combined,
+        )
+        self.assertIn(
+            "report a commit failure only when the local git commit itself fails",
+            combined,
+        )
+
+    def test_profile_sync_escalates_material_risk_instead_of_all_syncs(self) -> None:
+        policy = (
+            SYNC.REPO_ROOT
+            / "skills/codex/personal-codex-audit/references/sync-policy.md"
+        ).read_text(encoding="utf-8")
+        normalized = " ".join(policy.split()).lower()
+
+        for trigger in (
+            "new, removed, or renamed managed asset",
+            "unrelated or ambiguous worktree state",
+            "merge conflict",
+            "repository visibility change",
+            "sync tooling",
+        ):
+            self.assertIn(trigger, normalized)
+        self.assertIn("existing admitted portable targets", normalized)
+
     def test_manual_only_skill_routes_require_explicit_invocation(self) -> None:
         skill_root = SYNC.REPO_ROOT / "skills" / "codex"
         grilling_meta = (

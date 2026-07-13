@@ -6,7 +6,9 @@ single-skill lifecycle work.
 ## Contents
 
 - Repository and stage authorization
+- Routine directional sync
 - Preflight and portable asset boundaries
+- Escalation triggers
 - Export and apply
 - Commit and push
 
@@ -33,25 +35,100 @@ Do not turn the complete Codex home into a Git repository.
 | `sync.py export` | Writes profile-kit | Explicit export/local sync intent |
 | `sync.py verify` | No intended profile write | Normal verification after export or before apply |
 | `sync.py apply` | Dry-run only | Read-only apply comparison |
-| `sync.py apply --confirm` | Writes active profile and backup | Approval of the reported target set |
-| Commit | Changes local Git history | Explicit commit authority |
-| Push/publication | Changes external state | Explicit push/publication authority |
+| `sync.py apply --confirm` | Writes active profile and backup | Explicit apply authority, or bounded inbound-sync intent whose plan remains inside the fast path |
+| Commit | Changes local Git history | Explicit commit authority, or bounded outbound-sync intent whose diff remains inside the fast path |
+| Push/publication | Changes external state | Explicit push/publication authority, or bounded outbound-sync intent for the existing remote, branch, and visibility |
 
-Do not infer a later stage from an earlier one. In particular, export does not
-authorize commit or push.
+Do not infer a later stage from a bare audit, export, apply, or comparison. An
+explicit directional sync outcome is different: it authorizes its complete
+bounded chain below, so do not ask again at each internal stage.
+
+## Directional Intent
+
+- **Sync to GitHub** means audit, export, exact-path commit, and push to the
+  already configured remote and branch at its confirmed visibility.
+- **Sync GitHub updates to this host** means fetch, non-conflicting integration,
+  and confirmed apply of existing admitted portable targets with the standard
+  timestamped backup.
+
+These mappings do not authorize a pull request, repository or visibility
+change, another host, conflict resolution with ambiguous ownership, credential
+changes, or newly admitted content. A plan-only, audit-only, export-only, or
+apply-only request remains limited to the named stage.
 
 ## Preflight
 
-1. Lock direction, repository path, current host, actual repository visibility,
-   and furthest authorized stage.
-2. Run `git status --short` before a profile-kit write. Preserve existing user
+1. Lock direction, repository path, current host, actual repository visibility
+   when publishing, and the applicable intent boundary.
+2. Before Git network access, read the host connection contract routed by the
+   active instructions and use its documented entrypoint. Do not probe direct,
+   proxy, API, archive, or alternate transports first.
+3. Run `git status --short` before a profile-kit write. Preserve existing user
    changes and stop if the intended command could absorb unrelated work.
-3. Run `python3 scripts/sync.py audit` and inspect the categorized diff.
-4. Reconcile personal source-note presence and the third-party allowlist/content
+4. Run `python3 scripts/sync.py audit` at the direction-specific point below and
+   inspect the categorized diff.
+5. Reconcile personal source-note presence and the third-party allowlist/content
    lock. Do not export host-only, unassessed, deferred, rejected, unlocked, or
    digest-drifted skills.
-5. Pause when differences affect broad behavior, `AGENTS.md`, config templates,
-   host facts, hooks, trust-related state, memories, or sensitive paths.
+
+## Routine Fast Path
+
+### Outbound
+
+1. Preflight branch/upstream, author identity, worktree/index ownership, remote,
+   visibility, and host network entrypoint. GitHub write authentication is not
+   a prerequisite for creating the authorized local commit.
+2. Run `sync.py audit`, then `sync.py export`. Export verifies the staged
+   candidate, so do not run a redundant standalone `verify` while the exported
+   state remains unchanged.
+3. Inspect the exact portable diff and sensitive-path boundary. Stage only the
+   approved paths and commit once. Do not make GitHub write authentication a
+   prerequisite for the local commit. If a write-auth check is blocked,
+   continue with the exact-path local Git commit.
+4. Attempt push through the host entrypoint after the commit. If authentication
+   is unavailable, preserve the commit for a later push and report remote
+   publication as blocked; do not describe the local commit as failed. Report a
+   commit failure only when the local Git commit itself fails. When push
+   succeeds, compare the resulting remote ref with `HEAD`.
+
+### Inbound
+
+1. Preflight worktree/index ownership and the host network entrypoint, then
+   fetch and classify ancestry.
+2. Fast-forward or create a non-conflicting merge as authorized. Stop on a
+   merge conflict or ambiguous ownership.
+3. Run `sync.py audit`, then `sync.py apply` once. The apply dry run verifies
+   the repository and reports the exact target set.
+4. When the target set contains only existing admitted portable targets, the
+   inbound-sync intent authorizes `apply --confirm` with its timestamped backup.
+   Run one post-apply audit and require zero drift.
+
+Use one verification pass per unchanged state. Rerun only the check whose input
+or artifact identity changed; do not stack `audit`, `verify`, export validation,
+and apply validation merely for ceremony.
+
+## Escalation Triggers
+
+Leave the routine fast path and pause or invoke the owning workflow when any of
+these appears:
+
+- a new, removed, or renamed managed asset, including a skill, agent, hook, or
+  lifecycle successor;
+- changes to `AGENTS.md`, configuration/templates, the third-party lock, sync
+  tooling, generated policy documents, trust-related state, host facts,
+  memories, or excluded/sensitive paths;
+- unrelated or ambiguous worktree state, a pre-populated index of uncertain
+  ownership, a merge conflict, or ambiguous branch ancestry;
+- a repository visibility change, different remote/branch/host, unconfirmed
+  public exposure, or a pull-request/publication expansion;
+- an admission/provenance conflict, changed Codex compatibility contract, a
+  transport anomaly after using the documented host path, or a request to
+  change credentials. Mere write-auth unavailability does not block an already
+  authorized, verified local commit.
+
+Ordinary content updates to existing admitted portable targets do not require a
+whole-profile collector or a second authorization round merely because they
+span more than one file.
 
 ## Included Portable Assets
 
@@ -91,12 +168,12 @@ After explicit export authority:
 
 ```bash
 python3 scripts/sync.py export
-python3 scripts/sync.py verify
 git status --short
 ```
 
-Review the actual diff and confirm that no unrelated path was added. Do not
-stage, commit, or push as part of ordinary export.
+Export verifies its candidate. Review the actual diff and confirm that no
+unrelated path was added. Do not stage, commit, or push as part of a bare
+export request; bounded outbound-sync intent is the explicit exception.
 
 Admission does not authorize export, and export does not grant admission. A
 new portable vendor normally requires `admitted + complete + vendor`. A
@@ -111,18 +188,28 @@ Run the dry run first:
 python3 scripts/sync.py apply
 ```
 
-Use `apply --confirm` only after the user approves the listed targets and
-backup behavior. Re-check the backup path and verify the active files after the
-write. `AGENTS.portable.md` and config templates remain manual-review inputs,
-not automatic replacements for host-specific state.
+Use `apply --confirm` after explicit approval, or directly under bounded
+inbound-sync intent when the dry run lists only existing admitted portable
+targets and the standard backup behavior. Re-check the backup path and run a
+zero-drift audit after the write. `AGENTS.portable.md` and config templates
+remain manual-review inputs, not automatic replacements for host-specific state.
 
 ## Commit And Push
 
-`sync.py push --confirm` exports, verifies, stages with `git add -A`, commits,
-and pushes. Do not use it when the worktree contains unrelated or unapproved
-changes. Before using it, require all of the following:
+The routine outbound fast path already exported and verified its candidate, so
+do not call `sync.py push --confirm` after a completed export. Stage the exact
+reviewed paths and use ordinary commit/push commands through the host network
+entrypoint. Keep the local commit and remote push as separate outcomes: a
+GitHub authentication failure blocks publication, not the preceding authorized
+commit. Report a commit failure only when `git commit` itself fails.
 
-1. Explicit commit and push authority.
+`sync.py push --confirm` remains a standalone all-in-one option only when no
+separate export has run and the entire worktree diff is intentionally approved;
+it exports, verifies, stages with `git add -A`, commits, and pushes. Do not use
+it when the worktree contains unrelated or unapproved changes. Before either
+push path, require all of the following:
+
+1. Explicit commit and push authority, including bounded outbound-sync intent.
 2. A clean or intentionally isolated diff containing only approved profile
    changes.
 3. Verification success after the final export.
