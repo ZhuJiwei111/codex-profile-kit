@@ -96,6 +96,20 @@ progress point, log or artifact update frequency, and next meaningful event.
 Do not encode one global numerical interval for all jobs. Record any numerical
 cadence in the job contract where its rationale can be reviewed.
 
+When the contract cannot derive a more meaningful event-based cadence, use the
+legacy ranges only as non-binding fallback estimates:
+
+- shorter long-running jobs: check every 30-60 minutes;
+- multi-hour jobs: first check after 45-60 minutes, then every 90-120 minutes
+  after stable evidence; and
+- stable overnight or multi-day jobs: check every 2-4 hours.
+
+Shorten only the first fallback check when material early-failure risk remains
+after the startup guard, then back off. Override these ranges whenever
+job-specific signals justify a different cadence, record the rationale in the
+contract, and let an earlier evidence event supersede the next scheduled check.
+These ranges do not authorize extra polling.
+
 ## Health Signals And Fallback Anomalies
 
 Use job-specific signals and thresholds first. When the contract does not cover

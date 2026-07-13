@@ -388,6 +388,40 @@ class WholeProfileContractTests(unittest.TestCase):
             r"supervisor or coordinator .{0,80}(?:execute|act)",
         )
 
+    def test_monitor_cadence_keeps_dynamic_primary_with_numeric_fallback(self) -> None:
+        monitoring = (
+            SYNC.REPO_ROOT
+            / "skills/codex/personal-subagent-boundaries/references/monitoring.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("Do not encode one global numerical interval", monitoring)
+        self.assertIn("non-binding fallback estimates", monitoring)
+        for cadence in (
+            "30-60 minutes",
+            "45-60 minutes",
+            "90-120 minutes",
+            "2-4 hours",
+        ):
+            self.assertIn(cadence, monitoring)
+        self.assertIn(
+            "job-specific signals justify a different cadence",
+            monitoring,
+        )
+
+    def test_profile_sync_allows_confirmed_public_or_private_remote(self) -> None:
+        policy = (
+            SYNC.REPO_ROOT
+            / "skills/codex/personal-codex-audit/references/sync-policy.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("Visibility may be public or private", policy)
+        self.assertIn(
+            "Do not change repository visibility without separate explicit authority",
+            policy,
+        )
+        self.assertIn("authorization to publish the isolated diff", policy)
+        self.assertNotIn("Confirmed private remote", policy)
+
     def test_manual_only_skill_routes_require_explicit_invocation(self) -> None:
         skill_root = SYNC.REPO_ROOT / "skills" / "codex"
         grilling_meta = (

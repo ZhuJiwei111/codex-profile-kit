@@ -14,7 +14,9 @@ single-skill lifecycle work.
 
 - Default repository: `~/codex-profile-kit`.
 - Default remote: `ZhuJiwei111/codex-profile-kit`.
-- Visibility: private unless the user explicitly changes it.
+- Visibility may be public or private; confirm the actual visibility before
+  publication and ensure the user's publication intent covers that exposure.
+- Do not change repository visibility without separate explicit authority.
 - Export source of truth: active current-host `~/.codex` and `~/.agents`
   portable assets.
 - Apply source of truth: the reviewed profile-kit snapshot and its approved
@@ -40,8 +42,8 @@ authorize commit or push.
 
 ## Preflight
 
-1. Lock direction, repository path, current host, and furthest authorized
-   stage.
+1. Lock direction, repository path, current host, actual repository visibility,
+   and furthest authorized stage.
 2. Run `git status --short` before a profile-kit write. Preserve existing user
    changes and stop if the intended command could absorb unrelated work.
 3. Run `python3 scripts/sync.py audit` and inspect the categorized diff.
@@ -124,7 +126,10 @@ changes. Before using it, require all of the following:
 2. A clean or intentionally isolated diff containing only approved profile
    changes.
 3. Verification success after the final export.
-4. Confirmed private remote and intended branch.
+4. Confirmed intended remote and branch, actual repository visibility, and the
+   user's authorization to publish the isolated diff at that exposure level.
+5. For a public repository, confirmation that the isolated diff contains only
+   approved portable assets and no excluded or sensitive state.
 
 If those conditions are not all met, stop after local export and report the
 remaining external action.

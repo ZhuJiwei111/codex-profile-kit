@@ -131,10 +131,20 @@ narrower `AGENTS.md` files.
 - Without explicit current-stage active-monitoring authorization, do not poll,
   loop over status, tail continuously, keep a terminal open as a watcher, or
   spawn a monitoring worker. End with a reproducible handoff instead.
-- When active monitoring is explicitly authorized, use the dedicated
-  monitoring workflow: define its contract first, keep the monitoring worker
-  read-only, use sparse event-driven checks, and keep the main process as the
-  supervisor rather than duplicating polls.
+- Phrases such as `允许监控`, and equivalent explicit current-stage
+  active-monitoring approval, also authorize spawning or assigning exactly one
+  read-only monitoring subagent for that stage; the user need not separately
+  request a subagent.
+- When active monitoring is authorized, use the dedicated monitoring workflow:
+  the main process must define its contract first and delegate recurring
+  polling, log checks, and progress observation to that subagent, using sparse
+  event-driven checks.
+- The main process remains the supervisor and must not duplicate the monitor's
+  recurring checks. It may perform only the bounded startup guard, respond to
+  monitor reports, and run a one-off verification needed for a stage decision.
+- If no subagent slot or monitoring capability is available, do not silently
+  fall back to recurring monitoring in the main process. Report the limitation
+  and ask whether a one-off main-process check is acceptable.
 - A monitor may report evidence but must not stop, repair, restart, mutate
   outputs, launch the next stage, or make a go/no-go decision.
 - Execute repair, restart, or next-stage actions only when preapproved. Ask
