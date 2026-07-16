@@ -54,6 +54,52 @@ ALLOWED_SKILL_KEYS = {
 }
 PERSONAL_SKILL_DESCRIPTION_BUDGET = 6000
 MANAGED_SKILL_DESCRIPTION_BUDGET = 6500
+
+
+@dataclass(frozen=True)
+class ReviewedPersonalSkillLegacySnapshot:
+    """Compatibility lock plus distinct historical rollback source."""
+
+    rollback_revision: str
+    rollback_tree: str
+    allowed_content_sha256: str
+
+
+REVIEWED_PERSONAL_SKILL_LEGACY_SNAPSHOTS = {
+    "personal-branch-finish": ReviewedPersonalSkillLegacySnapshot(
+        rollback_revision="3791645f59c0eeec497755bd7301be78b44efbea",
+        rollback_tree="ff0d3a66a8fd6962fa2050cd02a982a7fd03cff2",
+        allowed_content_sha256=(
+            "5fa82d29aa715da87df96253f2738073343ba0ee8a9af6c45aafd6cebbaead14"
+        ),
+    ),
+    "personal-code-documentation": ReviewedPersonalSkillLegacySnapshot(
+        rollback_revision="3791645f59c0eeec497755bd7301be78b44efbea",
+        rollback_tree="074ebe5e1fe21df47535ea0a88a1e74bd357f5ae",
+        allowed_content_sha256=(
+            "65bc263c0733718fd50f10d2381e28945c584d042d7f69266e87381c95dc8e59"
+        ),
+    ),
+    "personal-risk-verification": ReviewedPersonalSkillLegacySnapshot(
+        rollback_revision="3791645f59c0eeec497755bd7301be78b44efbea",
+        rollback_tree="943a87d8ac2d9cd229d25cee8d596d85e07bcfae",
+        allowed_content_sha256=(
+            "17b5368dcb7ef3e0553693858f0096f1ee7c48e38102670876b9ae9237e03dc2"
+        ),
+    ),
+    "personal-writing-polish": ReviewedPersonalSkillLegacySnapshot(
+        rollback_revision="3791645f59c0eeec497755bd7301be78b44efbea",
+        rollback_tree="6dc2b073b17a9f90c809bf69aa7a09840558f403",
+        allowed_content_sha256=(
+            "534aa32b5273dcb8948f1cafb8b63b60f1dcd7a7c3d99e5917781fb21989857e"
+        ),
+    ),
+}
+PERSONAL_SKILL_ADMISSION_EVIDENCE_PREFIXES = (
+    "static_pass: ",
+    "runtime_pass: ",
+    "product_pass: ",
+)
 THIRD_PARTY_SKILL_LOCK_FILENAME = "THIRD_PARTY_SKILLS.lock.json"
 REQUIRED_OPENAI_INTERFACE_KEYS = {
     "display_name",
@@ -1395,6 +1441,9 @@ def render_export_snapshot(root: Path, home: Path) -> None:
             continue
         if not is_portable_codex_skill(skill_dir.name):
             continue
+        if skill_dir.name.startswith("personal-"):
+            validate_personal_skill_openai_yaml(skill_dir, home)
+            validate_personal_skill_source_notes(skill_dir, home)
         dst = skills_root / "codex" / skill_dir.name
         copytree(skill_dir, dst)
         skill_file = dst / "SKILL.md"
@@ -1764,22 +1813,22 @@ def validate_managed_snapshot_paths(root: Path) -> None:
 
 
 def skill_tree_sha256(skill_dir: Path) -> str:
-    """Hash one immutable skill snapshot by relative path and file content."""
+    """sha256-path-content-v1 over sorted regular-file paths and content hashes."""
     digest = hashlib.sha256()
     for path in sorted(skill_dir.rglob("*")):
         if path.is_symlink():
-            raise SystemExit(f"third-party skill snapshot contains symlink: {path}")
+            raise SystemExit(f"skill snapshot contains symlink: {path}")
         try:
             info = path.stat(follow_symlinks=False)
         except OSError as exc:
             raise SystemExit(
-                f"retired skill snapshot entry cannot be inspected: {path}"
+                f"skill snapshot entry cannot be inspected: {path}"
             ) from exc
         if stat.S_ISDIR(info.st_mode):
             continue
         if not stat.S_ISREG(info.st_mode):
             raise SystemExit(
-                f"retired skill snapshot contains non-regular entry: {path}"
+                f"skill snapshot contains non-regular entry: {path}"
             )
         relative = path.relative_to(skill_dir).as_posix().encode("utf-8")
         digest.update(relative)
@@ -2018,16 +2067,343 @@ def preflight_retired_skills(
     return snapshots
 
 
+def validate_personal_skill_identity_paths(
+    skill_dir: Path,
+    root: Path,
+) -> tuple[Path, Path]:
+    if skill_dir.is_symlink():
+        raise SystemExit(
+            f"personal skill directory must not be a symbolic link: {rel(skill_dir, root)}"
+        )
+    if not skill_dir.is_dir():
+        raise SystemExit(
+            f"personal skill path must be a regular directory: {rel(skill_dir, root)}"
+        )
+
+    skill_file = skill_dir / "SKILL.md"
+    if skill_file.is_symlink():
+        raise SystemExit(
+            f"personal SKILL.md must not be a symbolic link: {rel(skill_file, root)}"
+        )
+    if not skill_file.is_file():
+        raise SystemExit(
+            f"personal SKILL.md must be a regular file: {rel(skill_file, root)}"
+        )
+
+    agents_dir = skill_dir / "agents"
+    if agents_dir.is_symlink():
+        raise SystemExit(
+            f"personal agents directory must not be a symbolic link: {rel(agents_dir, root)}"
+        )
+    if not agents_dir.is_dir():
+        raise SystemExit(
+            f"personal agents path must be a regular directory: {rel(agents_dir, root)}"
+        )
+
+    metadata = agents_dir / "openai.yaml"
+    if metadata.is_symlink():
+        raise SystemExit(
+            "personal agents/openai.yaml must not be a symbolic link: "
+            f"{rel(metadata, root)}"
+        )
+    if not metadata.is_file():
+        raise SystemExit(
+            "personal agents/openai.yaml must be a regular file: "
+            f"{rel(metadata, root)}"
+        )
+    return skill_file, metadata
+
+
 def validate_personal_skill_source_notes(skill_dir: Path, root: Path) -> None:
-    notes = skill_dir / "references" / "source-notes.md"
+    validate_personal_skill_identity_paths(skill_dir, root)
+    references_dir = skill_dir / "references"
+    if references_dir.is_symlink():
+        raise SystemExit(
+            "personal references directory must not be a symbolic link: "
+            f"{rel(references_dir, root)}"
+        )
+    if not references_dir.is_dir():
+        raise SystemExit(
+            "personal references path must be a regular directory: "
+            f"{rel(references_dir, root)}"
+        )
+    notes = references_dir / "source-notes.md"
     if not notes.is_file() or notes.is_symlink():
         raise SystemExit(
             f"missing personal skill source-notes: {rel(skill_dir, root)}"
         )
-    if not notes.read_text(encoding="utf-8").startswith("# Source Notes\n"):
+    text = notes.read_text(encoding="utf-8")
+    if not text.startswith("# Source Notes\n"):
         raise SystemExit(
             f"invalid personal skill source-notes heading: {rel(notes, root)}"
         )
+
+    admission = parse_personal_skill_admission(text, notes)
+    skill_name = admission["skill"]
+    if skill_name != skill_dir.name:
+        raise SystemExit(
+            "personal skill admission identity mismatch: "
+            f"{rel(notes, root)} records {skill_name!r}, expected {skill_dir.name!r}"
+        )
+
+    acquisition_mode = admission["acquisition_mode"]
+    if acquisition_mode not in {"created", "installed"}:
+        raise SystemExit(
+            f"invalid personal skill admission acquisition_mode in {rel(notes, root)}: "
+            f"{acquisition_mode!r}"
+        )
+    source_classification = admission["source_classification"]
+    if source_classification not in {
+        "local-origin",
+        "upstream-derived",
+        "hybrid",
+        "unresolved",
+    }:
+        raise SystemExit(
+            "invalid personal skill admission source_classification in "
+            f"{rel(notes, root)}: {source_classification!r}"
+        )
+    provenance_status = admission["provenance_status"]
+    if provenance_status not in {"complete", "partial", "missing", "conflicting"}:
+        raise SystemExit(
+            f"invalid personal skill admission provenance_status in {rel(notes, root)}: "
+            f"{provenance_status!r}"
+        )
+
+    admission_status = admission["admission_status"]
+    if admission_status not in {"admitted", "legacy-exception"}:
+        raise SystemExit(
+            f"non-portable personal skill admission_status in {rel(notes, root)}: "
+            f"{admission_status!r}"
+        )
+    portability = admission["portability_disposition"]
+    if portability not in {"vendor", "internalized"}:
+        raise SystemExit(
+            "non-portable personal skill admission portability_disposition in "
+            f"{rel(notes, root)}: {portability!r}"
+        )
+
+    for status_field in ("safety_status", "trigger_status", "validation_status"):
+        if admission[status_field] != "passed":
+            raise SystemExit(
+                f"personal skill admission {status_field} must be passed in "
+                f"{rel(notes, root)}"
+            )
+    evidence_fields = {
+        "safety_review": [admission["safety_review"]],
+        "trigger_review": [admission["trigger_review"]],
+        "validation": admission["validation"],
+    }
+    for evidence_field, evidence_items in evidence_fields.items():
+        if not all(
+            isinstance(item, str)
+            and item.startswith(PERSONAL_SKILL_ADMISSION_EVIDENCE_PREFIXES)
+            for item in evidence_items
+        ):
+            raise SystemExit(
+                "passed personal skill admission evidence requires a controlled pass prefix in "
+                f"{evidence_field}: {rel(notes, root)}"
+            )
+    unknowns = admission["unknowns"]
+    unknowns_disposition = admission["unknowns_disposition"]
+    if unknowns_disposition not in {
+        "none",
+        "bounded-nonmaterial",
+        "provenance-gap",
+    }:
+        raise SystemExit(
+            "invalid personal skill admission unknowns_disposition in "
+            f"{rel(notes, root)}: {unknowns_disposition!r}"
+        )
+
+    if source_classification == "unresolved":
+        raise SystemExit(
+            "portable personal skill admission cannot use unresolved source classification in "
+            f"{rel(notes, root)}"
+        )
+    if admission_status == "admitted":
+        if provenance_status != "complete":
+            raise SystemExit(
+                "admitted personal skill requires complete provenance in "
+                f"{rel(notes, root)}"
+            )
+        expected_disposition = "bounded-nonmaterial" if unknowns else "none"
+        if unknowns_disposition != expected_disposition:
+            raise SystemExit(
+                "admitted personal skill unknowns/disposition mismatch in "
+                f"{rel(notes, root)}: expected {expected_disposition!r}"
+            )
+    if admission_status == "legacy-exception":
+        if provenance_status != "partial":
+            raise SystemExit(
+                "legacy-exception personal skill requires partial provenance in "
+                f"{rel(notes, root)}"
+            )
+        if unknowns_disposition != "provenance-gap":
+            raise SystemExit(
+                "legacy-exception personal skill requires provenance-gap disposition in "
+                f"{rel(notes, root)}"
+            )
+        if not unknowns:
+            raise SystemExit(
+                "legacy-exception personal skill must record its provenance gap in "
+                f"{rel(notes, root)}"
+            )
+        update_rule = _normalized_contract_text(admission["update_rule"])
+        if "re-admission" not in update_rule or not re.search(
+            r"\b(?:no update|updates? (?:are )?blocked)\b", update_rule
+        ):
+            raise SystemExit(
+                "legacy-exception personal skill must block updates pending re-admission in "
+                f"{rel(notes, root)}"
+            )
+        rollback_basis = admission["rollback_basis"]
+        rollback_normalized = rollback_basis.casefold()
+        revisions = re.findall(
+            r"\brevision\s+`?([0-9a-f]{40})`?(?![0-9a-f])",
+            rollback_normalized,
+        )
+        trees = re.findall(
+            r"\btree\s+`?([0-9a-f]{40})`?(?![0-9a-f])",
+            rollback_normalized,
+        )
+        if "exact" not in rollback_normalized:
+            raise SystemExit(
+                "legacy-exception personal skill requires exact revision and tree rollback basis in "
+                f"{rel(notes, root)}"
+            )
+        reviewed_snapshot = REVIEWED_PERSONAL_SKILL_LEGACY_SNAPSHOTS.get(
+            skill_dir.name
+        )
+        if (
+            len(revisions) != 1
+            or len(trees) != 1
+            or reviewed_snapshot is None
+            or reviewed_snapshot.rollback_revision != revisions[0]
+            or reviewed_snapshot.rollback_tree != trees[0]
+        ):
+            raise SystemExit(
+                "legacy-exception personal skill requires its reviewed legacy snapshot binding in "
+                f"{rel(notes, root)}"
+            )
+        actual_content_sha256 = skill_tree_sha256(skill_dir)
+        if actual_content_sha256 != reviewed_snapshot.allowed_content_sha256:
+            raise SystemExit(
+                "legacy-exception personal skill violates its reviewed legacy content lock in "
+                f"{rel(skill_dir, root)}: expected "
+                f"{reviewed_snapshot.allowed_content_sha256}, observed "
+                f"{actual_content_sha256}"
+            )
+
+
+PERSONAL_SKILL_ADMISSION_FIELDS = {
+    "skill",
+    "acquisition_mode",
+    "source_classification",
+    "provenance_status",
+    "admission_status",
+    "portability_disposition",
+    "safety_status",
+    "safety_review",
+    "trigger_status",
+    "trigger_review",
+    "validation_status",
+    "validation",
+    "update_owner",
+    "update_rule",
+    "rollback_basis",
+    "unknowns_disposition",
+    "unknowns",
+}
+PERSONAL_SKILL_ADMISSION_LIST_FIELDS = {"validation", "unknowns"}
+
+
+def _parse_controlled_yaml_scalar(raw_value: str, path: Path, field: str) -> str:
+    value = raw_value.strip()
+    if not value:
+        raise SystemExit(f"empty {field} in {path}")
+    if value.startswith('"'):
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise SystemExit(f"invalid quoted {field} in {path}") from exc
+        if not isinstance(parsed, str):
+            raise SystemExit(f"non-string {field} in {path}")
+        return parsed
+    if value.startswith("'"):
+        if len(value) < 2 or not value.endswith("'"):
+            raise SystemExit(f"invalid quoted {field} in {path}")
+        return value[1:-1].replace("''", "'")
+    if value in {"null", "Null", "NULL", "~", "{}"} or value.startswith("["):
+        raise SystemExit(f"unsupported scalar {field} in {path}")
+    return value
+
+
+def parse_personal_skill_admission(text: str, path: Path) -> dict[str, object]:
+    """Parse one deliberately small YAML admission mapping embedded in Markdown."""
+
+    lines = text.splitlines()
+    starts = [index for index, line in enumerate(lines) if line == "skill_admission:"]
+    if len(starts) != 1:
+        raise SystemExit(
+            f"personal skill source-notes must contain exactly one admission record: {path}"
+        )
+
+    result: dict[str, object] = {}
+    current_list: str | None = None
+    for raw_line in lines[starts[0] + 1 :]:
+        if "\t" in raw_line:
+            raise SystemExit(f"invalid tab indentation in personal skill admission: {path}")
+        if not raw_line.strip():
+            continue
+        if not raw_line.startswith("  "):
+            break
+        if raw_line.startswith("    - "):
+            if current_list is None:
+                raise SystemExit(f"unexpected admission list item in {path}")
+            item = _parse_controlled_yaml_scalar(
+                raw_line[6:], path, f"{current_list} item"
+            )
+            cast_list = result[current_list]
+            if not isinstance(cast_list, list):
+                raise SystemExit(f"invalid admission list in {path}: {current_list}")
+            cast_list.append(item)
+            continue
+        if raw_line.startswith("   "):
+            raise SystemExit(f"invalid admission indentation in {path}: {raw_line!r}")
+
+        stripped = raw_line[2:]
+        if ":" not in stripped:
+            raise SystemExit(f"invalid personal skill admission field in {path}")
+        field, raw_value = stripped.split(":", 1)
+        field = field.strip()
+        if field not in PERSONAL_SKILL_ADMISSION_FIELDS:
+            raise SystemExit(f"unexpected personal skill admission field in {path}: {field}")
+        if field in result:
+            raise SystemExit(f"duplicate personal skill admission field in {path}: {field}")
+        if field in PERSONAL_SKILL_ADMISSION_LIST_FIELDS:
+            value = raw_value.strip()
+            if value not in {"", "[]"}:
+                raise SystemExit(f"personal skill admission {field} must be a list in {path}")
+            result[field] = []
+            current_list = field
+        else:
+            result[field] = _parse_controlled_yaml_scalar(raw_value, path, field)
+            current_list = None
+
+    missing = PERSONAL_SKILL_ADMISSION_FIELDS - set(result)
+    if missing:
+        raise SystemExit(
+            f"personal skill admission is missing fields in {path}: {sorted(missing)}"
+        )
+    for field in PERSONAL_SKILL_ADMISSION_FIELDS - PERSONAL_SKILL_ADMISSION_LIST_FIELDS:
+        value = result[field]
+        if not isinstance(value, str) or not value.strip():
+            raise SystemExit(f"personal skill admission {field} must be non-empty in {path}")
+    validation = result["validation"]
+    if not isinstance(validation, list) or not validation:
+        raise SystemExit(f"personal skill admission validation must be non-empty in {path}")
+    return result
 
 
 def validate_third_party_skill_lock(root: Path) -> dict[str, dict[str, object]]:
@@ -2232,24 +2608,40 @@ def validate_skills(root: Path) -> None:
         )
 
 
-def parse_openai_interface(path: Path) -> dict[str, str]:
-    """Parse the small, controlled interface mapping without a YAML dependency."""
-    interface: dict[str, str] = {}
-    in_interface = False
+def parse_openai_metadata(path: Path) -> dict[str, dict[str, object]]:
+    """Parse the controlled interface and policy mappings without PyYAML."""
+
+    sections: dict[str, dict[str, object]] = {"interface": {}, "policy": {}}
+    current_section: str | None = None
+    seen_sections: set[str] = set()
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         if "\t" in raw_line:
             raise SystemExit(f"invalid tab indentation in {path}")
         if not raw_line.strip() or raw_line.lstrip().startswith("#"):
             continue
         if not raw_line.startswith(" "):
-            in_interface = raw_line.strip() == "interface:"
+            stripped = raw_line.strip()
+            section = stripped[:-1] if stripped.endswith(":") else ""
+            if section in sections:
+                if section in seen_sections:
+                    raise SystemExit(f"duplicate {section} mapping in {path}")
+                seen_sections.add(section)
+                current_section = section
+            else:
+                current_section = None
             continue
-        if not in_interface or not raw_line.startswith("  "):
+        if current_section is None or not raw_line.startswith("  "):
+            continue
+        if raw_line.startswith("   "):
             continue
         stripped = raw_line.strip()
         if ":" not in stripped:
             continue
         key, raw_value = stripped.split(":", 1)
+        key = key.strip()
+        section_values = sections[current_section]
+        if key in section_values:
+            raise SystemExit(f"duplicate {current_section} value in {path}: {key}")
         value = raw_value.strip()
         if value.startswith('"'):
             try:
@@ -2257,20 +2649,40 @@ def parse_openai_interface(path: Path) -> dict[str, str]:
             except json.JSONDecodeError as exc:
                 raise SystemExit(f"invalid quoted value in {path}: {key}") from exc
             if not isinstance(parsed, str):
-                raise SystemExit(f"non-string interface value in {path}: {key}")
-            interface[key] = parsed
+                raise SystemExit(
+                    f"non-string {current_section} value in {path}: {key}"
+                )
+            section_values[key] = parsed
         elif value.startswith("'") and value.endswith("'"):
-            interface[key] = value[1:-1].replace("''", "'")
+            section_values[key] = value[1:-1].replace("''", "'")
+        elif value in {"true", "false"}:
+            section_values[key] = value == "true"
         else:
-            interface[key] = value
-    return interface
+            section_values[key] = value
+    return sections
+
+
+def parse_openai_interface(path: Path) -> dict[str, str]:
+    """Return the string-valued interface mapping from controlled metadata."""
+
+    interface = parse_openai_metadata(path)["interface"]
+    for key, value in interface.items():
+        if not isinstance(value, str):
+            raise SystemExit(f"non-string interface value in {path}: {key}")
+    return interface  # type: ignore[return-value]
 
 
 def validate_personal_skill_openai_yaml(skill_dir: Path, root: Path) -> None:
-    metadata = skill_dir / "agents" / "openai.yaml"
-    if not metadata.is_file():
-        raise SystemExit(f"missing agents/openai.yaml: {rel(skill_dir, root)}")
-    interface = parse_openai_interface(metadata)
+    skill_file, metadata = validate_personal_skill_identity_paths(skill_dir, root)
+    parsed_metadata = parse_openai_metadata(metadata)
+    interface_values = parsed_metadata["interface"]
+    for key, value in interface_values.items():
+        if not isinstance(value, str):
+            raise SystemExit(
+                f"invalid agents/openai.yaml in {rel(skill_dir, root)}: "
+                f"non-string interface value {key}"
+            )
+    interface: dict[str, str] = interface_values  # type: ignore[assignment]
     missing = REQUIRED_OPENAI_INTERFACE_KEYS - set(interface)
     if missing:
         raise SystemExit(
@@ -2292,6 +2704,35 @@ def validate_personal_skill_openai_yaml(skill_dir: Path, root: Path) -> None:
         raise SystemExit(
             f"invalid agents/openai.yaml in {rel(skill_dir, root)}: "
             f"default_prompt must contain {invocation}"
+        )
+
+    policy = parsed_metadata["policy"]
+    if "allow_implicit_invocation" not in policy:
+        raise SystemExit(
+            f"invalid agents/openai.yaml in {rel(skill_dir, root)}: "
+            "missing required policy.allow_implicit_invocation"
+        )
+    implicit_policy = policy["allow_implicit_invocation"]
+    if not isinstance(implicit_policy, bool):
+        raise SystemExit(
+            f"invalid agents/openai.yaml in {rel(skill_dir, root)}: "
+            "policy.allow_implicit_invocation must be true or false"
+        )
+    description = _normalized_contract_text(
+        parse_frontmatter(skill_file.read_text(encoding="utf-8")).get(
+            "description", ""
+        )
+    )
+    manual_only_markers = (
+        "manual only",
+        "only when the user explicitly invokes",
+        "only when the user explicitly requests",
+        "use only for explicitly requested",
+    )
+    if implicit_policy and any(marker in description for marker in manual_only_markers):
+        raise SystemExit(
+            f"invalid agents/openai.yaml in {rel(skill_dir, root)}: "
+            "manual-only skill requires policy.allow_implicit_invocation: false"
         )
 
 

@@ -74,3 +74,26 @@ runtime dependency of this skill.
 When refreshing from upstream, pin the new tag or commit, compare behavior
 rather than wording, preserve deliberate local deviations, and re-run simple,
 decomposition, concern, and combined-skill forward probes before adoption.
+
+```yaml
+skill_admission:
+  skill: personal-brainstorms
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found an instruction-and-reference-only skill with no bundled executable, hook, MCP, credential, installation, publication, or destructive-action surface."
+  trigger_status: passed
+  trigger_review: "static_pass: The consequential-design and concern-discussion trigger was reviewed against simple edits, personal-grilling, and file-backed planning boundaries."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned upstream, local profile, and user-locked source evidence reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-brainstorms"
+  update_rule: "Repeat provenance, safety, trigger, and portability review before any source, trigger, runtime surface, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: none
+  unknowns: []
+```

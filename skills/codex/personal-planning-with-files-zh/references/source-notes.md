@@ -62,3 +62,26 @@ transaction design. Those were local experiments, not upstream requirements.
 No upstream template, script, or substantial prose is copied. Source concepts
 are re-expressed under the local Codex authorization model; the fixed source and
 license remain recorded for audit.
+
+```yaml
+skill_admission:
+  skill: personal-planning-with-files-zh
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: The bundled plan validator and tests were inspected as read-only no-follow checks; plan writes require explicit file-backed planning authority and no hooks, forced continuation, or autonomous loop is included."
+  trigger_status: passed
+  trigger_review: "static_pass: Explicit-only cross-session planning was reviewed against ordinary plan tracking and policy.allow_implicit_invocation false is required mechanically."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned release, commit, license, failure evidence, local redesign, and validator ownership reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission and explicit-only metadata fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-planning-with-files-zh"
+  update_rule: "Repeat provenance, safety, trigger, executable-surface, metadata, and portability review before any source, plan schema, validator, trigger, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: none
+  unknowns: []
+```

@@ -107,3 +107,27 @@ workflow source material:
 - Publication handoffs explicitly set `dependency_install_authorized: false`.
   The cached `github:yeet` source remains external and is not a durable profile
   owner; missing helpers require an already available path or a user decision.
+
+```yaml
+skill_admission:
+  skill: personal-branch-finish
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: partial
+  admission_status: legacy-exception
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found no bundled executable; Git, cleanup, and publication mutations remain behind explicit authority and specialist ownership."
+  trigger_status: passed
+  trigger_review: "static_pass: The post-verification Git-readiness trigger was reviewed against personal-risk-verification, multiline integration, and github:yeet publication ownership."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned upstream identities, license, local blobs, and declared derivation gap reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-branch-finish"
+  update_rule: "No update is authorized; any content, source, trigger, executable, or metadata change requires a fresh re-admission before portable export."
+  rollback_basis: "The pre-batch rollback source is exact codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea and exact tree ff0d3a66a8fd6962fa2050cd02a982a7fd03cff2; the current compatibility-only allowed content is separately locked by the validator's reviewed sha256-path-content-v1 full-tree digest."
+  unknowns_disposition: provenance-gap
+  unknowns:
+    - "Available Git history does not prove whether the initial local text was directly derived from the pinned upstream skill."
+```

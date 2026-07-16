@@ -75,3 +75,26 @@ precedence.
   personal skills.
 - Keep the cycle record conversational and non-persistent unless another
   approved workflow owns a durable record.
+
+```yaml
+skill_admission:
+  skill: personal-test-first-changes
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found no bundled executable; rollback of user or prior-stage work, installation, heavy checks, long jobs, and scope expansion remain prohibited or separately authorized."
+  trigger_status: passed
+  trigger_review: "static_pass: Bug-fix, feature, behavior-change, and refactor evidence routing was reviewed against diagnosis-only work, expected RED, final verification, and non-behavior changes."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned upstream skill and anti-pattern reference, hashes, license, local adaptations, and authorization boundaries reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-test-first-changes"
+  update_rule: "Repeat provenance, safety, trigger, evidence-mode, and portability review before any source, RED/GREEN contract, trigger, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: none
+  unknowns: []
+```

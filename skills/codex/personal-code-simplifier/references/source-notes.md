@@ -90,3 +90,26 @@ pinned source is design evidence, not a runtime dependency.
 - `personal-temporary-work` owns approved one-off helpers and codemods.
 - `personal-risk-verification` owns final completion evidence.
 - `personal-branch-finish` owns Git readiness and handoff.
+
+```yaml
+skill_admission:
+  skill: personal-code-simplifier
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found no bundled executable; edits remain bounded to authorized behavior-preserving cleanup and dependencies, publication, destructive actions, and broad formatting are excluded."
+  trigger_status: passed
+  trigger_review: "static_pass: The explicit bounded simplification trigger was reviewed against ordinary implementation, review response, test-first evidence, debugging, and temporary transformations."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned official plugin artifacts, license, local rewrite, and ownership boundaries reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-code-simplifier"
+  update_rule: "Repeat provenance, safety, trigger, and portability review before any source, trigger, runtime surface, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: none
+  unknowns: []
+```

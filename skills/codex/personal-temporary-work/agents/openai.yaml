@@ -2,3 +2,5 @@ interface:
   display_name: "Durable vs Temporary Work"
   short_description: "Keep one-off transition logic out of maintained code"
   default_prompt: "Use $personal-temporary-work to separate this one-off transition, keep its helper excluded by default, and apply the explicit cleanup or promotion lifecycle."
+policy:
+  allow_implicit_invocation: true

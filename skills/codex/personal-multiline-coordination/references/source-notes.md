@@ -94,3 +94,27 @@ These commits are evidence of the local design lineage, not upstream APIs.
   live App-visible worker smoke test.
 - The active subagent and branch-finish contracts now use the same worker
   outcome, coordinator-decision, and integration-provenance boundaries.
+
+```yaml
+skill_admission:
+  skill: personal-multiline-coordination
+  acquisition_mode: created
+  source_classification: local-origin
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: The bundled auditor and tests were inspected as read-only reconciliation tooling; writers, integration, monitoring, cleanup, and Git mutations remain explicitly coordinator-authorized."
+  trigger_status: passed
+  trigger_review: "static_pass: Visible worker/worktree coordination was reviewed against bounded subagent delegation, one-shot status checks, strict monitoring, and ordinary single-line work."
+  validation_status: passed
+  validation:
+    - "static_pass: Local history, user-origin workflow evidence, environment boundaries, and auditor design reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-multiline-coordination"
+  update_rule: "Repeat provenance, safety, trigger, executable-surface, and portability review before auditor, worker, worktree, monitoring, integration, or ownership changes enter portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: bounded-nonmaterial
+  unknowns:
+    - "Live App-visible worker behavior remains outside this portable admission evidence and is nonmaterial to the read-only auditor contract."
+```

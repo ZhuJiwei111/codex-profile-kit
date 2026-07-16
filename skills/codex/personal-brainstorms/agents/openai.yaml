@@ -2,3 +2,5 @@ interface:
   display_name: "Personal Brainstorms"
   short_description: "Shape consequential work into a bounded design"
   default_prompt: "Use $personal-brainstorms to clarify consequential choices, compare viable approaches, and shape a bounded design before implementation."
+policy:
+  allow_implicit_invocation: true

@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-14.
+Checked: 2026-07-16.
 
 This skill uses upstream material as design evidence, not as an authority over
 the local Codex profile. Local authorization, host boundaries, specialist
@@ -66,6 +66,32 @@ evidence.
   discipline, and destructive behavior receive progressively stronger probes.
 - Admission is a local controller contract. Product-owned creator/installer
   skills continue to own authoring and acquisition mechanics.
-- A documented `legacy-exception` may preserve only a content-locked existing
-  vendor snapshot with an explicit provenance gap; it cannot authorize update
-  or serve as precedent for a new candidate.
+- A documented `legacy-exception` may preserve only a reviewed content-locked
+  existing vendor or internalized snapshot with an explicit provenance gap.
+  Internalized identifies the local maintenance owner but does not unfreeze the
+  compatibility snapshot; any content change requires fresh admission and a
+  reviewed full-tree lock refresh.
+
+```yaml
+skill_admission:
+  skill: personal-skill-hygiene
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found no bundled executable; admission starts read-only, preserves unknown evidence, separates activation from acquisition, and keeps destructive lifecycle changes behind exact authority."
+  trigger_status: passed
+  trigger_review: "static_pass: Targeted admission and lifecycle disposition was reviewed against skill authoring, installation, hook design, plugin creation, MCP configuration, and whole-profile audit owners."
+  validation_status: passed
+  validation:
+    - "static_pass: Official live sources, pinned upstream testing source, hash-addressed system snapshots, and local admission design reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+    - "static_pass: Legacy compatibility locks now compare the actual sha256-path-content-v1 full-tree digest, including metadata and this admission record, against a reviewed per-skill value."
+  update_owner: "maintainer of personal-skill-hygiene"
+  update_rule: "Repeat provenance, safety, trigger, lifecycle, and portability review before any admission schema, product surface, trigger, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through the approved lifecycle path and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: none
+  unknowns: []
+```

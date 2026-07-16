@@ -17,8 +17,9 @@ Before spawning or rearming a monitoring observer, confirm:
 - the job, phase, process or session, evidence paths, and completion condition
   are known;
 - checks can remain read-only with respect to the job and its outputs;
-- the `monitor` custom profile can be selected and its effective model,
-  reasoning effort, and read-only sandbox are verified; and
+- the observation target is classified by its actual evidence and impact
+  surfaces, not only by the job label;
+- the selected risk tier's read-only gate is satisfied and recorded; and
 - the main process will remain responsible for judgment while the job-owning
   executor remains responsible for any separately authorized later action.
 
@@ -27,12 +28,21 @@ another user prompt, but it does not carry a prior PID, cadence, evidence path,
 or action authority into a new job. Create a fresh contract for every job or
 phase and keep at most one observer on the same monitored job.
 
-The checked portable profile is only `configured_unverified`. If the requested
-Luna/high, read-only profile cannot be selected and verified by the live spawn
-surface, record `strict_monitor_state: unavailable` and create no watcher. Do
-not make the main process poll as a fallback. Use another profile only when the
-contract explicitly names a verified fallback and its cost and reasoning
-implications are accepted.
+The default applicability is a `low-risk local long job`: local `Python
+processing`, `download`, or `training` observed only through local process or
+session state, logs, and outputs. When the live spawn surface cannot verify the
+requested custom profile or effective sandbox, this tier may use
+`read_only_enforcement: prompt_only`; the observer is allowed only when the
+contract and user-visible launch disclosure also state
+`profile_verification: profile_unverified`. Treat a download as low-risk only
+when the observer never contacts the remote source, handles its credentials, or
+mutates external state.
+
+A sensitive, external, production, or high-impact target requires mechanical,
+product-confirmed, or runtime-verified read-only enforcement. Neither
+`prompt_only` nor a merely configured profile satisfies that elevated gate. If
+the required enforcement cannot be demonstrated, record the gate as unavailable
+and create no observer. Do not make the main process poll as a fallback.
 
 ## Monitoring Contract
 
@@ -53,15 +63,21 @@ monitoring:
   expected_artifacts: []
   startup_guard_result:
   estimated_runtime:
+  runtime_gate:
+    target_class: low_risk_local | sensitive | external | production | high_impact
+    rationale:
+    decision: verified_read_only | disclosed_prompt_only | no_monitor
   execution_profile:
     requested_role: monitor
     requested_model: gpt-5.6-luna
     requested_reasoning_effort: high
     selection_mechanism: custom_agent | explicit_override | runtime_choice
     configuration_state: configured_unverified
-    runtime_enforcement: verified
+    profile_verification: runtime_verified | profile_unverified
+    read_only_enforcement: mechanical | product_confirmed | runtime_verified |
+      prompt_only
+    user_visible_disclosure:
     fallback: no_monitor
-  strict_monitor_state: available
   health_signals: []
   job_specific_thresholds: []
   fallback_thresholds: []
@@ -192,8 +208,10 @@ owns any final completion claim.
 
 ## Observer And Record Boundaries
 
-The standard `monitor` profile is read-only. It may inspect only the assigned
-job and evidence paths and return an event to the supervisor. It must not:
+Every observer contract is read-only. `prompt_only` is a disclosed behavioral
+boundary for the low-risk tier, not proof of an effective sandbox. An observer
+may inspect only the assigned job and evidence paths and return an event to the
+supervisor. It must not:
 
 - stop, restart, repair, or reconfigure the job;
 - mutate job outputs, checkpoints, logs, or artifacts;

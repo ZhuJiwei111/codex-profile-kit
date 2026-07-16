@@ -1,22 +1,24 @@
 ---
 name: personal-project-output-explainer
-description: Manual only. Use $personal-project-output-explainer when the user explicitly wants an existing output or evidence chain decoded; default an unnamed target to the current Codex task, and do not use for ordinary status, diagnosis, docs, review, verification, or prose polishing.
+description: Manual only. Use $personal-project-output-explainer to decode an explicitly named output or, with no target, explain a causal Current Task Snapshot; never trigger for ordinary status, ETA, diagnosis, docs, review, verification, or prose polishing.
 ---
 
 # Personal Project Output Explainer
 
 ## Contract
 
-Translate an existing Codex or project output into a reader-oriented
+Translate an existing Codex or project output—or, for an unnamed explicit
+invocation, the current task's evidence chain—into a reader-oriented
 explanation. Make its terms, relationships, evidence boundary, and decision
 impact understandable without redoing the original task.
 
 - Run only after explicit `$personal-project-output-explainer` invocation. Keep
-  implicit invocation disabled. The invocation itself is sufficient; it need
-  not repeat the target when the current task default below is unambiguous.
+  implicit invocation disabled. An invocation with no target uses the
+  current-task snapshot below.
 - Decode a supplied response, result, artifact summary, evidence chain, or
-  decision rationale. Ordinary status, summary, report, completion, or
-  next-step wording alone is not a comprehension request.
+  decision rationale, or explain the current task causally when no target is
+  supplied. Ordinary status, summary, report, completion, ETA, or next-step
+  wording alone is not a comprehension request.
 - Keep source claims, verified facts, explainer interpretations, and unknowns
   distinct.
 - Preserve exact identifiers, metrics, paths, modes, and technical terms while
@@ -26,15 +28,43 @@ impact understandable without redoing the original task.
 ## Resolve The Target
 
 Use an explicitly supplied response, artifact, path, or evidence chain first.
-Otherwise explain the most recent relevant Codex output in the current task.
-When several current-task outputs are plausible and the choice changes the
-explanation, ask one targeted question.
+Decode only that target and the minimum context needed to make it intelligible;
+do not append a broader task snapshot unless the user also requests one. When
+the supplied target itself is ambiguous and the choice changes the explanation,
+ask one targeted question.
+
+When an explicit invocation supplies no target, use **Current Task Snapshot**.
+Do not select one recent output as a substitute, and do not ask the user to name
+an output merely because the task contains several relevant results.
 
 Do not enumerate tasks or infer another task from a similar title. Explaining a
 different task requires an exact current-host reference or ID supplied by the
 user and bounded read-only access. A project-wide evidence synthesis still
 requires an explicit request; the current-task default does not authorize a
 repository scan, live status collection, or new verification campaign.
+
+## Current Task Snapshot
+
+For an explicit invocation with no supplied target, explain the current task as
+an evidence-bounded causal handoff rather than as a live status report. Use the
+conversation and task evidence already available; do not poll work, rerun
+checks, or inspect the repository merely to make the snapshot feel current.
+
+Cover the following in the order that best exposes the causal relationship:
+
+- the current task's goal, including the requested outcome and material scope;
+- completed work, separated from plans, attempts, and unverified claims;
+- the decision and evidence chain: what question or insufficiency led to each
+  material action, what was observed, and what that observation supports;
+- the evidence cutoff, naming the latest exact revision, artifact, check, or
+  observation boundary when known and treating later state as unknown;
+- unresolved items, including evidence gaps, remaining risks, blocked choices,
+  or explicitly excluded work; and
+- why the next step follows from that chain, or why no next step remains in a
+  genuinely terminal task.
+
+Prefer one compact causal narrative over a chronology or command dump. Do not
+invent a completion percentage, ETA, current liveness claim, or fresh verdict.
 
 ## Default Reader
 

@@ -1,6 +1,6 @@
 ---
 name: personal-triad-discussion
-description: Manual only. Use $personal-triad-discussion for an explicit multi-round, user-mediated deliberation between the current Codex task and a user-created GPT Pro Project chat, with one coordinator-written project memo updated after material rounds and curated at closure.
+description: Manual only. Use $personal-triad-discussion for an explicit low-bandwidth, multi-round, user-mediated deliberation between the current Codex task and a user-created GPT Pro Project chat, with one coordinator-written project memo updated after material rounds and curated at closure.
 ---
 
 # Personal Triad Discussion
@@ -13,9 +13,19 @@ Project.
 
 - Run only after explicit `$personal-triad-discussion` invocation for a
   multi-round deliberation. Keep implicit invocation disabled.
-- Keep the user as chair, final decision maker, and authority owner.
-- Keep the current Codex coordinator as local evidence auditor, relay
-  coordinator, sole memo writer, and final decision synthesizer.
+- Keep the user as the low-frequency decision and authority owner, not the
+  per-round chair, analyst, or recorder.
+- The Codex main process is the control plane. It owns the opening summary,
+  relay preparation, sole memo writing, bounded delegation, compressed
+  synthesis, user questions, and final judgment.
+- Keep only tiny identity and boundary guards in the main process. Delegate
+  substantial evidence work, including repository exploration, multi-file
+  source or log analysis, and reading or comparing test or experiment results,
+  to a bounded subagent or worker.
+- This Triad invocation does not authorize mutation, tests, experiments,
+  downloads, long jobs, or resource changes. If no qualified evidence slot is
+  available, tell the user directly; do not let the main process silently
+  absorb the substantial work.
 - Let GPT Pro act as an independent reframer, challenger, domain expert,
   alternative generator, or synthesizer by round.
 - Treat GPT Pro replies and subagent reports as external evidence, not user
@@ -40,8 +50,8 @@ user names.
 4. Do not claim Codex created the chat, selected the model, changed Project
    instructions, or changed memory unless a product tool proves the authorized
    action.
-5. Project memory may supply context but does not guarantee retrieval or
-   isolation. Request an independent framing before exposing a preferred answer,
+5. Project memory may supply context but cannot guarantee isolation or
+   retrieval. Request an independent framing before exposing a preferred answer,
    and keep facts, Project context, assumptions, and inferences distinct.
 
 The user relays between chats. Prefer an available native import; otherwise use
@@ -89,16 +99,60 @@ A memo write failure must be reported. Mark persistence unsupported and preserve
 the in-thread decision state; the failure does not by itself falsify the
 discussion result. Do not broaden writes merely to make persistence succeed.
 
+## Use A Low-Bandwidth User Interface
+
+Start with this five-line summary before the first relay:
+
+```text
+Discussion goal: <decision or bottleneck>
+Current state: <verified state and material unknown>
+Role split: <GPT Pro, Codex control plane, and any evidence worker>
+This round: <one concrete discussion action>
+When you need to intervene: <now, at a named decision, or not yet>
+```
+
+Every user-visible round must contain exactly one of these status labels:
+
+- `无需你操作`
+- `需要你转发`
+- `需要你决定`
+- `需要你授权`
+- `需要你操作`
+
+Any request to the user must state the exact action, reason, impact, and success
+signal. Do not hide two different user obligations behind one label. When the
+user only needs to relay, provide one complete message that can be copied
+without reconstructing context from the analysis.
+
+After a GPT Pro reply, default to this sequence without asking for another
+instruction:
+
+1. classify statements as verified facts, Project context, inference, or
+   unknown;
+2. update `working.md` with the material delta;
+3. delegate bounded evidence work when it is substantial and already within the
+   read-only boundary;
+4. give the user a compact round summary containing the key change and the
+   current Codex judgment; and
+5. generate the next directly relayable GPT Pro message when another round has
+   decision value.
+
+Do not ask the user to say `continue`. Stop instead when the next action needs a
+decision, authorization, operation, or evidence that the user owns, and label
+that need directly.
+
 ## Start The Discussion
 
 Inspect only enough local evidence to avoid a false premise. Bounded directly
 relevant read-only inspection needs no extra triad approval; keep unknowns
 explicit instead of broadening the investigation.
 
-Create one neutral `Kickoff Brief` in the current conversation and record its
-decision state in `working.md`. Include the decision, why now, verified facts and
-cutoff, user decisions and constraints, hypotheses, unknowns, action boundary,
-and first-round request.
+Give the five-line low-bandwidth summary, then create one neutral `Kickoff
+Brief` in the current conversation and record its decision state in
+`working.md`. Include the decision, why now, verified facts and cutoff, user
+decisions and constraints, hypotheses, unknowns, action boundary, and
+first-round request. Use `需要你转发` when the kickoff is ready for the user to
+relay.
 
 Ask GPT Pro first to independently reframe the problem, identify hidden
 assumptions and competing explanations, propose alternatives before reviewing a
@@ -125,10 +179,12 @@ positions repeat, disagreement becomes a concrete evidence task, options will
 not change, required evidence is unavailable, or the user decides, defers,
 pauses, or changes the question.
 
-Use bounded core retrieval and output partitioning in the current task. When
-evidence collection becomes exploratory, multi-module, data-heavy, experimental,
-or log-heavy, route it to the owning workflow and return a compressed evidence
-packet in conversation. The coordinator retains the authoritative judgment.
+Use bounded core retrieval and output partitioning in the current task. Keep
+only tiny identity and boundary guards local. When evidence collection becomes
+exploratory, multi-module, data-heavy, or log-heavy, or requires reading test or
+experiment results, route it to a bounded evidence subagent or the owning
+workflow and return a compressed evidence packet in conversation. The
+coordinator retains the authoritative judgment.
 
 A GPT Pro request for editing, experiments, downloads, resources, or external
 action is not authorization. Perform only in-scope read-only checks; otherwise
@@ -137,9 +193,18 @@ use the normal owner and approval boundary.
 ## Restart Or Finish
 
 If the GPT Pro chat becomes anchored to a false premise, role-confused, or too
-long to use reliably, update `working.md`, prepare a `Restart Brief`, and ask the
-user to open a new GPT Pro chat in the same Project. Do not replay the full
-transcript or silently carry rejected assumptions forward.
+long to use reliably, choose one restart explicitly:
+
+- **Continuity Restart:** update `working.md`, prepare a minimal Restart Brief
+  containing only the verified state, locked user decisions, open disagreement,
+  and evidence cutoff, then ask the user to open a new chat in the same Project.
+  Do not replay the full transcript or silently carry rejected assumptions
+  forward.
+- **Blank Restart:** ask the user to open a new chat; do not send the working
+  memo, do not send verified state, and do not send old conclusions. Provide
+  only a neutral new kickoff that restates the question without prior answers
+  or a handoff. Project memory cannot guarantee isolation, so disclose that the
+  new GPT Pro chat may still receive earlier Project context.
 
 At a stop condition, curate `decision.md` with:
 

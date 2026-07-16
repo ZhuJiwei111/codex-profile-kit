@@ -76,6 +76,10 @@ progressive-disclosure references were still present.
 - Manual-only invocation, with no description-based implicit trigger.
 - An unnamed explicit target defaults to the current task; other tasks require
   an exact user-supplied current-host reference.
+- The unnamed mode produces a Current Task Snapshot covering the task goal,
+  completed work, the decision-and-evidence chain, evidence cutoff, unresolved
+  items, and why the next step follows. It does not silently substitute the
+  most recent output as its target.
 - A default AI-PhD/AI-for-biology reader profile with asymmetric domain depth.
 - Layered explanation: practical meaning, necessary terms, relationships,
   evidence boundary, and decision impact.
@@ -118,3 +122,26 @@ progressive-disclosure references were still present.
 - No mechanical validator or reusable script is bundled. Metadata and link
   checks plus isolated engineering, AI-for-biology, multi-stage, missing-data,
   and adjacent-routing probes provide more proportionate evidence.
+
+```yaml
+skill_admission:
+  skill: personal-project-output-explainer
+  acquisition_mode: created
+  source_classification: local-origin
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: The instruction-only skill was reviewed; it performs bounded read-only explanation, does not grant implementation or external actions, and does not bundle scripts, hooks, credentials, persistence, or publication."
+  trigger_status: passed
+  trigger_review: "static_pass: Manual invocation, named-output decoding, unnamed Current Task Snapshot, live-status exclusion, and adjacent diagnosis/documentation routes were reviewed."
+  validation_status: passed
+  validation:
+    - "static_pass: Local history, user-origin design evidence, metadata, and focused contract checks were reviewed on 2026-07-16."
+    - "product_pass: A fresh bounded Current Task Snapshot forward probe preserved the goal, causal evidence cutoff, unresolved resource decision, and next action on 2026-07-16."
+  update_owner: "maintainer of personal-project-output-explainer"
+  update_rule: "Repeat provenance, safety, trigger, evidence-retrieval, audience, and portability review before the source, invocation modes, output contract, or adjacent owner boundaries change."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: none
+  unknowns: []
+```

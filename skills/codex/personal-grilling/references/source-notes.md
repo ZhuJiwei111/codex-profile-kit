@@ -160,3 +160,27 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+```yaml
+skill_admission:
+  skill: personal-grilling
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found no bundled executable and a hard no-implementation gate; silence never resolves questions and downstream action requires a separate authorized owner."
+  trigger_status: passed
+  trigger_review: "static_pass: Manual-only invocation, adjacent brainstorming ownership, and explicit policy.allow_implicit_invocation false were reviewed against ordinary questions and design work."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned interview sources, license, local revisions, live regression evidence, and user-locked decisions reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-grilling"
+  update_rule: "Repeat provenance, safety, trigger, metadata, and portability review before any source, coverage contract, trigger, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: bounded-nonmaterial
+  unknowns:
+    - "Semantic completeness cannot be formally proven; the retained control is explicit coverage and residual-risk closure."
+```

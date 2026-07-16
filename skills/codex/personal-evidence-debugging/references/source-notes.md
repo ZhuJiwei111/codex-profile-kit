@@ -80,3 +80,26 @@ workflow ownership take precedence.
   does not claim final completion.
 - Durable guidance is routed only after a confirmed reusable cause and separate
   authorization.
+
+```yaml
+skill_admission:
+  skill: personal-evidence-debugging
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found no bundled executable; diagnosis is read-only by default and instrumentation, installation, long jobs, restarts, monitoring, and fixes retain separate authority."
+  trigger_status: passed
+  trigger_review: "static_pass: Unexpected failure investigation was reviewed against expected RED, status-only checks, test-first fixes, and final verification."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned upstream release, supporting materials, license, independent rewrite, and local safety deviations reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-evidence-debugging"
+  update_rule: "Repeat provenance, safety, trigger, and portability review before any source, trigger, runtime surface, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: none
+  unknowns: []
+```

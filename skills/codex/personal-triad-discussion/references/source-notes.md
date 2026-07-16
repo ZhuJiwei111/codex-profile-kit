@@ -88,14 +88,23 @@ on the user to negate the older broad trigger.
 - One topology: a new user-created GPT Pro chat inside the target ChatGPT
   Project.
 - User-mediated relay and no polling or monitoring of the GPT Pro chat.
+- The user is the low-frequency decision and authority owner, not the per-round
+  chair, analyst, or recorder.
+- The Codex main process is the control plane for opening summaries, relays,
+  sole memo writing, bounded delegation, compressed synthesis, direct user
+  requests, and final judgment; substantial evidence work belongs to a bounded
+  subagent or worker.
+- A five-line opening summary and one explicit user-action label per visible
+  round, with exact action, reason, impact, and success signal when intervention
+  is required.
 - Procedural independence through a neutral first brief and explicit separation
   of facts, Project context, assumptions, and inferences.
 - A flexible decision loop: independent reframe, disagreement mapping, targeted
   exchange, and decision synthesis.
 - Three context layers: curated GPT Pro input, a bounded Codex coordinator task,
   and independent evidence work when collection itself becomes substantial.
-- One kickoff brief, event-driven checkpoints, optional same-Project restart,
-  and a final decision synthesis.
+- One kickoff brief, event-driven checkpoints, Continuity Restart or Blank
+  Restart as distinct modes, and a final decision synthesis.
 - One coordinator-written project memo for an explicitly invoked multi-round
   discussion. Prefer an existing decision-note convention; otherwise use
   `.triad/<topic-slug>/working.md` and `decision.md`.
@@ -116,14 +125,21 @@ on the user to negate the older broad trigger.
 - Treating `/side`, `/fork`, a Codex subagent, or a worktree worker as the third
   GPT participant.
 - Treating external consensus as implementation or resource authorization.
+- Treating the user as the per-round chair, analyst, recorder, or a mandatory
+  `continue` signal between GPT Pro replies.
+- Letting the main process absorb repository exploration, multi-file source or
+  log analysis, or test and experiment evidence when a bounded evidence worker
+  is required but unavailable.
 
 ## Local Deviations And Limits
 
-- The user remains the only chair and final decision owner. Codex coordinates
-  evidence and synthesis; GPT Pro provides independent reasoning material.
-- Project memory provides continuity but not guaranteed retrieval or physical
-  context isolation. The skill mitigates anchoring procedurally and does not
-  modify the Project memory mode.
+- The user remains the final decision and authority owner but is deliberately
+  not the per-round chair. Codex coordinates evidence and synthesis; GPT Pro
+  provides independent reasoning material.
+- Project memory provides continuity but cannot guarantee isolation or
+  retrieval. A Blank Restart therefore creates a new chat and sends no working
+  memo, verified state, or old conclusions, while still disclosing that Project
+  context may surface.
 - Global instructions retain ownership of user-change protection, secrets,
   resources, long jobs, Git, external effects, and ask-first boundaries.
 - `personal-brainstorms` and explicitly invoked `personal-grilling` own internal
@@ -136,3 +152,30 @@ on the user to negate the older broad trigger.
 - Memo write failure is a persistence failure, not evidence that the discussion
   result is false. Planning may reference the curated decision; no adjacent
   workflow may rewrite it.
+
+```yaml
+skill_admission:
+  skill: personal-triad-discussion
+  acquisition_mode: created
+  source_classification: local-origin
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: The instruction and Markdown-template surfaces were reviewed; user-mediated relay and bounded project memo writes do not grant implementation, resource launch, Git, publication, credential, or external-chat automation."
+  trigger_status: passed
+  trigger_review: "static_pass: Manual-only Triad invocation was reviewed against ordinary brainstorming, explicit grilling, direct GPT relay, worker evidence, and project decision documentation."
+  validation_status: passed
+  validation:
+    - "static_pass: Local history, official product evidence, observed tool boundaries, metadata, links, and baseline behavior probes were reviewed on 2026-07-16."
+    - "static_pass: The low-bandwidth role split, five-line opening, action labels, post-reply loop, delegation boundary, and separate Continuity Restart and Blank Restart contracts were reviewed in the active skill and packet reference."
+    - "product_pass: A fresh post-GPT-reply smoke produced the five-line opening, one direct relay label, a compressed judgment, one complete relay, and no continue prompt on 2026-07-16."
+    - "product_pass: A fresh Blank Restart smoke sent only the neutral new question, excluded the old memo, verified state, conclusion, and named consumer, and disclosed the Project-memory isolation limit on 2026-07-16."
+  update_owner: "maintainer of personal-triad-discussion"
+  update_rule: "Repeat provenance, safety, trigger, relay, memo, user-intervention, restart, and portability review before the source, interaction contract, persistence surface, or role boundaries change."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: bounded-nonmaterial
+  unknowns:
+    - "Direct Codex control of a user-owned GPT Pro Project chat was not available on the observed tool surface."
+    - "The fresh CLI smokes followed the core SKILL contract but did not load the linked discussion-packets reference because their read-only tool path failed."
+```

@@ -149,3 +149,27 @@ those probes.
   profile's skill validators plus isolated behavioral scenarios.
 - Promotion to a project convention or `scripts/one-off/<task-slug>/` is a
   separate durable mutation and never implies Git stage or commit.
+
+```yaml
+skill_admission:
+  skill: personal-temporary-work
+  acquisition_mode: created
+  source_classification: local-origin
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found no bundled executable; helper creation, sensitive intermediates, cleanup, large artifacts, and promotion remain task-scoped and separately authorized."
+  trigger_status: passed
+  trigger_review: "static_pass: One-off work that might otherwise become maintained code was reviewed against simple commands, formal deliverables, permanent features, domain workflows, and multiline shared data."
+  validation_status: passed
+  validation:
+    - "static_pass: Local Git lineage, user-origin design evidence, official product evidence, and read-only baseline probes reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-temporary-work"
+  update_rule: "Repeat provenance, safety, trigger, artifact-lifecycle, and portability review before any source, helper policy, cleanup rule, trigger, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: bounded-nonmaterial
+  unknowns:
+    - "No real large dataset, destructive cleanup, or long-running transformation was used in the recorded baseline probes."
+```

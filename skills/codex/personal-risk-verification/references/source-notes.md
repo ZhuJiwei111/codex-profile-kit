@@ -107,3 +107,27 @@ the 26-line local skill.
 - Render evidence-state boundaries in Chinese for user-visible reports while
   retaining stable English values only at machine-readable or external
   convention boundaries.
+
+```yaml
+skill_admission:
+  skill: personal-risk-verification
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: partial
+  admission_status: legacy-exception
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found no bundled executable; verification consumes authorized evidence and does not grant fixes, installation, long checks, Git, publication, or external mutation."
+  trigger_status: passed
+  trigger_review: "static_pass: The single final completion gate was reviewed against intermediate checks, diagnosis, implementation, review handling, documentation sync, and branch finish."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned upstream identities, license, local blobs, and declared derivation gap reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-risk-verification"
+  update_rule: "No update is authorized; any content, source, trigger, executable, or metadata change requires a fresh re-admission before portable export."
+  rollback_basis: "The pre-batch rollback source is exact codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea and exact tree 943a87d8ac2d9cd229d25cee8d596d85e07bcfae; the current compatibility-only allowed content is separately locked by the validator's reviewed sha256-path-content-v1 full-tree digest."
+  unknowns_disposition: provenance-gap
+  unknowns:
+    - "Available Git history does not prove whether the initial local text was directly derived from the pinned upstream skill."
+```

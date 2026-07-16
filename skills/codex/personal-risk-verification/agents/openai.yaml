@@ -2,3 +2,5 @@ interface:
   display_name: "Personal Risk Verification"
   short_description: "Gate completion claims on fresh local evidence"
   default_prompt: "Use $personal-risk-verification as the final local completion gate: map each scoped claim to fresh evidence after its last relevant change, inspect exit status and the final diff, and report any unmet or unrun checks."
+policy:
+  allow_implicit_invocation: true

@@ -1,7 +1,7 @@
 interface:
   display_name: "Project Output Explainer"
-  short_description: "Explicitly decode the current task's output"
-  default_prompt: "Use $personal-project-output-explainer to decode the current task's latest relevant output, unless I name a different exact source."
+  short_description: "Explain current-task evidence and next step"
+  default_prompt: "Use $personal-project-output-explainer with no target to explain the current task's causal snapshot and why its next step follows."
 
 policy:
   allow_implicit_invocation: false

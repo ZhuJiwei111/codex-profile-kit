@@ -169,3 +169,27 @@ when distributing the substantially derived `sync_existing` material.
   facts stop at bounded inspection and the smallest decision-changing question.
 - `personal-risk-verification` is the final completion gate after file changes,
   and `personal-branch-finish` owns later Git readiness.
+
+```yaml
+skill_admission:
+  skill: personal-code-documentation
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: partial
+  admission_status: legacy-exception
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found an instruction-and-reference-only skill; writes are limited to explicitly authorized documentation artifacts and no publication, credential, installation, or destructive surface is bundled."
+  trigger_status: passed
+  trigger_review: "static_pass: Explain, create, and sync_existing ownership was reviewed against output explanation, prose polishing, review response, debugging, and consequential design."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned documentation sources, retained retirement tree identities, licenses, and the historical source gap reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-code-documentation"
+  update_rule: "No update is authorized; any content, source, trigger, executable, or metadata change requires a fresh re-admission before portable export."
+  rollback_basis: "The pre-batch rollback source is exact codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea and exact tree 074ebe5e1fe21df47535ea0a88a1e74bd357f5ae; the current compatibility-only allowed content is separately locked by the validator's reviewed sha256-path-content-v1 full-tree digest."
+  unknowns_disposition: provenance-gap
+  unknowns:
+    - "The exact historical upstream commit that originally shaped the retired personal-docs-sync-light workflow is not established."
+```

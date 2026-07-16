@@ -2,3 +2,5 @@ interface:
   display_name: "Personal Code Documentation"
   short_description: "Explain, create, or sync technical documentation"
   default_prompt: "Use $personal-code-documentation to explain code, create or substantially rewrite technical documentation, or run sync_existing for a small stale CLI, API, config, installation, or workflow contract patch from verified repository evidence."
+policy:
+  allow_implicit_invocation: true

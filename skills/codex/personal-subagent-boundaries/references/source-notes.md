@@ -97,6 +97,14 @@ revision retains the useful contract in a progressive-disclosure reference.
   `personal-risk-verification` as separate evidence layers.
 - Keep active-monitoring detail in a reference loaded only after current-thread
   authorization.
+- Treat fixed-path, credential-free observation of local Python processing,
+  downloads, and training as the default low-risk monitoring domain. When the
+  current spawn surface cannot prove the effective profile or sandbox, disclose
+  `profile_unverified` and `prompt_only` instead of claiming mechanical
+  enforcement.
+- Require product-confirmed or runtime-verified mechanical read-only isolation
+  before monitoring sensitive, external, production, or otherwise high-impact
+  state. A low-risk exception never widens that boundary.
 
 ## Rejected
 
@@ -136,11 +144,39 @@ revision retains the useful contract in a progressive-disclosure reference.
 - The local `monitor` profile requests user-selected `gpt-5.6-luna` with high
   reasoning. Parser acceptance is `configured_unverified`, not evidence of the
   effective role, model, effort, or sandbox at spawn time.
-- If the monitoring profile cannot be enforced and verified at runtime, strict
-  monitoring is unavailable. The default is no watcher, not recurring main-
-  process checks or silent inheritance of an unknown parent profile.
+- If the monitoring profile cannot be enforced and verified at runtime, only
+  the bounded low-risk local observation exception may use one explicitly
+  disclosed prompt-only observer. Other monitoring remains unavailable; the
+  main process does not silently inherit recurring polling.
 - Explorer, worker, validator, and diagnostic model choices remain
   task-dependent.
 - Persistent worktree and line state belongs to
   `personal-multiline-coordination`; final completion belongs to
   `personal-risk-verification`.
+
+```yaml
+skill_admission:
+  skill: personal-subagent-boundaries
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: The instruction and reference surfaces were reviewed; monitoring is observation-only, prompt-only enforcement is disclosed and limited to fixed low-risk local jobs, and sensitive or high-impact targets require mechanical read-only isolation."
+  trigger_status: passed
+  trigger_review: "static_pass: Delegation and explicit monitoring-authorization routes were reviewed against ordinary local execution, one-shot status checks, multiline coordination, and final verification."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned upstream sources, official product evidence, local history, and the risk-tier contract were reviewed on 2026-07-16."
+    - "static_pass: Active quick_validate and focused link/contract checks passed on 2026-07-16."
+    - "product_pass: A fresh admission-gate smoke allowed disclosed prompt-only observation for a fixed local Python training job and blocked a write-capable production-cloud observer on 2026-07-16."
+    - "runtime_pass: One disclosed prompt-only observer exclusively watched fixed PID/log evidence for disposable local Python jobs on 2026-07-16; it reported and stopped on an early-termination path, then observed progress=1/6 through progress=6/6 plus status=complete on the successful path while the main process performed no polling."
+  update_owner: "maintainer of personal-subagent-boundaries"
+  update_rule: "Repeat provenance, safety, trigger, runtime-capability, and portability review before any source, observer authority, enforcement tier, custom-agent dependency, or execution boundary changes."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: bounded-nonmaterial
+  unknowns:
+    - "The effective child model, reasoning effort, and sandbox remain product-confirmation facts at each real spawn."
+    - "The live runtime smoke used disposable local Python processing rather than a real model-training or authenticated-download workload; elevated sensitive and external paths remain intentionally blocked without mechanical read-only isolation."
+```

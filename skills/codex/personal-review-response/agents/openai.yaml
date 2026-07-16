@@ -2,3 +2,5 @@ interface:
   display_name: "Personal Review Response"
   short_description: "Evaluate review feedback before action"
   default_prompt: "Use $personal-review-response to verify each review claim, assign accepted, rejected, or needs-clarification, and act only within local and external authorization."
+policy:
+  allow_implicit_invocation: true

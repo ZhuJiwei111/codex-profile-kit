@@ -246,22 +246,32 @@ again, poll, tail, diagnose, repair, restart, or infer an ETA unsupported by
 evidence. This is not active monitoring.
 
 Active monitoring requires explicit authorization in the current Codex thread
-and an enforceable per-job monitoring contract. Unless the user narrows or
+and a risk-classified per-job monitoring contract. Unless the user narrows or
 revokes it, that authorization remains valid for later long-running jobs in the
 same thread and on the same host. It authorizes observation only: every new job
 or phase still needs a fresh contract, and launch, repair, restart, and stage
 progression retain their own authority gates.
 
-The portable custom file requests `monitor`, `gpt-5.6-luna`, high reasoning,
-and a read-only sandbox; that is `configured_unverified`, not runtime proof. A
-strict monitor is available only when the active spawn surface verifies the
-effective role, model, reasoning effort, and sandbox. `prompt_only` or
-`configured_unverified` enforcement means strict monitoring is unavailable.
-Do not replace it with recurring checks in the main process. Read [the
+The default delegated scope is a `low-risk local long job`: local Python
+processing, download, or training whose observer reads only local process,
+session, log, and output evidence. A download belongs to this tier only when
+the observer does not contact its remote source, use credentials, or mutate
+external state. Prefer a runtime-verified custom profile and sandbox. If the
+live spawn surface cannot verify them, this low-risk tier may use one observer
+only after the contract and user-visible launch disclosure state
+`profile_verification: profile_unverified` and
+`read_only_enforcement: prompt_only`.
+
+A sensitive, external, production, or high-impact target requires mechanical,
+product-confirmed, or runtime-verified read-only enforcement. Prompt-only or
+merely configured enforcement does not satisfy that gate; create no observer
+when the required read-only boundary cannot be demonstrated. Never replace an
+unavailable observer with recurring checks in the main process. Read [the
 monitoring protocol](references/monitoring.md) before spawning. User-visible
-prose renders these states as `已配置但未验证`, `仅提示约束`, and
-`运行时已验证`; keep the English values only inside machine-readable contracts.
-Monitoring reports use Chinese event names; monitoring events remain evidence,
+prose renders `configured_unverified` or `profile_unverified` as
+`已配置但未验证`, `prompt_only` as `仅提示约束`, and a runtime-verified
+boundary as `运行时已验证`; keep the English values inside machine-readable
+contracts. Monitoring reports use Chinese event names and remain evidence,
 never task completion or a go/no-go decision.
 
 ## Collaboration Boundaries

@@ -96,3 +96,26 @@ state, task, or required claim materially changes.
   path only; it does not grant publication, credential, installation, launch,
   or verdict authority. The cached `github:yeet` source remains external and is
   not modified by this profile skill.
+
+```yaml
+skill_admission:
+  skill: personal-codex-audit
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: The bundled collector and tests were inspected as a bounded non-secret profile projection; collection does not grant apply, Git, publication, credential, or dependency-install authority."
+  trigger_status: passed
+  trigger_review: "static_pass: Whole-profile audit and directional transfer ownership was reviewed against targeted skill hygiene, hook authoring, ordinary status, and github:yeet publication."
+  validation_status: passed
+  validation:
+    - "static_pass: Official live sources, local compatibility evidence, collector boundaries, and portable lock design reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-codex-audit"
+  update_rule: "Repeat provenance, safety, trigger, executable-surface, and portability review before collector, source, trigger, transfer, or ownership changes enter portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: none
+  unknowns: []
+```

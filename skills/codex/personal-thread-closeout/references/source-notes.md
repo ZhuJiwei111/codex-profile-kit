@@ -78,3 +78,27 @@ archive as proof of completion.
 - automatic implementation, Git, publication, worker, or job actions;
 - batch-wide rollback or stopping on a target-local failure; and
 - claiming archive success without the native action result.
+
+```yaml
+skill_admission:
+  skill: personal-thread-closeout
+  acquisition_mode: created
+  source_classification: local-origin
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found no bundled executable; exact-target archive is last, self-targeting is forbidden, project writes are conditional, and all task operations require native bounded surfaces."
+  trigger_status: passed
+  trigger_review: "static_pass: Manual-only separate-controller invocation and policy.allow_implicit_invocation false were reviewed against ordinary task endings, title search, broad enumeration, and implicit retrospectives."
+  validation_status: passed
+  validation:
+    - "static_pass: User-locked design, local revision evidence, live self-archive RED, and product-surface limits reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-thread-closeout"
+  update_rule: "Repeat provenance, safety, trigger, metadata, product-surface, and portability review before any targeting, selection, write, archive, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: bounded-nonmaterial
+  unknowns:
+    - "A native bounded task-list surface is not exposed by every controller and must be rechecked before project sweep use."
+```

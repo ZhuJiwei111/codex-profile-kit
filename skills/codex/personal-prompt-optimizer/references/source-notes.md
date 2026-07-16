@@ -24,16 +24,20 @@ skill_admission:
   provenance_status: complete
   admission_status: admitted
   portability_disposition: internalized
-  safety_review: "Static instruction and executable-surface review found no scripts, network, file-write, hook, MCP, credential, publication, or destructive-action surface."
-  trigger_review: "Product-confirmed in a fresh side-conversation: explicit discovery and manual Handoff Mode invocation."
+  safety_status: passed
+  safety_review: "static_pass: Static instruction and executable-surface review found no scripts, network, file-write, hook, MCP, credential, publication, or destructive-action surface."
+  trigger_status: passed
+  trigger_review: "product_pass: Product-confirmed in a fresh side-conversation: explicit discovery and manual Handoff Mode invocation."
+  validation_status: passed
   validation:
-    - "quick_validate: active and portable snapshots passed on 2026-07-16"
-    - "profile tests: passed on 2026-07-16"
-    - "sync audit: zero drift on 2026-07-16"
-    - "product smoke: product-confirmed explicit discovery and manual Handoff Mode in a fresh side-conversation"
+    - "static_pass: quick_validate: active and portable snapshots passed on 2026-07-16"
+    - "static_pass: profile tests: passed on 2026-07-16"
+    - "static_pass: sync audit: zero drift on 2026-07-16"
+    - "product_pass: product smoke: product-confirmed explicit discovery and manual Handoff Mode in a fresh side-conversation"
   update_owner: "maintainer of personal-prompt-optimizer"
   update_rule: "Repeat admission review when the source, trigger, safety boundary, owner routing, or runtime surface changes."
   rollback_basis: "Remove the skill from active discovery and the portable snapshot through the owning lifecycle workflow; reconstruct from the reviewed profile revision."
+  unknowns_disposition: bounded-nonmaterial
   unknowns:
     - "Downstream prompt effectiveness is not runtime_tested."
     - "Negative no-invocation product smoke was not rerun."

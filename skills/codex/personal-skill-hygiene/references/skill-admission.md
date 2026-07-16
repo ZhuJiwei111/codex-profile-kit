@@ -29,11 +29,23 @@ snapshot that predates this contract. It requires an exact local content lock,
 an explicit provenance gap, and review before any update. Never assign it to a
 new candidate.
 
+For an internalized legacy exception, `internalized` identifies the local
+maintenance owner; it does not make the frozen snapshot ordinarily admitted.
+The reviewed lock is a `sha256-path-content-v1` digest over every regular file's
+relative path and bytes, including `SKILL.md`, `agents/openai.yaml`, the
+`skill_admission` record, and all references. Any path or byte change requires
+fresh admission and an explicit reviewed-lock refresh. A historical Git
+revision and tree remain rollback evidence only; they are not the current
+allowed-content lock.
+
 Apply these invariants:
 
 - `vendor` and `internalized` normally require `admitted + complete`.
 - A recorded `legacy-exception + vendor` may preserve only its locked existing
   bytes; it cannot authorize refresh, replacement, or another install.
+- A recorded `legacy-exception + internalized` may preserve only its reviewed
+  locked content. Local ownership does not authorize an update while the
+  provenance exception remains open.
 - `host-only` is not a trust claim. It still requires the local safety and
   trigger checks needed for activation and is never exported.
 - `unassessed`, `deferred`, and `rejected` use `not-assigned` and remain outside

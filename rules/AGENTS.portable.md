@@ -177,7 +177,8 @@ AGENTS.md files.
   review, omissions, remaining risk, and the completion verdict.
 - Report changed, passed, not run, and residual risk without implying an
   external action occurred.
-- End a completed response with one concise outcome-specific next action of one
-  to three sentences when useful. In a terminal state, state there is no next
-  action or omit it. If new authority is needed, request the exact approval or
+- End every substantive final response with one outcome-specific next action of
+  one to three sentences. A blocking question may itself be that next action.
+  In a terminal state, explicitly state that there is no next action because the
+  goal is complete. If new authority is needed, request the exact approval or
   permission.

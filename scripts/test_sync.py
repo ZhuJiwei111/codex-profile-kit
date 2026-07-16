@@ -111,6 +111,88 @@ REVIEWED_RETIRED_HOOK_TARGET_SHA256 = {
 }
 
 
+def valid_personal_admission_notes(
+    name: str,
+    *,
+    admission_status: str = "admitted",
+    portability_disposition: str = "internalized",
+    provenance_status: str = "complete",
+    source_classification: str = "local-origin",
+    unknowns: tuple[str, ...] | None = None,
+    unknowns_disposition: str | None = None,
+    rollback_revision: str = "3791645f59c0eeec497755bd7301be78b44efbea",
+    rollback_tree: str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+) -> str:
+    update_rule = "Repeat admission when the skill contract changes."
+    rollback_basis = "Restore the reviewed fixture source."
+    if admission_status == "legacy-exception":
+        if unknowns is None:
+            unknowns = ("Historical provenance is incomplete.",)
+        update_rule = (
+            "No update is authorized; any change requires a fresh re-admission."
+        )
+        rollback_basis = (
+            "The pre-batch rollback source is exact reviewed revision "
+            f"{rollback_revision} and exact tree {rollback_tree}; current allowed "
+            "content is separately locked by the reviewed full-tree digest."
+        )
+    if unknowns is None:
+        unknowns = ()
+    if unknowns_disposition is None:
+        if admission_status == "legacy-exception":
+            unknowns_disposition = "provenance-gap"
+        else:
+            unknowns_disposition = "bounded-nonmaterial" if unknowns else "none"
+    if unknowns:
+        unknown_lines = "  unknowns:\n" + "".join(
+            f'    - "{item}"\n' for item in unknowns
+        )
+    else:
+        unknown_lines = "  unknowns: []\n"
+    return (
+        "# Source Notes\n\n"
+        "```yaml\n"
+        "skill_admission:\n"
+        f"  skill: {name}\n"
+        "  acquisition_mode: created\n"
+        f"  source_classification: {source_classification}\n"
+        f"  provenance_status: {provenance_status}\n"
+        f"  admission_status: {admission_status}\n"
+        f"  portability_disposition: {portability_disposition}\n"
+        "  safety_status: passed\n"
+        '  safety_review: "static_pass: Fixture has no executable surface."\n'
+        "  trigger_status: passed\n"
+        '  trigger_review: "static_pass: Fixture trigger is bounded."\n'
+        "  validation_status: passed\n"
+        "  validation:\n"
+        '    - "static_pass: Focused fixture validation."\n'
+        '  update_owner: "fixture maintainer"\n'
+        f'  update_rule: "{update_rule}"\n'
+        f'  rollback_basis: "{rollback_basis}"\n'
+        f"  unknowns_disposition: {unknowns_disposition}\n"
+        f"{unknown_lines}"
+        "```\n"
+    )
+
+
+def write_personal_skill_identity(skill: Path, *, policy: bool = True) -> None:
+    (skill / "agents").mkdir(parents=True, exist_ok=True)
+    (skill / "SKILL.md").write_text(
+        f"---\nname: {skill.name}\n"
+        "description: Use for one focused personal skill fixture.\n---\n",
+        encoding="utf-8",
+    )
+    (skill / "agents/openai.yaml").write_text(
+        "interface:\n"
+        "  display_name: \"Personal Fixture\"\n"
+        "  short_description: \"Exercise one personal skill validator fixture\"\n"
+        f"  default_prompt: \"Use ${skill.name} for this fixture.\"\n"
+        "policy:\n"
+        f"  allow_implicit_invocation: {str(policy).lower()}\n",
+        encoding="utf-8",
+    )
+
+
 class PortableAgentsTests(unittest.TestCase):
     def write_agents(self, text: str) -> Path:
         temp_dir = tempfile.TemporaryDirectory()
@@ -311,9 +393,28 @@ class PortableAgentsTests(unittest.TestCase):
             "outcome-specific" in normalized,
             "portable AGENTS lacks outcome-specific next-action routing",
         )
+        self.assertIn(
+            "every substantive final response",
+            normalized,
+            "portable AGENTS does not require a result-aware closeout on every substantive final",
+        )
+        final_section = normalized.partition("## final gate and result-aware next action")[2]
+        self.assertNotIn(
+            "when useful",
+            final_section,
+            "portable AGENTS still makes the next action discretionary",
+        )
+        self.assertNotIn(
+            "or omit it",
+            final_section,
+            "portable AGENTS still permits an implicit terminal closeout",
+        )
         self.assertIsNotNone(
-            re.search(r"terminal.{0,100}(?:no next action|omit|none)", normalized),
-            "portable AGENTS lacks the terminal-state next-action rule",
+            re.search(
+                r"terminal.{0,120}(?:explicitly|state).{0,60}(?:no next action|none)",
+                final_section,
+            ),
+            "portable AGENTS lacks an explicit terminal-state no-next-action rule",
         )
         self.assertIsNotNone(
             re.search(
@@ -921,6 +1022,41 @@ class WholeProfileContractTests(unittest.TestCase):
             monitoring,
         )
 
+    def test_monitoring_uses_a_risk_tiered_runtime_gate(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills" / "codex" / "personal-subagent-boundaries"
+        skill = " ".join(
+            (skill_root / "SKILL.md").read_text(encoding="utf-8").split()
+        ).lower()
+        monitoring = " ".join(
+            (skill_root / "references/monitoring.md")
+            .read_text(encoding="utf-8")
+            .split()
+        ).lower()
+
+        for phrase in (
+            "low-risk local long job",
+            "python processing",
+            "download",
+            "training",
+            "prompt_only",
+            "profile_unverified",
+        ):
+            with self.subTest(low_risk_contract=phrase):
+                self.assertIn(phrase, monitoring)
+        self.assertRegex(
+            monitoring,
+            r"low-risk local long job.{0,500}prompt_only.{0,300}(?:may|can|allowed)",
+        )
+        self.assertRegex(
+            monitoring,
+            r"(?:sensitive|external|production|high-impact).{0,500}"
+            r"(?:mechanical|product-confirmed|runtime-verified).{0,120}read-only",
+        )
+        self.assertNotIn(
+            "`prompt_only` or `configured_unverified` enforcement means strict monitoring is unavailable",
+            skill,
+        )
+
     def test_profile_sync_allows_confirmed_public_or_private_remote(self) -> None:
         policy = (
             SYNC.REPO_ROOT
@@ -1114,6 +1250,181 @@ class WholeProfileContractTests(unittest.TestCase):
         )
         self.assertIn("ordinary", debugging.lower())
         self.assertIn("ordinary", branch_finish.lower())
+
+    def test_explicit_only_skill_metadata_is_validated_generically(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = Path(tmp) / "personal-explicit-fixture"
+            (skill / "agents").mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                "---\n"
+                "name: personal-explicit-fixture\n"
+                "description: Use only when the user explicitly requests this fixture.\n"
+                "---\n",
+                encoding="utf-8",
+            )
+            (skill / "agents/openai.yaml").write_text(
+                "interface:\n"
+                "  display_name: \"Explicit Fixture\"\n"
+                "  short_description: \"Exercise one explicit-only metadata route\"\n"
+                "  default_prompt: \"Use $personal-explicit-fixture for this fixture.\"\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(SystemExit, "allow_implicit_invocation"):
+                SYNC.validate_personal_skill_openai_yaml(skill, Path(tmp))
+
+            (skill / "agents/openai.yaml").write_text(
+                "interface:\n"
+                "  display_name: \"Explicit Fixture\"\n"
+                "  short_description: \"Exercise one explicit-only metadata route\"\n"
+                "  default_prompt: \"Use $personal-explicit-fixture for this fixture.\"\n"
+                "policy:\n"
+                "  allow_implicit_invocation: false\n",
+                encoding="utf-8",
+            )
+            SYNC.validate_personal_skill_openai_yaml(skill, Path(tmp))
+
+            (skill / "agents/openai.yaml").write_text(
+                "interface:\n"
+                "  display_name: \"Explicit Fixture\"\n"
+                "  short_description: \"Exercise one explicit-only metadata route\"\n"
+                "  default_prompt: \"Use $personal-explicit-fixture for this fixture.\"\n"
+                "policy:\n"
+                "  allow_implicit_invocation: true\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(SystemExit, "manual-only"):
+                SYNC.validate_personal_skill_openai_yaml(skill, Path(tmp))
+
+            (skill / "agents/openai.yaml").write_text(
+                "interface:\n"
+                "  display_name: \"Explicit Fixture\"\n"
+                "  short_description: \"Exercise one explicit-only metadata route\"\n"
+                "  default_prompt: \"Use $personal-explicit-fixture for this fixture.\"\n"
+                "policy:\n"
+                "  allow_implicit_invocation: \"false\"\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(SystemExit, "must be true or false"):
+                SYNC.validate_personal_skill_openai_yaml(skill, Path(tmp))
+
+    def test_personal_skill_metadata_requires_an_implicit_policy_owner(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = Path(tmp) / "personal-policy-fixture"
+            write_personal_skill_identity(skill)
+            metadata = skill / "agents/openai.yaml"
+            metadata.write_text(
+                metadata.read_text(encoding="utf-8").partition("policy:\n")[0],
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(SystemExit, "allow_implicit_invocation"):
+                SYNC.validate_personal_skill_openai_yaml(skill, Path(tmp))
+
+    def test_planning_skill_disables_implicit_invocation(self) -> None:
+        planning = (
+            SYNC.REPO_ROOT
+            / "skills/codex/personal-planning-with-files-zh/agents/openai.yaml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("allow_implicit_invocation: false", planning)
+
+    def test_output_explainer_unnamed_invocation_is_a_current_task_snapshot(self) -> None:
+        skill = (
+            SYNC.REPO_ROOT
+            / "skills/codex/personal-project-output-explainer/SKILL.md"
+        ).read_text(encoding="utf-8")
+        normalized = " ".join(skill.split()).lower()
+
+        self.assertIn("## current task snapshot", normalized)
+        for expected in (
+            "current task's goal",
+            "completed work",
+            "decision and evidence chain",
+            "evidence cutoff",
+            "unresolved",
+            "why the next step follows",
+        ):
+            with self.subTest(snapshot_contract=expected):
+                self.assertIn(expected, normalized)
+        target_section = normalized.partition("## resolve the target")[2].partition("##")[0]
+        self.assertNotIn("most recent relevant codex output", target_section)
+
+    def test_triad_is_a_low_bandwidth_control_plane(self) -> None:
+        skill_root = (
+            SYNC.REPO_ROOT / "skills/codex/personal-triad-discussion"
+        )
+        skill = " ".join(
+            (skill_root / "SKILL.md").read_text(encoding="utf-8").split()
+        ).lower()
+        packets = " ".join(
+            (skill_root / "references/discussion-packets.md")
+            .read_text(encoding="utf-8")
+            .split()
+        ).lower()
+
+        for phrase in (
+            "low-frequency decision and authority owner",
+            "not the per-round chair",
+            "main process is the control plane",
+            "tiny identity and boundary guards",
+            "substantial evidence work",
+            "do not ask the user to say `continue`",
+            "after a gpt pro reply",
+        ):
+            with self.subTest(control_plane_contract=phrase):
+                self.assertIn(phrase, skill)
+        for label in (
+            "discussion goal",
+            "current state",
+            "role split",
+            "this round",
+            "when you need to intervene",
+        ):
+            with self.subTest(opening_summary=label):
+                self.assertIn(label, skill)
+        for action_label in (
+            "无需你操作",
+            "需要你转发",
+            "需要你决定",
+            "需要你授权",
+            "需要你操作",
+        ):
+            with self.subTest(user_action_label=action_label):
+                self.assertIn(action_label, skill)
+                self.assertIn(action_label, packets)
+        self.assertRegex(
+            skill,
+            r"exact action.{0,120}reason.{0,120}impact.{0,120}success signal",
+        )
+
+    def test_triad_separates_continuity_and_blank_restart(self) -> None:
+        skill_root = (
+            SYNC.REPO_ROOT / "skills/codex/personal-triad-discussion"
+        )
+        skill = " ".join(
+            (skill_root / "SKILL.md").read_text(encoding="utf-8").split()
+        ).lower()
+        packets = " ".join(
+            (skill_root / "references/discussion-packets.md")
+            .read_text(encoding="utf-8")
+            .split()
+        ).lower()
+
+        for phrase in (
+            "continuity restart",
+            "blank restart",
+            "do not send the working memo",
+            "do not send verified state",
+            "do not send old conclusions",
+            "neutral new kickoff",
+        ):
+            with self.subTest(restart_contract=phrase):
+                self.assertIn(phrase, skill)
+                self.assertIn(phrase, packets)
+        self.assertRegex(
+            skill,
+            r"blank restart.{0,500}project memory.{0,240}(?:cannot|does not).{0,80}isolation",
+        )
 
     def test_grilling_requires_sourced_three_pass_coverage_closure(self) -> None:
         skill_root = SYNC.REPO_ROOT / "skills" / "codex" / "personal-grilling"
@@ -1386,6 +1697,477 @@ class PortableSkillTests(unittest.TestCase):
                 source = skill / "references" / "source-notes.md"
                 self.assertTrue(source.is_file(), source)
                 self.assertIn("source", source.read_text(encoding="utf-8").lower())
+
+    def test_every_personal_skill_has_a_machine_readable_admission_record(self) -> None:
+        root = SYNC.REPO_ROOT / "skills" / "codex"
+        personal = sorted(path for path in root.glob("personal-*") if path.is_dir())
+
+        for skill in personal:
+            with self.subTest(skill=skill.name):
+                notes = skill / "references/source-notes.md"
+                text = notes.read_text(encoding="utf-8")
+                self.assertIn("skill_admission:", text)
+                self.assertRegex(text, rf"(?m)^  skill: {re.escape(skill.name)}$")
+                for field in (
+                    "acquisition_mode",
+                    "source_classification",
+                    "provenance_status",
+                    "admission_status",
+                    "portability_disposition",
+                    "safety_status",
+                    "safety_review",
+                    "trigger_status",
+                    "trigger_review",
+                    "validation_status",
+                    "validation",
+                    "update_owner",
+                    "update_rule",
+                    "rollback_basis",
+                    "unknowns_disposition",
+                    "unknowns",
+                ):
+                    self.assertRegex(text, rf"(?m)^  {field}:")
+                SYNC.validate_personal_skill_source_notes(skill, SYNC.REPO_ROOT)
+
+    def test_source_note_validator_rejects_an_unassessed_personal_skill(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills/codex/personal-unassessed"
+            write_personal_skill_identity(skill)
+            (skill / "references").mkdir(parents=True)
+            (skill / "references/source-notes.md").write_text(
+                "# Source Notes\n\nNo admission decision yet.\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(SystemExit, "admission"):
+                SYNC.validate_personal_skill_source_notes(skill, root)
+
+    def test_source_note_validator_rejects_nonportable_admission_records(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills/codex/personal-admission-fixture"
+            write_personal_skill_identity(skill)
+            notes = skill / "references/source-notes.md"
+            notes.parent.mkdir(parents=True)
+
+            cases = {
+                "unassessed": valid_personal_admission_notes(skill.name).replace(
+                    "admission_status: admitted", "admission_status: unassessed"
+                ),
+                "deferred": valid_personal_admission_notes(skill.name).replace(
+                    "admission_status: admitted", "admission_status: deferred"
+                ),
+                "rejected": valid_personal_admission_notes(skill.name).replace(
+                    "admission_status: admitted", "admission_status: rejected"
+                ),
+                "host-only": valid_personal_admission_notes(
+                    skill.name, portability_disposition="host-only"
+                ),
+                "identity mismatch": valid_personal_admission_notes(
+                    "personal-other-identity"
+                ),
+                "partial admitted": valid_personal_admission_notes(
+                    skill.name, provenance_status="partial"
+                ),
+                "unresolved admitted": valid_personal_admission_notes(
+                    skill.name, source_classification="unresolved"
+                ),
+                "failed safety": valid_personal_admission_notes(skill.name).replace(
+                    "safety_status: passed", "safety_status: pending"
+                ),
+                "empty unknown mismatch": valid_personal_admission_notes(
+                    skill.name, unknowns_disposition="bounded-nonmaterial"
+                ),
+                "bounded unknown mismatch": valid_personal_admission_notes(
+                    skill.name,
+                    unknowns=("A nonmaterial boundary remains.",),
+                    unknowns_disposition="none",
+                ),
+                "unresolved legacy": valid_personal_admission_notes(
+                    skill.name,
+                    admission_status="legacy-exception",
+                    provenance_status="partial",
+                    source_classification="unresolved",
+                ),
+            }
+            for label, text in cases.items():
+                with self.subTest(case=label):
+                    notes.write_text(text, encoding="utf-8")
+                    with self.assertRaisesRegex(SystemExit, "admission|provenance"):
+                        SYNC.validate_personal_skill_source_notes(skill, root)
+
+            legacy_revision = "3791645f59c0eeec497755bd7301be78b44efbea"
+            legacy_tree = "a" * 40
+            notes.write_text(
+                valid_personal_admission_notes(
+                    skill.name,
+                    admission_status="legacy-exception",
+                    provenance_status="partial",
+                    rollback_revision=legacy_revision,
+                    rollback_tree=legacy_tree,
+                ),
+                encoding="utf-8",
+            )
+            allowed_digest = SYNC.skill_tree_sha256(skill)
+            with mock.patch.dict(
+                SYNC.REVIEWED_PERSONAL_SKILL_LEGACY_SNAPSHOTS,
+                {
+                    skill.name: SYNC.ReviewedPersonalSkillLegacySnapshot(
+                        rollback_revision=legacy_revision,
+                        rollback_tree=legacy_tree,
+                        allowed_content_sha256=allowed_digest,
+                    )
+                },
+            ):
+                SYNC.validate_personal_skill_source_notes(skill, root)
+
+            notes.write_text(
+                valid_personal_admission_notes(
+                    skill.name,
+                    unknowns=("A nonmaterial runtime boundary remains.",),
+                ),
+                encoding="utf-8",
+            )
+            SYNC.validate_personal_skill_source_notes(skill, root)
+
+    def test_source_note_validator_requires_controlled_review_statuses(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills/codex/personal-status-fixture"
+            write_personal_skill_identity(skill)
+            notes = skill / "references/source-notes.md"
+            notes.parent.mkdir(parents=True)
+            valid = valid_personal_admission_notes(skill.name)
+            for field in (
+                "safety_status",
+                "trigger_status",
+                "validation_status",
+                "unknowns_disposition",
+            ):
+                with self.subTest(missing=field):
+                    notes.write_text(
+                        re.sub(rf"(?m)^  {field}:.*\n", "", valid),
+                        encoding="utf-8",
+                    )
+                    with self.assertRaisesRegex(SystemExit, field):
+                        SYNC.validate_personal_skill_source_notes(skill, root)
+
+    def test_passed_admission_evidence_requires_a_controlled_prefix(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills/codex/personal-evidence-prefix"
+            write_personal_skill_identity(skill)
+            notes = skill / "references/source-notes.md"
+            notes.parent.mkdir(parents=True)
+            valid = valid_personal_admission_notes(skill.name)
+            for prefix in ("static_pass", "runtime_pass", "product_pass"):
+                with self.subTest(allowed_prefix=prefix):
+                    notes.write_text(
+                        valid.replace("static_pass: ", f"{prefix}: "),
+                        encoding="utf-8",
+                    )
+                    SYNC.validate_personal_skill_source_notes(skill, root)
+
+            cases = {
+                "missing safety prefix": valid.replace(
+                    'safety_review: "static_pass: Fixture has no executable surface."',
+                    'safety_review: "Fixture has no executable surface."',
+                ),
+                "unknown safety prefix": valid.replace(
+                    'safety_review: "static_pass: Fixture has no executable surface."',
+                    'safety_review: "manual_pass: Fixture has no executable surface."',
+                ),
+                "missing trigger prefix": valid.replace(
+                    'trigger_review: "static_pass: Fixture trigger is bounded."',
+                    'trigger_review: "Fixture trigger is bounded."',
+                ),
+                "unknown trigger prefix": valid.replace(
+                    'trigger_review: "static_pass: Fixture trigger is bounded."',
+                    'trigger_review: "manual_pass: Fixture trigger is bounded."',
+                ),
+                "missing validation prefix": valid.replace(
+                    '    - "static_pass: Focused fixture validation."\n',
+                    '    - "static_pass: Focused fixture validation."\n'
+                    '    - "Second fixture validation."\n',
+                ),
+                "unknown validation prefix": valid.replace(
+                    '    - "static_pass: Focused fixture validation."\n',
+                    '    - "static_pass: Focused fixture validation."\n'
+                    '    - "manual_pass: Second fixture validation."\n',
+                ),
+            }
+            for label, text in cases.items():
+                with self.subTest(evidence=label):
+                    notes.write_text(text, encoding="utf-8")
+                    with self.assertRaisesRegex(SystemExit, "controlled pass prefix"):
+                        SYNC.validate_personal_skill_source_notes(skill, root)
+
+    def test_admitted_record_allows_bounded_nonmaterial_not_run_unknowns(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills/codex/personal-bounded-unknowns"
+            write_personal_skill_identity(skill)
+            notes = skill / "references/source-notes.md"
+            notes.parent.mkdir(parents=True)
+            notes.write_text(
+                valid_personal_admission_notes(
+                    skill.name,
+                    unknowns=(
+                        "Downstream prompt effectiveness is not runtime_tested.",
+                        "Negative no-invocation product smoke was not rerun.",
+                    ),
+                    unknowns_disposition="bounded-nonmaterial",
+                ),
+                encoding="utf-8",
+            )
+
+            SYNC.validate_personal_skill_source_notes(skill, root)
+
+    def test_legacy_rollback_requires_a_reviewed_skill_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "skills/codex/personal-legacy-fixture"
+            write_personal_skill_identity(skill)
+            notes = skill / "references/source-notes.md"
+            notes.parent.mkdir(parents=True)
+            valid_revision = "3791645f59c0eeec497755bd7301be78b44efbea"
+            valid_tree = "a" * 40
+            valid = valid_personal_admission_notes(
+                skill.name,
+                admission_status="legacy-exception",
+                provenance_status="partial",
+                rollback_revision=valid_revision,
+                rollback_tree=valid_tree,
+            )
+            notes.write_text(valid, encoding="utf-8")
+            self.assertNotIn(
+                skill.name,
+                SYNC.REVIEWED_PERSONAL_SKILL_LEGACY_SNAPSHOTS,
+            )
+            with self.assertRaisesRegex(
+                SystemExit, "reviewed legacy snapshot binding"
+            ):
+                SYNC.validate_personal_skill_source_notes(skill, root)
+
+            allowed_digest = SYNC.skill_tree_sha256(skill)
+            with mock.patch.dict(
+                SYNC.REVIEWED_PERSONAL_SKILL_LEGACY_SNAPSHOTS,
+                {
+                    skill.name: SYNC.ReviewedPersonalSkillLegacySnapshot(
+                        rollback_revision=valid_revision,
+                        rollback_tree=valid_tree,
+                        allowed_content_sha256=allowed_digest,
+                    )
+                },
+            ):
+                SYNC.validate_personal_skill_source_notes(skill, root)
+
+                for label, text in {
+                    "fake revision": valid.replace(valid_revision, "f" * 40),
+                    "wrong tree": valid.replace(valid_tree, "e" * 40),
+                }.items():
+                    with self.subTest(mismatch=label):
+                        notes.write_text(text, encoding="utf-8")
+                        with self.assertRaisesRegex(
+                            SystemExit, "reviewed legacy snapshot binding"
+                        ):
+                            SYNC.validate_personal_skill_source_notes(skill, root)
+
+    def test_legacy_content_lock_rejects_any_skill_tree_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            revision = "3791645f59c0eeec497755bd7301be78b44efbea"
+            tree = "a" * 40
+            mutations = {
+                "skill instructions": lambda skill: (skill / "SKILL.md").write_text(
+                    (skill / "SKILL.md").read_text(encoding="utf-8")
+                    + "\nUnreviewed instruction.\n",
+                    encoding="utf-8",
+                ),
+                "metadata": lambda skill: (skill / "agents/openai.yaml").write_text(
+                    (skill / "agents/openai.yaml").read_text(encoding="utf-8")
+                    + "# unreviewed metadata\n",
+                    encoding="utf-8",
+                ),
+                "admission block": lambda skill: (
+                    skill / "references/source-notes.md"
+                ).write_text(
+                    (skill / "references/source-notes.md").read_text(
+                        encoding="utf-8"
+                    ).replace("fixture maintainer", "unreviewed maintainer"),
+                    encoding="utf-8",
+                ),
+                "new file": lambda skill: (skill / "unreviewed-change.txt").write_text(
+                    "this byte was not admitted\n", encoding="utf-8"
+                ),
+            }
+            for index, (label, mutate) in enumerate(mutations.items()):
+                with self.subTest(drift=label):
+                    skill = (
+                        root
+                        / f"case-{index}"
+                        / "skills/codex/personal-legacy-content-lock"
+                    )
+                    write_personal_skill_identity(skill)
+                    notes = skill / "references/source-notes.md"
+                    notes.parent.mkdir(parents=True)
+                    notes.write_text(
+                        valid_personal_admission_notes(
+                            skill.name,
+                            admission_status="legacy-exception",
+                            provenance_status="partial",
+                            rollback_revision=revision,
+                            rollback_tree=tree,
+                        ),
+                        encoding="utf-8",
+                    )
+                    reviewed = SYNC.ReviewedPersonalSkillLegacySnapshot(
+                        rollback_revision=revision,
+                        rollback_tree=tree,
+                        allowed_content_sha256=SYNC.skill_tree_sha256(skill),
+                    )
+                    with mock.patch.dict(
+                        SYNC.REVIEWED_PERSONAL_SKILL_LEGACY_SNAPSHOTS,
+                        {skill.name: reviewed},
+                    ):
+                        SYNC.validate_personal_skill_source_notes(
+                            skill, root / f"case-{index}"
+                        )
+                        mutate(skill)
+                        with self.assertRaisesRegex(
+                            SystemExit, "reviewed legacy content lock"
+                        ):
+                            SYNC.validate_personal_skill_source_notes(
+                                skill, root / f"case-{index}"
+                            )
+
+    def test_legacy_internalized_records_separate_rollback_and_content_lock(
+        self,
+    ) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills/codex"
+        for name, reviewed in sorted(
+            SYNC.REVIEWED_PERSONAL_SKILL_LEGACY_SNAPSHOTS.items()
+        ):
+            with self.subTest(skill=name):
+                notes = (
+                    skill_root / name / "references/source-notes.md"
+                ).read_text(encoding="utf-8")
+                normalized = " ".join(notes.split()).casefold()
+                self.assertIn("admission_status: legacy-exception", normalized)
+                self.assertIn("portability_disposition: internalized", normalized)
+                self.assertIn("pre-batch rollback source", normalized)
+                self.assertIn("full-tree digest", normalized)
+                self.assertNotIn("only admitted delta", normalized)
+                self.assertRegex(reviewed.rollback_revision, r"^[0-9a-f]{40}$")
+                self.assertRegex(reviewed.rollback_tree, r"^[0-9a-f]{40}$")
+                self.assertRegex(
+                    reviewed.allowed_content_sha256, r"^[0-9a-f]{64}$"
+                )
+
+    def test_personal_skill_validators_reject_symlinked_identity_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+
+            metadata_skill = root / "metadata/personal-metadata-link"
+            write_personal_skill_identity(metadata_skill)
+            metadata = metadata_skill / "agents/openai.yaml"
+            external_metadata = root / "external-openai.yaml"
+            external_metadata.write_text(
+                metadata.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+            metadata.unlink()
+            metadata.symlink_to(external_metadata)
+            with self.assertRaisesRegex(SystemExit, "symbolic link"):
+                SYNC.validate_personal_skill_openai_yaml(metadata_skill, root)
+            with self.assertRaisesRegex(SystemExit, "symbolic link"):
+                SYNC.validate_personal_skill_source_notes(metadata_skill, root)
+
+            skill_file_skill = root / "skill-file/personal-skill-link"
+            write_personal_skill_identity(skill_file_skill)
+            skill_file = skill_file_skill / "SKILL.md"
+            external_skill = root / "external-SKILL.md"
+            external_skill.write_text(
+                skill_file.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+            skill_file.unlink()
+            skill_file.symlink_to(external_skill)
+            with self.assertRaisesRegex(SystemExit, "symbolic link"):
+                SYNC.validate_personal_skill_openai_yaml(skill_file_skill, root)
+
+            target = root / "target/personal-directory-link"
+            write_personal_skill_identity(target)
+            linked = root / "linked/personal-directory-link"
+            linked.parent.mkdir(parents=True)
+            linked.symlink_to(target, target_is_directory=True)
+            with self.assertRaisesRegex(SystemExit, "symbolic link"):
+                SYNC.validate_personal_skill_openai_yaml(linked, root)
+
+            agents_skill = root / "agents-ancestor/personal-agents-link"
+            write_personal_skill_identity(agents_skill)
+            agents = agents_skill / "agents"
+            external_agents = root / "external-agents"
+            agents.rename(external_agents)
+            agents.symlink_to(external_agents, target_is_directory=True)
+            with self.assertRaisesRegex(SystemExit, "symbolic link"):
+                SYNC.validate_personal_skill_openai_yaml(agents_skill, root)
+
+            references_skill = root / "references-ancestor/personal-references-link"
+            write_personal_skill_identity(references_skill)
+            references = references_skill / "references"
+            references.mkdir()
+            (references / "source-notes.md").write_text(
+                valid_personal_admission_notes(references_skill.name),
+                encoding="utf-8",
+            )
+            external_references = root / "external-references"
+            references.rename(external_references)
+            references.symlink_to(external_references, target_is_directory=True)
+            with self.assertRaisesRegex(SystemExit, "symbolic link"):
+                SYNC.validate_personal_skill_source_notes(references_skill, root)
+
+    def test_personal_skill_validators_reject_non_regular_identity_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+
+            skill_file_skill = root / "skill-file/personal-non-file-skill"
+            write_personal_skill_identity(skill_file_skill)
+            skill_file = skill_file_skill / "SKILL.md"
+            skill_file.unlink()
+            skill_file.mkdir()
+            with self.assertRaisesRegex(SystemExit, "regular file"):
+                SYNC.validate_personal_skill_openai_yaml(skill_file_skill, root)
+
+            metadata_skill = root / "metadata/personal-non-file-metadata"
+            write_personal_skill_identity(metadata_skill)
+            metadata = metadata_skill / "agents/openai.yaml"
+            metadata.unlink()
+            metadata.mkdir()
+            with self.assertRaisesRegex(SystemExit, "regular file"):
+                SYNC.validate_personal_skill_openai_yaml(metadata_skill, root)
+
+            non_directory = root / "personal-non-directory"
+            non_directory.write_text("not a skill directory\n", encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "regular directory"):
+                SYNC.validate_personal_skill_openai_yaml(non_directory, root)
+
+            agents_skill = root / "agents-ancestor/personal-non-directory-agents"
+            write_personal_skill_identity(agents_skill)
+            agents = agents_skill / "agents"
+            (agents / "openai.yaml").unlink()
+            agents.rmdir()
+            agents.write_text("not an agents directory\n", encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "agents.*regular directory"):
+                SYNC.validate_personal_skill_openai_yaml(agents_skill, root)
+
+            references_skill = (
+                root / "references-ancestor/personal-non-directory-references"
+            )
+            write_personal_skill_identity(references_skill)
+            references = references_skill / "references"
+            references.write_text("not a references directory\n", encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "references.*regular directory"):
+                SYNC.validate_personal_skill_source_notes(references_skill, root)
 
     def test_prompt_optimizer_contract_is_manual_and_bounded(self) -> None:
         skill_root = (
@@ -1670,7 +2452,9 @@ class PortableSkillTests(unittest.TestCase):
                 "interface:\n"
                 "  display_name: \"Personal Sample\"\n"
                 "  short_description: \"Validate one focused sample workflow\"\n"
-                "  default_prompt: \"Use $personal-sample for this sample.\"\n",
+                "  default_prompt: \"Use $personal-sample for this sample.\"\n"
+                "policy:\n"
+                "  allow_implicit_invocation: true\n",
                 encoding="utf-8",
             )
 
@@ -1691,9 +2475,12 @@ class PortableSkillTests(unittest.TestCase):
                 "interface:\n"
                 "  display_name: \"Personal Sample\"\n"
                 "  short_description: \"Validate one focused sample workflow\"\n"
-                "  default_prompt: \"Use $personal-sample for this sample.\"\n",
+                "  default_prompt: \"Use $personal-sample for this sample.\"\n"
+                "policy:\n"
+                "  allow_implicit_invocation: true\n",
                 encoding="utf-8",
             )
+            (skill / "references").mkdir()
 
             with self.assertRaisesRegex(SystemExit, "source-notes"):
                 SYNC.validate_skills(root)
@@ -1712,12 +2499,14 @@ class PortableSkillTests(unittest.TestCase):
                 "interface:\n"
                 "  display_name: \"Personal Sample\"\n"
                 "  short_description: \"Validate one focused sample workflow\"\n"
-                "  default_prompt: \"Use $personal-sample for this sample.\"\n",
+                "  default_prompt: \"Use $personal-sample for this sample.\"\n"
+                "policy:\n"
+                "  allow_implicit_invocation: true\n",
                 encoding="utf-8",
             )
             (skill / "references").mkdir()
             (skill / "references" / "source-notes.md").write_text(
-                "# Source Notes\n",
+                valid_personal_admission_notes(skill.name),
                 encoding="utf-8",
             )
 
@@ -2220,11 +3009,13 @@ class RetiredSkillLifecycleTests(unittest.TestCase):
             "interface:\n"
             "  display_name: \"Retired Fixture\"\n"
             "  short_description: \"Exercise one retired skill identity\"\n"
-            f"  default_prompt: \"Use ${name} for this fixture.\"\n",
+            f"  default_prompt: \"Use ${name} for this fixture.\"\n"
+            "policy:\n"
+            "  allow_implicit_invocation: true\n",
             encoding="utf-8",
         )
         (skill / "references" / "source-notes.md").write_text(
-            "# Source Notes\n", encoding="utf-8"
+            valid_personal_admission_notes(name), encoding="utf-8"
         )
         return skill
 
@@ -2347,7 +3138,8 @@ class RetiredSkillLifecycleTests(unittest.TestCase):
                 skill_root, "personal-replacement"
             )
             (replacement / "references/source-notes.md").write_text(
-                "# Source Notes\n\nlive replacement contract marker\n",
+                valid_personal_admission_notes(replacement.name)
+                + "\nlive replacement contract marker\n",
                 encoding="utf-8",
             )
             policy = SYNC.RetiredCodexSkill(

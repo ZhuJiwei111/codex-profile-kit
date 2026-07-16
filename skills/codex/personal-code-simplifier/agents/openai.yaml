@@ -2,3 +2,5 @@ interface:
   display_name: "Personal Code Simplifier"
   short_description: "Simplify scoped code while preserving behavior"
   default_prompt: "Use $personal-code-simplifier to simplify the authorized code scope while preserving observable behavior and protected user changes."
+policy:
+  allow_implicit_invocation: true

@@ -2,3 +2,5 @@ interface:
   display_name: "Personal Planning With Files Zh"
   short_description: "Manage an explicit serial-phase project plan"
   default_prompt: "Use $personal-planning-with-files-zh to manage an explicitly requested project-root plan whose detailed work advances through one approved phase trio at a time."
+policy:
+  allow_implicit_invocation: false

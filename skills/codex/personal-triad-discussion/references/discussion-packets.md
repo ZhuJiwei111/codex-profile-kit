@@ -7,9 +7,11 @@ user's language, and link or cite evidence instead of copying large artifacts.
 ## Contents
 
 - [Kickoff Brief](#kickoff-brief)
+- [Low-Bandwidth Round](#low-bandwidth-round)
 - [Evidence Packet](#evidence-packet)
 - [Working Project Memo](#working-project-memo)
-- [Restart Brief](#restart-brief)
+- [Continuity Restart](#continuity-restart)
+- [Blank Restart](#blank-restart)
 - [Final Decision Memo](#final-decision-memo)
 
 ## Kickoff Brief
@@ -64,6 +66,51 @@ specifically wants a review rather than an independent reframe. If Project
 memory may already contain a preferred solution, tell GPT Pro not to treat it as
 the default or as verified evidence.
 
+## Low-Bandwidth Round
+
+Start the discussion with exactly these five lines:
+
+```text
+Discussion goal: <decision or bottleneck>
+Current state: <verified state and material unknown>
+Role split: <GPT Pro, Codex control plane, and any evidence worker>
+This round: <one concrete discussion action>
+When you need to intervene: <now, at a named decision, or not yet>
+```
+
+For every later user-visible round, use exactly one status label:
+
+- `无需你操作`
+- `需要你转发`
+- `需要你决定`
+- `需要你授权`
+- `需要你操作`
+
+When action is requested, include the exact action, reason, impact, and success
+signal. Use this compact shape and omit fields that carry no information:
+
+```markdown
+<exactly one status label>
+
+本轮小结：
+关键变化：
+Codex 当前判断：
+
+请求：
+- exact action:
+- reason:
+- impact:
+- success signal:
+
+发送给 GPT Pro：
+<one complete directly relayable message, when another round has value>
+```
+
+After a GPT Pro reply, classify verified facts, Project context, inference, and
+unknowns; update the working memo; delegate substantial read-only evidence work
+when needed; summarize the key change and Codex judgment; and prepare the next
+relay. Do not ask the user to say `continue`.
+
 ## Evidence Packet
 
 Use this contract when local inspection or delegated work returns facts for the
@@ -114,9 +161,10 @@ If an older checkpoint is wrong, create a correction that names what changed
 and why in the current memo. Do not keep forwarding a known-bad premise. Only the
 current Codex coordinator writes this file; external participants return evidence.
 
-## Restart Brief
+## Continuity Restart
 
-Use when opening a clean GPT Pro chat in the same ChatGPT Project.
+Use when opening a new chat in the same ChatGPT Project while preserving the
+minimum verified state needed for safe continuation.
 
 ```markdown
 # Restart Brief
@@ -146,7 +194,20 @@ Use when opening a clean GPT Pro chat in the same ChatGPT Project.
 ```
 
 Do not replay the full transcript. Include only state needed to continue safely,
-and remind GPT Pro that Project memory may contain superseded material.
+and remind GPT Pro that Project memory may contain superseded material and
+cannot guarantee isolation.
+
+## Blank Restart
+
+Use only when the user wants an independent restart without an explicit
+handoff. Ask the user to open a new chat. Do not send the working memo, do not
+send verified state, and do not send old conclusions. Provide only a neutral new
+kickoff that states the question and desired independent role without prior
+answers.
+
+Project memory cannot guarantee isolation, so a Blank Restart cannot prove that
+the new GPT Pro chat has no earlier Project context. Disclose this limitation;
+do not compensate by adding old state to the kickoff.
 
 ## Final Decision Memo
 

@@ -73,3 +73,27 @@ Local deviation: every anti-defensive rewrite passes a proposition-equivalence g
 - Missing support in a supplied excerpt triggers a visible evidence-conflict flag, not silent deletion or weakening of the source claim.
 - Content-owning skills run first for explanations, documentation, review decisions, rebuttals, and research analysis.
 - No upstream installation, detector integration, or mechanical validator is required at runtime.
+
+```yaml
+skill_admission:
+  skill: personal-writing-polish
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: partial
+  admission_status: legacy-exception
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Static review found an instruction-and-reference-only skill; edits require locked text and transformation intent, preserve propositions and evidence, and bundle no detector, installation, or external mutation."
+  trigger_status: passed
+  trigger_review: "static_pass: Expression-only rewriting was reviewed against analysis, new content, review disposition, rebuttal strategy, documentation ownership, and bare read-only review requests."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned upstream commits, trees, blobs, licenses, local history, and the declared underlying-source gap reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-writing-polish"
+  update_rule: "No update is authorized; any content, source, trigger, executable, or metadata change requires a fresh re-admission before portable export."
+  rollback_basis: "The pre-batch rollback source is exact codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea and exact tree 6dc2b073b17a9f90c809bf69aa7a09840558f403; the current compatibility-only allowed content is separately locked by the validator's reviewed sha256-path-content-v1 full-tree digest."
+  unknowns_disposition: provenance-gap
+  unknowns:
+    - "Humanizer's attributed Wikipedia-related pattern provenance and licensing were not independently audited; only generalized editorial concepts are retained."
+```

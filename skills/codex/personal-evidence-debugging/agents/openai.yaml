@@ -2,3 +2,5 @@ interface:
   display_name: "Personal Evidence Debugging"
   short_description: "Trace failures to root cause before fixes"
   default_prompt: "Use $personal-evidence-debugging to reproduce the failure, trace its root cause, test one hypothesis at a time, and stop for architecture review after three independent failed fixes."
+policy:
+  allow_implicit_invocation: true

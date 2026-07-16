@@ -69,3 +69,26 @@ When Codex or Hookify changes:
 3. Re-run local payload tests before adopting any protocol change.
 4. Preserve deliberate local constraints unless the user approves a broader
    design change.
+
+```yaml
+skill_admission:
+  skill: personal-codex-hook-rules
+  acquisition_mode: created
+  source_classification: hybrid
+  provenance_status: complete
+  admission_status: admitted
+  portability_disposition: internalized
+  safety_status: passed
+  safety_review: "static_pass: Native hook and Markdown-guard mutation stays behind exact authority, payload validation, trust review, and no-credential boundaries; this skill bundles no executable of its own."
+  trigger_status: passed
+  trigger_review: "static_pass: Codex hook and controlled Markdown guard ownership was reviewed against generic configuration, skill hygiene, and whole-profile audit routes."
+  validation_status: passed
+  validation:
+    - "static_pass: Pinned schemas, Hookify design source, local adapter blobs, and behavior-test evidence reviewed on 2026-07-16."
+    - "static_pass: Targeted personal-skill admission validator fixtures passed on 2026-07-16."
+  update_owner: "maintainer of personal-codex-hook-rules"
+  update_rule: "Repeat provenance, safety, trigger, trust, payload, and portability review before any source, hook protocol, adapter, or ownership change enters portable export."
+  rollback_basis: "Remove the skill through personal-skill-hygiene and restore the reviewed tree from codex-profile-kit revision 3791645f59c0eeec497755bd7301be78b44efbea."
+  unknowns_disposition: none
+  unknowns: []
+```
