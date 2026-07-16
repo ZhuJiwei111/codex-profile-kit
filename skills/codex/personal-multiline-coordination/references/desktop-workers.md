@@ -37,6 +37,39 @@ not create a stale planned worktree and later repoint it invisibly.
 Task creation is user-visible external state. A generic request for read-only
 analysis, an implicit trigger, or a discussion does not authorize it.
 
+## Exact-Task Bounded Continuation
+
+Continue an existing visible task only when the user or current coordination
+state identifies the exact task. Before reading content or sending work:
+
+1. use the active current-host task surface's exact-target read operation;
+2. verify the exact task id and returned metadata, including current host,
+   repository or worktree, branch, target revision, and lifecycle state;
+3. reject a host, repository, worktree, or revision mismatch instead of
+   guessing identity; and
+4. avoid broad task enumeration. If the exact id is unavailable, ask for it
+   rather than listing unrelated or other-host tasks.
+
+The main process extracts only a bounded continuation packet:
+
+```yaml
+exact_task_id:
+objective:
+accepted_decisions: []
+canonical_cwd:
+branch:
+target_revision:
+exclusive_surface: []
+evidence_anchors: []
+risks_and_unknowns: []
+next_stop_condition:
+```
+
+Send that packet to the assigned executor. Continuing one exact task does not
+authorize creating another task, changing worktrees, restoring a context
+archive, launching a job, mutating Git, or advancing a stage. Keep unmatched
+host records out of model context and user-visible output.
+
 ## Worker Rules
 
 A worker:
@@ -47,7 +80,8 @@ A worker:
 - stops at its line-card condition;
 - does not commit, integrate, operate other workers, launch successors, or
   decide the line result;
-- reports evidence and a `recommended_outcome`.
+- reports evidence and may include a non-authoritative
+  `recommended_outcome`.
 
 If the worker discovers that its base, worktree, ownership, dependency, or
 resource assumptions are wrong, it stops and reports the mismatch.
@@ -70,7 +104,7 @@ worker failed.
 
 ## Intake And Rework
 
-On an event:
+On an event, the main process or coordinator:
 
 1. read the worker report;
 2. inspect only the relevant task, worktree, diff, outputs, and evidence;

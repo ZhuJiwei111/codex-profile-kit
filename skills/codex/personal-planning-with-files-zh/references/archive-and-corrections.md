@@ -1,260 +1,145 @@
-# Archive And Corrections
+# Snapshots, Corrections, Archive, And Successors
 
-Read this reference only for plan closure, terminal archive, frozen-record
-correction, invalidation, redaction, successor creation, or lineage impact.
+Use this reference only for a material correction, terminal archive, or a
+successor after closure.
 
-## Contents
+## Non-Sensitive Snapshots
 
-- Closure and archive
-- Archive transactions
-- Frozen-record controls
-- Correction workflow
-- Active-plan and successor paths
-- Lineage impact
-- Security and corruption exceptions
-- Verification
+Before correcting an approved fact that does not change the plan contract,
+preserve the exact affected controlled files at the following path only after
+confirming that neither the files nor their history contain sensitive values:
 
-## Closure And Archive
-
-Separate lifecycle closure from storage:
-
-```yaml
-plan_status: closed
-closure_status: complete | cancelled | suspended | superseded
+```text
+<project-root>/.planning/snapshots/<YYYYMMDD-HHMMSS>-<slug>/
 ```
 
-Closing a plan does not move it. Archive only after a separate explicit request
-or approval of the exact source, destination, and closure record.
+Include `SNAPSHOT.md` with:
 
-Archive a task plan at:
+- plan ID and operation;
+- source paths and SHA-256 hashes;
+- evidence cutoff and reason;
+- root status and active phase at capture; and
+- the approved correction or archive preview that consumes it.
 
-`.planning/archive/plans/<plan-id>/`
+Copy only the affected root/phase files. A snapshot is evidence, not another
+active plan, an initialization source, or a mutable trust state. Never add an
+active pointer, generation number, packet selector, transaction phase, or trust
+enum to it.
 
-Archive a repo-plan epoch at:
+Do not make an exact snapshot merely because a correction is material. If the
+affected bytes contain or may contain a token, password, cookie, private key,
+authenticated URL, credential-bearing environment value, or other sensitive
+material, use the sensitive-correction contract below instead.
 
-`.planning/archive/repo/<repo-plan-id>/`
+## Corrections
 
-Never reuse a plan id for unrelated work. Never overwrite an archive target.
-If the target exists and is not the exact same approved record, stop.
+For a non-sensitive correction that preserves the existing goal, scope, global
+acceptance, phase order, closed-phase validity, and lifecycle:
 
-Before closing or archiving a parent or repo plan, close, reparent, or explicitly
-detach active children. Preserve historical relationships with
-`predecessor_plan_id` or `initialized_from`; do not keep an archived plan as a
-current coordination parent.
+1. Quarantine the affected claim in current reasoning.
+2. Show the exact current files, hashes, error, corrected evidence, and impact.
+3. Obtain approval for the snapshot and active-file edits.
+4. Create the snapshot, update only the canonical active files, and append a
+   concise correction note under the snapshot's `corrections/` directory.
+5. Validate the resulting serial state and read back the changed claims.
 
-A terminal plan never moves back to active. Continued work uses a successor
-draft with a new plan id.
+Correction notes identify the original problem, corrected evidence, affected
+acceptance or decisions, required revalidation, and approval. They do not alter
+the snapshot body. Ordinary fact or evidence correction preserves the root and
+phase lifecycle. Never change an `active` or `closed` root or phase back to
+`draft`.
 
-## Archive Transactions
+While the project is still draft, its proposed goal, scope, acceptance, and
+phase order may be revised under a fresh preview. Once active, a change to the
+global goal, scope, acceptance, or phase order, or a change that invalidates a
+closed phase, is not an in-place correction: record the reason, close the source
+when appropriate, and use the successor workflow.
 
-Bind approval to the plan id, canonical root, closure state, source file hashes,
-history controls, destination, and intended successor relationship.
+## Sensitive Corrections
 
-Run the read-only validator with `--check-lineage` before preparing the preview
-and again immediately before writing. Use its current trio hashes for approval
-binding. Resolve every `stale`, `incomplete`, `invalid`, or `needs_rebind`
-result before archiving.
+Never preserve secret-bearing bytes in `snapshots/` or copy them into an
+archive. Remove the value from every authorized in-scope active location, then
+create only a redacted incident/correction record containing:
 
-For a task plan:
+- the sensitive category, never the value;
+- affected paths and the bounded removal scope;
+- which copies were cleared or remain unverified;
+- necessary non-secret evidence and its cutoff; and
+- the separate rotation or revocation decision, if any.
 
-1. Finalize the approved closure in the active trio.
-2. Create `ARCHIVE.md` with closure, hashes, lineage, and
-   `record_trust: valid`.
-3. Verify all controlled content and that the destination is absent.
-4. Move the whole plan directory, including history, within the same project
-   filesystem when possible.
-5. Verify the final path and remove no other data.
+Do not record a digest when it could help confirm or recover a low-entropy
+secret. A digest is not automatically safe evidence. Credential rotation,
+revocation, external cleanup, and repository-history rewriting remain separate
+authority.
 
-For a repo plan:
+## Terminal Archive
 
-1. Stage the root trio, `.planning/_repo/history/`, and `ARCHIVE.md` under the
-   approved archive destination.
-2. Verify the staged copy and hashes.
-3. Publish the archive directory.
-4. Remove the root active trio and old repo sidecar only after the published
-   archive verifies completely.
-5. Leave no new root plan unless its exact draft and activation were separately
-   approved.
+Terminal archive uses a simple publish-verify-remove-postflight sequence:
 
-If interrupted, prefer preserving both verified copies to deleting uncertain
-state. Stop ordinary plan writes, identify the authoritative hashes, and resume
-or roll back only the approved transaction.
+1. While the closed active source still exists, run the validator with
+   `--operation archive`. This is preflight only: the root must be closed, every
+   phase closed, and no active pointer or duplicate truth present.
+2. After separate approval, publish one closed copy at:
 
-Use this minimum terminal control frontmatter:
-
-```yaml
----
-record_type: terminal-archive
-record_trust: valid
-plan_id: dense-model-smoke
-generation: 3
-source_hashes:
-  task_plan.md: <sha256>
-  findings.md: <sha256>
-  progress.md: <sha256>
----
+```text
+<project-root>/.planning/archive/<plan-id>/
 ```
 
-Follow it with closure, lineage, destination, evidence cutoff, history index,
-and correction index. After publication, validate the terminal record at its
-final path. For a repo archive, also confirm that no managed active root trio
-or partial sidecar remains. The archived `task_plan.md` must already have
-`plan_status: closed` and a valid `closure_status`; the control file cannot make
-an active trio terminal by itself.
+3. Write `ARCHIVE.md` with every copied relative path and source SHA-256, closure
+   evidence, skipped checks, and final evidence cutoff. Copy the root, every
+   phase trio, and only relevant confirmed non-sensitive snapshots. Refuse an
+   existing non-identical destination and never overwrite an archive.
+4. Independently compare the manifest to the source set and verify every copied
+   hash. The validator checks path safety and lifecycle; it does not prove that
+   an archive copy is complete or equal to its source.
+5. Only after the manifest and hash comparison passes, remove the active root
+   `task_plan.md` and active `.planning/plans/`. Preserve the verified archive
+   and other safe history.
+6. Run `--operation init` as postflight. It must report `initializable`: the
+   active namespace is empty and all surviving historical namespaces are safe.
+   An existing safe archive does not block initialization.
 
-## Frozen-Record Controls
+If publication or removal is interrupted, preserve both copies until the
+manifest, hashes, and ownership are clear. Do not delete an uncertain copy
+merely to obtain a clean layout. This sequence is recoverable but is not a
+cross-file atomic transaction.
 
-Use `SNAPSHOT.md` for a generation history record and `ARCHIVE.md` for a terminal
-archive. Store the original triad body hashes and a current trust state:
+## Successors
 
-```yaml
-record_trust: valid | corrected | invalidated | redacted
-```
+A closed plan never reopens. Continued work uses an explicitly approved new
+draft with a new `plan_id` and a fresh ordered phase list.
 
-Read frozen state in this order:
+If the closed active source still exists, use `--operation successor` only as a
+preflight. Before creating the successor:
 
-1. Control file and state-change history.
-2. Every applicable correction record, not only a latest pointer.
-3. Original triad and referenced evidence.
+- validate the closed source with `--operation successor`;
+- name the source archive and the reason for continuation in prose;
+- revalidate inherited evidence and dynamic facts;
+- show which decisions are inherited, corrected, or deliberately omitted; and
+- obtain approval for the exact successor draft.
 
-Never initialize from an `invalidated` record. A `corrected` record is usable
-only through the active correction chain. A `redacted` record may have missing
-detail by design.
+If the source has already been archived and removed from the active namespace,
+do not use `successor`: first validate `ARCHIVE.md` against the archive files and
+their hashes, then run `--operation init`, preview the new draft, and initialize
+it. After either branch creates the draft, use `--operation inspect` for the
+post-mutation validation.
 
-When considering any frozen record as initialization input, run the validator
-with `--for-initialization`. A redacted source requires explicit completeness
-review; an invalidated source must fail mechanically. The validator complements
-rather than replaces review of the full correction chain.
-
-Treat the frozen trio's `canonical_root` as historical provenance. A mismatch
-with the current inspection root is informational and never a reason to rebind
-or rewrite the frozen body.
-
-Do not silently rewrite frozen triads, snapshots, or existing corrections. A
-new correction supersedes an incorrect correction.
-
-## Correction Workflow
-
-When a serious problem is suspected but not yet approved for persistent change:
-
-- Stop using the affected claim in current reasoning.
-- Report it as temporary quarantine.
-- Do not claim that an archive or snapshot has been persistently invalidated.
-- Identify the proposed record, correction, and impact scope.
-
-After explicit approval:
-
-1. Add `corrections/cNNNN-YYYYMMDD-<slug>.md` beside the frozen record.
-2. Update the control file's current trust and append a state-change entry.
-3. Keep the original body and older corrections unchanged.
-4. Verify that readers can discover the full correction chain.
-5. Run only the approved bounded impact scan.
-
-Run the validator before binding the correction preview and after updating the
-control and correction chain. A non-`valid` trust state must have at least one
-discoverable correction record named
-`cNNNN-YYYYMMDD-<slug>.md`. Conversely, a correction file with
-`record_trust: valid` is an incomplete control transition and must be reconciled
-before the record is consumed.
-
-Use this correction structure:
-
-```markdown
-# Correction c0001
-
-## Detection And Source
-
-## Affected Plan, Generation, Findings, And Evidence
-
-## Original Problem
-
-## Corrected Evidence
-
-## Decision And Acceptance Impact
-
-## Required Revalidation
-
-## Downstream References
-
-## Approved Disposition
-```
-
-Summarize an erroneous or sensitive claim instead of copying unsafe content.
-Record which correction supersedes another correction when applicable.
-
-Handle interrupted correction writes conservatively. A correction file that
-exists without an updated control pointer still requires inspection; do not
-trust only `latest_correction`. Complete the approved metadata update when its
-identity and content are clear, otherwise stop.
-
-## Active-Plan And Successor Paths
-
-For a material error in an active plan whose goal and acceptance remain valid:
-
-1. Temporarily quarantine the affected evidence.
-2. Prepare a corrected generation and invalid snapshot control.
-3. Return the plan to draft when the change affects scope, direction, or
-   acceptance.
-4. Obtain approval for the correction and exact target generation.
-5. Publish the corrected generation through the rollover transaction.
-6. Reactivate only when the revised content was explicitly approved.
-
-For a terminal plan or an error that invalidates the core premise:
-
-1. Add the approved archive correction and mark the frozen record invalidated.
-2. Preserve the original archive.
-3. Propose a successor draft with a new `plan_id`.
-4. Use `predecessor_plan_id` for successor lineage, not `parent_plan_id`.
-5. Point `initialized_from` to the exact corrected archive or generation.
-
-Correction approval does not authorize successor creation, descendant edits,
-implementation, or any external action unless those actions were also explicit.
-
-## Lineage Impact
-
-Keep impact scans bounded to the current host and canonical project root. Check
-only explicit relationships:
-
-- `root_plan_id`;
-- `parent_plan_id`;
-- `predecessor_plan_id`;
-- `initialized_from`;
-- stable inherited finding or evidence IDs.
-
-Do not scan every Markdown file or infer dependency from similar wording.
-
-For affected active plans, mark the evidence stale and return them to draft
-only when the correction changes their direction or acceptance. For frozen
-records, add correction pointers rather than changing the body. Every
-descendant mutation needs its own shown scope and approval.
-
-For another worktree, report the affected path and handoff requirement. Do not
-cross the canonical writer boundary to change it.
-
-## Security And Corruption Exceptions
-
-Security overrides historical byte preservation:
-
-- Remove secrets, credentials, private keys, cookies, or sensitive session data
-  from every in-scope copy.
-- Never repeat the removed value in a correction, hash label, log, or report.
-- Record only the redacted category, affected paths, and safe remediation.
-- Credential rotation remains a separate user-controlled authority boundary.
-
-Repair verifiable corruption only from an identified trustworthy copy. Record
-safe before/after hashes and provenance. Do not treat a plausible reconstruction
-as verified repair.
+Do not encode predecessor, parent, root-plan, packet, generation, or correction
+selectors in active frontmatter. The source archive is historical evidence, not
+authority for the successor or its first phase.
 
 ## Verification
 
-Before reporting archive or correction complete, verify:
+Before reporting one of these operations complete, verify:
 
-- approval-bound source hashes and destination;
-- closure status and absence of active unhandled children;
-- complete archive controls and history;
-- correction discoverability and current trust;
-- original frozen bodies remain unchanged except an approved security or
-  corruption exception;
-- invalidated records cannot initialize new active state;
-- successor, descendant, execution, and external actions were not inferred;
-- no partial staging or correction transaction remains.
+- approval-bound source hashes and exact paths;
+- the active root and phase set remain serial and single-writer;
+- snapshots or archive controls identify every copied file;
+- sensitive corrections contain only redacted categories, paths, removal scope,
+  and necessary non-secret evidence;
+- corrections remain discoverable without rewriting snapshots;
+- an archive is closed, its destination is unique, and its manifest and copied
+  hashes were compared independently of the validator;
+- archive postflight reports an initializable empty active namespace;
+- a successor is a separately approved draft with no active phase; and
+- no implementation, Git, publication, or later phase action was inferred.

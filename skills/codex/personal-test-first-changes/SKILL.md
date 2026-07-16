@@ -8,6 +8,11 @@ description: Use before implementing a bug fix, feature, behavior change, or ref
 Establish local evidence before changing behavior. Scale the cycle to the
 available harness, risk, and authorization boundary.
 
+The main process locks the behavior, authority, and acceptance boundary. A
+bounded executor owns substantive RED/GREEN commands and edits, then returns
+raw command, revision, exit-status, and scope evidence for intake. That evidence
+supports later verification but is not a task-level verdict.
+
 ## Choose The Evidence Mode
 
 Choose one mode before changing task-owned behavior:
@@ -29,8 +34,9 @@ verification. Route those phases to their dedicated owners.
 
 1. State the observable behavior boundary and expected result.
 2. Confirm the edit owner, focused check, `cwd`, environment owner, expected
-   runtime, and material side effects. Use `personal-repo-intake` only when one
-   of those repository facts is genuinely unclear.
+   runtime, and material side effects. If one of those repository facts remains
+   unclear after bounded inspection, stop and ask the smallest question that
+   changes the RED/GREEN boundary.
 3. If the required behavior is still ambiguous, resolve it through discussion,
    `personal-brainstorms`, or the owning plan before writing a test.
 4. Preserve existing user and independently handed-off prior-stage work. Do not
@@ -158,14 +164,14 @@ When implementation already exists, distinguish provenance:
 
 ## Collaboration And Completion Boundary
 
-- `personal-repo-intake` identifies uncertain harness and ownership facts; it
-  does not execute the checks.
+- Uncertain harness and ownership facts stop at bounded inspection and a
+  decision-changing question before any check or edit.
 - `personal-review-response` decides whether review feedback is accepted before
   an accepted behavior change enters this workflow.
 - `personal-evidence-debugging` owns unexpected, flaky, hanging, or
   wrong-reason failures.
-- `personal-docs-sync-light` updates an identified documentation contract after
-  behavior or configuration changes.
+- `personal-code-documentation` in `sync_existing` mode updates an identified
+  documentation contract after behavior or configuration changes.
 - `personal-risk-verification` owns the only final completion gate and requires
   fresh evidence after the last relevant change.
 - `personal-branch-finish` consumes completed verification evidence for Git

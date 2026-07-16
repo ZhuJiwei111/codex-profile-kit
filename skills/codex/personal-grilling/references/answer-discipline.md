@@ -6,6 +6,7 @@ closure claim is not strong enough to enter the sourced coverage ledger.
 ## Contents
 
 - [Lockable Answers](#lockable-answers)
+- [Open-First Theme Answers](#open-first-theme-answers)
 - [Invalid-Answer Loop](#invalid-answer-loop)
 - [Answer Failure Types](#answer-failure-types)
 - [Coverage And Closure Failures](#coverage-and-closure-failures)
@@ -34,6 +35,22 @@ treating evidence as missing, inspect any scoped source, path, command, test,
 metric, current behavior, or authoritative reference that can answer the fact
 without user authority.
 
+## Open-First Theme Answers
+
+The first question for a new material theme is exploratory, not a presented
+choice. Ask one neutral open-ended question and wait without a timeout. Do not
+include a recommendation, default, option list, suggested wording, or an
+auto-resolving prompt.
+
+The answer is sufficient when it exposes the user's framing, desired behavior,
+constraints, concerns, or values well enough to discover the theme's real
+leaves. It need not lock every leaf. If it is too vague to identify the branch,
+ask one narrower open follow-up before presenting choices. Once the theme is
+framed, use recommendations or real alternatives for specific material leaves.
+
+Silence and elapsed time are not invalid answers; they are no answer. Keep the
+question pending until the user responds, explicitly defers, pauses, or stops.
+
 ## Invalid-Answer Loop
 
 When an answer is not lockable:
@@ -41,7 +58,8 @@ When an answer is not lockable:
 1. State that the current leaf remains unresolved.
 2. Name the exact failure below.
 3. Re-ask the same decision more narrowly.
-4. Give the minimum lockable answer and a recommendation or real alternatives.
+4. Give the minimum lockable answer. After the theme-opening answer, include a
+   recommendation or real alternatives when they materially help.
 5. Wait. Do not switch themes, implement, or hide the gap as an assumption.
 
 ## Answer Failure Types
@@ -192,6 +210,8 @@ without testing the problem framing, smaller alternatives, hidden coupling, or
 failure conditions.
 
 - Reopen the relevant problem or approach leaf.
+- If the theme never received a neutral open question, return it to `unopened`
+  and ask that question before presenting another option set.
 - Present a different option only when it is genuinely viable and changes the
   decision; do not invent alternatives for ceremony.
 
@@ -232,6 +252,9 @@ Use this compact Chinese form when a leaf cannot proceed:
 擅自假设的风险：<specific consequence>
 受影响分支：<dependent leaves>
 ```
+
+Omit `推荐选项` while opening a theme. This form never sets a timeout or
+authorizes an automatic default.
 
 If the user stops, preserve this blocker in the incomplete brief. Do not smooth
 it over, call the requirements locked, or infer acceptance from silence.

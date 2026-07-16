@@ -114,17 +114,17 @@ class HookifyCodexRunnerTest(unittest.TestCase):
 
         self.assert_denied(result, "block-sensitive-file-edits")
 
-    def test_env_file_edit_returns_valid_ask_first_context(self) -> None:
+    def test_env_file_edit_is_left_to_agents_policy(self) -> None:
         result = self.invoke(self.payload("apply_patch", self.patch(".env")))
 
-        self.assert_context(result, "warn-sensitive-file-edits")
+        self.assertEqual(result.stdout, "")
 
     def test_env_example_edit_is_silent(self) -> None:
         result = self.invoke(self.payload("apply_patch", self.patch(".env.example")))
 
         self.assertEqual(result.stdout, "")
 
-    def test_public_pem_edit_warns_but_private_pem_is_denied(self) -> None:
+    def test_public_pem_edit_is_silent_but_private_pem_is_denied(self) -> None:
         public_result = self.invoke(
             self.payload("apply_patch", self.patch("certificates/server.pem"))
         )
@@ -132,7 +132,7 @@ class HookifyCodexRunnerTest(unittest.TestCase):
             self.payload("apply_patch", self.patch("certificates/private-key.pem"))
         )
 
-        self.assert_context(public_result, "warn-sensitive-file-edits")
+        self.assertEqual(public_result.stdout, "")
         self.assert_denied(private_result, "block-sensitive-file-edits")
 
     def test_apply_patch_content_does_not_match_bash_rules(self) -> None:
@@ -149,14 +149,12 @@ class HookifyCodexRunnerTest(unittest.TestCase):
         command = "printf '%s\\n' '*** Update File: /root/.codex/auth.json'"
         result = self.invoke(self.payload("Bash", command))
 
-        output = self.hook_output(result)
-        self.assertNotEqual(output.get("permissionDecision"), "deny")
-        self.assertIn("warn-sensitive-path-command", str(output.get("additionalContext")))
+        self.assertEqual(result.stdout, "")
 
-    def test_package_install_warning_is_valid_json_context(self) -> None:
+    def test_package_install_is_left_to_agents_policy(self) -> None:
         result = self.invoke(self.payload("Bash", "pip install -r requirements.txt"))
 
-        self.assert_context(result, "warn-package-manager-install")
+        self.assertEqual(result.stdout, "")
 
     def test_explicit_base_conda_install_is_denied(self) -> None:
         result = self.invoke(self.payload("Bash", "conda install demo -n base"))
@@ -179,14 +177,12 @@ class HookifyCodexRunnerTest(unittest.TestCase):
                 result = self.invoke(self.payload("Bash", command))
                 self.assert_denied(result, "block-base-conda-install")
 
-    def test_project_conda_install_warns_without_base_deny(self) -> None:
+    def test_project_conda_install_is_silent_without_base_deny(self) -> None:
         result = self.invoke(self.payload("Bash", "conda install demo -n project-env"))
 
-        output = self.hook_output(result)
-        self.assertNotEqual(output.get("permissionDecision"), "deny")
-        self.assertIn("warn-package-manager-install", str(output.get("additionalContext")))
+        self.assertEqual(result.stdout, "")
 
-    def test_documented_fallback_install_warns_without_base_deny(self) -> None:
+    def test_documented_fallback_install_is_silent_without_base_deny(self) -> None:
         result = self.invoke(
             self.payload(
                 "Bash",
@@ -194,11 +190,7 @@ class HookifyCodexRunnerTest(unittest.TestCase):
             )
         )
 
-        output = self.hook_output(result)
-        self.assertNotEqual(output.get("permissionDecision"), "deny")
-        context = str(output.get("additionalContext"))
-        self.assertIn("warn-package-manager-install", context)
-        self.assertIn("host-documented Codex fallback", context)
+        self.assertEqual(result.stdout, "")
 
     def test_sensitive_shell_mutation_is_denied(self) -> None:
         result = self.invoke(
@@ -207,12 +199,10 @@ class HookifyCodexRunnerTest(unittest.TestCase):
 
         self.assert_denied(result, "block-sensitive-path-command")
 
-    def test_sensitive_metadata_read_warns_without_deny(self) -> None:
+    def test_sensitive_metadata_read_is_left_to_agents_policy(self) -> None:
         result = self.invoke(self.payload("Bash", "stat /root/.codex/auth.json"))
 
-        output = self.hook_output(result)
-        self.assertNotEqual(output.get("permissionDecision"), "deny")
-        self.assertIn("warn-sensitive-path-command", str(output.get("additionalContext")))
+        self.assertEqual(result.stdout, "")
 
     def test_project_markdown_rules_are_not_loaded(self) -> None:
         project_rules = self.project / ".codex" / "hookify"
@@ -257,12 +247,12 @@ Invalid test rule.
         self.assert_denied(result, "block-sensitive-file-edits")
         self.assertIn("invalid-regex.md", result.stderr)
 
-    def test_gpu_launch_without_scope_warns(self) -> None:
+    def test_gpu_launch_without_scope_is_left_to_agents_policy(self) -> None:
         result = self.invoke(
             self.payload("Bash", "tmux new-session -d python3 train_model.py")
         )
 
-        self.assert_context(result, "warn-gpu-task-without-device-scope")
+        self.assertEqual(result.stdout, "")
 
     def test_scoped_detached_gpu_launch_is_silent(self) -> None:
         command = "CUDA_VISIBLE_DEVICES=0 tmux new-session -d python3 train_model.py"
@@ -270,16 +260,16 @@ Invalid test rule.
 
         self.assertEqual(result.stdout, "")
 
-    def test_attached_long_job_launch_warns(self) -> None:
+    def test_attached_long_job_launch_is_left_to_agents_policy(self) -> None:
         command = "CUDA_VISIBLE_DEVICES=0 python3 train_model.py"
         result = self.invoke(self.payload("Bash", command))
 
-        self.assert_context(result, "warn-long-running-direct-launch")
+        self.assertEqual(result.stdout, "")
 
-    def test_continuous_monitoring_warns(self) -> None:
+    def test_continuous_monitoring_is_left_to_agents_policy(self) -> None:
         result = self.invoke(self.payload("Bash", "tail -f training.log"))
 
-        self.assert_context(result, "warn-long-running-monitoring")
+        self.assertEqual(result.stdout, "")
 
 
 if __name__ == "__main__":

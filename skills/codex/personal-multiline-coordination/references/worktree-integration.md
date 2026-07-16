@@ -29,7 +29,9 @@ and `location_source`; never infer ownership from a directory name alone.
 - Two active writers never share a worktree.
 - A reader is bound to a fixed revision. It needs a worktree only when its tools
   or isolation require one.
-- The integration worktree is coordinator-owned. Workers never edit it.
+- The integration worktree is coordination-owned and writable only by the one
+  executor assigned under an exact integration grant. Implementation-line
+  workers and the main process never edit it.
 - Existing unrelated worktrees are inventory, not automatically coordination
   lines or cleanup candidates.
 - A dependent writer's worktree is created only after its required predecessor
@@ -80,10 +82,11 @@ project data.
 
 ## Checkpoint And Integration
 
-Workers hand off without committing. Under an exact integration grant, the
-coordinator:
+Implementation workers hand off without committing. Under an exact integration
+grant, one assigned integration executor:
 
-1. verifies the worker report, line diff, ownership, and focused tests;
+1. confirms the coordinator-accepted worker report, line diff, ownership, and
+   focused-test scope match the grant;
 2. confirms the line branch still descends from `target_base_oid`;
 3. stages only accepted task-owned paths;
 4. creates one line checkpoint commit on the worker branch;
@@ -91,7 +94,8 @@ coordinator:
 6. integrates through the dedicated integration worktree, normally with
    cherry-pick;
 7. records the resulting integrated OID and method;
-8. runs appropriate integration checks before accepting successors.
+8. runs appropriate integration checks and hands the raw evidence to the
+   coordinator before successors are accepted.
 
 The grant must name allowed lines and stage scope. It must not become a generic
 `git add -A`, final commit, merge, push, PR, or publication permission.
@@ -100,7 +104,8 @@ The grant must name allowed lines and stage scope. It must not become a generic
 
 Record the mechanism that proves the final integration, not merely the command
 that started it. When `cherry-pick` or `rebase` stops for a conflict and the
-coordinator stages any manual resolution before continuing:
+integration executor stages an exactly authorized manual resolution before
+continuing:
 
 - set the integration record to `method: manual`;
 - record the resulting integration commit as `integrated_oid`;
@@ -118,8 +123,8 @@ patch equivalence after a manual resolution.
 
 ## Conflict Routing
 
-- Tiny, deterministic, fully understood conflict: coordinator resolves under
-  the integration grant.
+- Tiny, deterministic, fully understood conflict: coordinator classifies and
+  grants the exact resolution; the integration executor applies it.
 - Ordinary bounded conflict needing independent analysis: managed subagent.
 - Substantive conflict requiring implementation rework or multiple turns:
   Desktop-visible worker in its own line/worktree.

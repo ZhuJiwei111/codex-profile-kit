@@ -1,16 +1,21 @@
 # Controlled Global Markdown Hook Rules
 
-This directory contains small, deterministic rules evaluated by
+This directory contains deterministic blocking rules evaluated by
 `~/.codex/hooks/hookify_codex_runner.py` for Codex `PreToolUse` events.
 
 ## Scope
 
 - `event: bash` matches only canonical `tool_name: "Bash"` payloads.
 - `event: file` matches only canonical `tool_name: "apply_patch"` payloads.
-- Rules may use `action: warn` or `action: block`.
-- `warn` emits `hookSpecificOutput.additionalContext`.
+- Installed rules use `action: block` for mechanical guardrails that can be
+  decided from the tool payload alone.
 - `block` emits `permissionDecision: "deny"` with a reason.
 - Prompt, Stop, PostToolUse, and catch-all rules are intentionally unsupported.
+
+Ask-first policy, authorization, long-job, monitoring, GPU, package-manager,
+and other semantic decisions belong in `AGENTS.md`, not Markdown hook rules.
+The native `direct_download_guard.py` may add nonblocking context for likely
+large proxy-inherited transfers; that heuristic is guidance, not enforcement.
 
 Only Markdown files in this directory are loaded. Do not place project policy
 here or under a project's legacy Hookify paths. Use native project
@@ -20,10 +25,10 @@ here or under a project's legacy Hookify paths. Use native project
 
 ```markdown
 ---
-name: warn-example
+name: block-example
 enabled: true
 event: bash
-action: warn
+action: block
 pattern: example-command
 ---
 

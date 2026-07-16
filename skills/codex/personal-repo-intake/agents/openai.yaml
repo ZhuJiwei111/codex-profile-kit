@@ -1,4 +1,0 @@
-interface:
-  display_name: "Personal Repo Intake"
-  short_description: "Resolve uncertain repository work boundaries"
-  default_prompt: "Use $personal-repo-intake to resolve only the unclear repository root, instructions, dirty overlap, edit surface, or verification command, then stop."

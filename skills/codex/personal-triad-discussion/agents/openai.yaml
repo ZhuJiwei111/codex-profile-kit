@@ -1,7 +1,7 @@
 interface:
   display_name: "Personal Triad Discussion"
-  short_description: "Coordinate Project-based GPT Pro deliberations."
-  default_prompt: "Use $personal-triad-discussion to initialize and coordinate a GPT Pro deliberation inside the current ChatGPT Project."
+  short_description: "Deliberate with GPT Pro and keep a project memo"
+  default_prompt: "Use $personal-triad-discussion for a multi-round GPT Pro Project deliberation and maintain one coordinator-written project memo through the final decision."
 
 policy:
   allow_implicit_invocation: false

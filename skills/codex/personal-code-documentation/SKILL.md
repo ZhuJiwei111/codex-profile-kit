@@ -1,14 +1,26 @@
 ---
 name: personal-code-documentation
-description: Use to explain existing code or create new or substantially rewritten architecture, API, onboarding, tutorial, or walkthrough artifacts; not for stale-doc sync, output decoding, diagnosis, review, or prose-only polishing.
+description: Use to explain existing code, create new or substantially rewritten technical documentation, or run sync_existing for existing docs made stale by an identified CLI, API, config, installation, or workflow contract change; not for output decoding, diagnosis, review, status reporting, or prose-only polishing.
 ---
 
 # Personal Code Documentation
 
 Turn verified repository evidence into a code explanation, a durable technical
-document, or a runnable learning path. Own the audience, information structure,
-source anchors, and evidence boundary of that output. Do not absorb code
-implementation, defect review, failure diagnosis, or expression-only rewriting.
+document, a runnable learning path, or the smallest factual synchronization of
+existing stale documentation. Own the audience, information structure, source
+anchors, and evidence boundary of that output. Do not absorb code
+implementation, defect review, failure diagnosis, status reporting, or
+expression-only rewriting.
+
+## Keep The Actor Boundary
+
+The main process locks mode, audience, scope, authority, and evidence needs,
+then performs intake and owns any task-level verdict. A bounded documentation
+executor performs substantive repository reading, file edits, and validation.
+An independent reviewer may report semantic evidence, coverage gaps, and
+uncertainty, but never decides acceptance or completion. Simple work may use
+one executor across several evidence layers; do not manufacture delegation
+when it adds no independence or useful coverage.
 
 ## Apply The Source-Object Gate
 
@@ -17,8 +29,8 @@ codebase-derived artifact that the user wants created. Before selecting a mode:
 
 - route an existing Codex response, project result, evidence chain, artifact
   summary, or decision rationale to `personal-project-output-explainer`;
-- route a bounded patch to existing docs made stale by an already identified
-  contract change to `personal-docs-sync-light`;
+- keep a bounded patch to existing docs made stale by an already identified
+  contract change in this skill and select `sync_existing`;
 - route expression-only revision to `personal-writing-polish`;
 - route defect or feedback assessment to `personal-review-response`, failure
   investigation to `personal-evidence-debugging`, and code implementation to
@@ -37,9 +49,14 @@ sufficient reason to stay.
 | Understand existing code structure, behavior, flow, or an algorithm | `explain` | Current conversation |
 | Create a new or substantially rewrite a lasting architecture, API, reference, onboarding, or walkthrough document | `document` | Explicit or repository-owned documentation path |
 | Learn to complete a concrete task through verified steps | `tutorial` | Tutorial or onboarding artifact |
+| Update an existing supported page made stale by an identified CLI, API, config, installation, or workflow contract change | `sync_existing` | Small factual patch to the current canonical page |
 
 - Keep `explain` read-only and conversational by default. Write a file only
   when the user explicitly requests a durable artifact; then use `document`.
+- Keep `sync_existing` bounded to existing documentation. A new architecture
+  guide, explanation, tutorial, migration system, or broad information-
+  architecture redesign belongs to `document`, `tutorial`, or the relevant
+  design owner. Ordinary status and prose polish are not documentation sync.
 - Split a mixed request into explicit outputs rather than forcing one mode over
   every part.
 - Handle a simple, explicit explanation or small document directly. Use
@@ -77,9 +94,10 @@ unverified_claims: []
 
 Inspect applicable `AGENTS.md`, nearby documentation style, generated-file
 ownership, and the canonical source before writing. Do not hand-edit generated
-documentation or invent a new documentation root when ownership is clear. Use
-`personal-repo-intake` only when the repository, instructions, edit surface, or
-verification command is genuinely unclear.
+documentation or invent a new documentation root when ownership is clear. If
+the repository, instructions, edit surface, generated owner, or verification
+command remains unclear after bounded inspection, stop and ask the smallest
+question that changes the work.
 
 ## Build A Bounded Evidence Map
 
@@ -172,6 +190,32 @@ creating a multi-step tutorial or onboarding path.
   exact exercise is authorized and safely bounded.
 - End with a concise recap and a useful next learning or operating action.
 
+## Synchronize Existing Documentation
+
+Use `sync_existing` only after a stable, evidenced CLI, API, config,
+installation, or workflow contract change makes an existing supported document
+stale. Read [the sync-existing contract](references/sync-existing.md) when more
+than one obvious literal, link, example, or snippet may be affected.
+
+- Lock the before/after contract, target version and audience, canonical page,
+  generated owner, and narrow validation surface. Stop on an unresolved
+  code-versus-specification conflict instead of guessing which side is right.
+- Start from the identified change. Run a bounded doc-first search over likely
+  owning pages and a bounded code-first mapping from the changed public
+  surface. Classify coverage as current, stale, missing a small fact, or
+  outside `sync_existing`.
+- Patch the smallest factual surface: a literal, link, example, snippet,
+  prerequisite, default, or short paragraph needed to make the existing page
+  accurate. Preserve historical, versioned, translated, frozen, and generated
+  material according to its actual ownership.
+- Route a new or substantially rewritten architecture, API, explanation,
+  onboarding, tutorial, or navigation structure to the corresponding mode or
+  design owner. Do not turn synchronization into a status report or polish
+  pass.
+- After editing, read the section in context, inspect the scoped diff, search
+  for stale semantic anchors, validate affected links/examples/snippets with
+  existing narrow checks, and run `git diff --check` in a Git repository.
+
 ## Use Visuals Only When They Carry Structure
 
 Choose the smallest form that makes a material relationship easier to verify:
@@ -202,10 +246,9 @@ inference as confirmed architecture.
 
 ## Collaborate Without Blurring Ownership
 
-- `personal-docs-sync-light` owns a bounded patch to existing documentation
-  made stale by an already identified CLI, API, configuration, installation,
-  or workflow contract change. This skill owns new or substantially rewritten
-  standalone documentation.
+- This skill owns both `sync_existing` factual synchronization and new or
+  substantially rewritten codebase-derived documentation. Keep those modes
+  separate so a small stale-contract patch does not become a redesign.
 - `personal-project-output-explainer` decodes an existing Codex response,
   project result, evidence chain, or decision rationale. This skill explains
   the codebase itself and creates codebase-derived artifacts. A decoded output

@@ -54,13 +54,15 @@ These commits are evidence of the local design lineage, not upstream APIs.
 - Repo-sibling fallback layout outside both the repository and `~/.codex`.
 - Controlled symlink binding for ignored, immutable, project-local heavy data.
 - App/Git/snapshot reconciliation with preservation-first recovery.
-- Strict observer/executor separation: monitors report trigger evidence, while
-  the supervisor or coordinator executes authorized contingencies after intake.
-- Manual-only routing for `personal-grilling` and
-  `personal-long-job-status`; normal questions, brainstorming, and bounded
-  one-shot status inspection remain the defaults.
+- Strict observer/executor separation: monitors report trigger evidence, the
+  coordinator decides after intake, and the job-owning executor performs any
+  separately authorized contingency.
+- Manual-only routing for `personal-grilling`; normal questions, brainstorming,
+  and one exact bounded executor status inspection remain the defaults.
 - Optional existing schema-v2 snapshots for machine-checkable handoff;
   file-backed planning only after an explicit file-backed planning request.
+- Exact-task continuation through a current-host metadata precheck and bounded
+  task packet, without task enumeration or a restored context archive.
 
 ## Rejected Or Retired
 
@@ -69,7 +71,10 @@ These commits are evidence of the local design lineage, not upstream APIs.
   state machine.
 - Fixed concurrency targets and coordinator polling loops.
 - Monitor-executed contingencies, including preauthorized ones.
-- Worker-owned commits, integration, line `pass`, or next-stage launch.
+- Implementation-worker commits, worker-owned integration grants, line `pass`,
+  or next-stage launch. An assigned integration executor may perform only the
+  exact internal checkpoint and integration mutations granted by the
+  coordinator.
 - Automatic `git add`, cleanup, force-removal, branch deletion, global prune,
   or permanent task deletion.
 - Treating a symlink as mechanical write protection or sharing mutable project

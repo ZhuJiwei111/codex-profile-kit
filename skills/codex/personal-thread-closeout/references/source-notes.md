@@ -1,99 +1,80 @@
 # Source Notes
 
-Checked: 2026-07-13
+Checked: 2026-07-16
 
 ## Provenance Decision
 
 - Classification: local-origin personal workflow.
-- Primary source: the user's recurring need to review a finished Codex task,
+- Primary source: the user's recurring need to review finished Codex tasks,
   preserve durable lessons, update project documentation only when worthwhile,
-  and archive the exact target without losing the closeout audit trail.
-- This skill is not derived from an external retrospective or thread-management
-  skill. No upstream text, script, or runtime package is copied.
+  and archive exact targets without losing the controller audit trail.
+- No external retrospective or thread-management skill text, script, or runtime
+  package is copied.
 
 ## User-Locked Design Decisions
 
-The design conversation fixed these requirements:
-
-- explicit `$personal-thread-closeout` invocation is required;
-- a separate controller task must receive one explicit target reference or ID;
-- the target must differ from the controller and remain on the current host;
-- Codex decides whether the target task is terminal from available evidence;
-- persistent writes are limited to the target task's project;
-- personal `AGENTS.md`, `HOST_LOCAL.md`, skills, hooks, and profile-kit receive
-  proposals only;
-- documentation is conditional, so short tasks and failures without new
-  knowledge may be archived without a new document;
-- when documentation is valuable, prefer an existing project convention and
-  otherwise use a unique `docs/retrospectives/<date>-<task-slug>.md` record;
-- archive must use the exact target ID as the final state-changing action; the
-  controller stays active and reports the result.
+- Explicit `$personal-thread-closeout` invocation is required in a separate
+  external controller task.
+- Entry may name one exact target, an ordered exact-target list, or an explicit
+  current-host project sweep.
+- The controller never targets itself and remains alive to report results.
+- Exact target lists are sequential and first occurrence wins for duplicates.
+- Each target is assessed independently; target-local failure continues, while
+  shared infrastructure failure stops later mutation.
+- Project sweep is fail-closed, exact-project and current-host only. Its default
+  selects tasks older than 15 full local-calendar days, oldest first, maximum 10.
+- Persistent writes are limited to each target's project and only when their
+  value and verification gates pass.
+- Personal profile surfaces receive proposals only.
+- Documentation is conditional; short tasks and failures without new knowledge
+  may close without a new document.
+- Prefer an existing project convention; otherwise use one unique
+  `docs/retrospectives/<date>-<task-slug>.md` record.
+- Archive uses the exact ID as that target's final state-changing action.
 
 ## Local Profile Evidence
 
-The following profile-kit revision was the fixed collaboration baseline during
-the initial design:
-
-- Revision: `1958e80b1af61cc5437d95e844a95eaf55aadef8`
-- `rules/AGENTS.portable.md`: Git blob
-  `e20fa56361bee15b1187bb377fb50170ae722ffa`
-- `skills/codex/personal-risk-verification/SKILL.md`: Git blob
-  `5aa8ccb9932f590a8e606678ebd8cdc231ffc663`
-- `skills/codex/personal-docs-sync-light/SKILL.md`: Git blob
-  `4a097917cdce2adf3cc4f35b2cacb658f5057fa8`
-- `skills/codex/personal-branch-finish/SKILL.md`: Git blob
-  `80ed3fa4cac6160f0ef95b1870b1bd05e5dfb0d8`
-
-These sources define authorization, final verification, canonical-doc updates,
-and Git finish boundaries. They are design evidence, not bundled runtime
-dependencies.
+The initial single-target design used profile-kit revision
+`1958e80b1af61cc5437d95e844a95eaf55aadef8` as its collaboration baseline. Its
+portable instructions and then-current verification, documentation, and branch
+contracts were design evidence, not bundled runtime dependencies. The current
+revision replaces retired routing names with bounded core behavior or active
+owners.
 
 ## Live Self-Archive RED
 
-On 2026-07-13 the first live invocation ran inside target thread
-`019f4c1c-909a-76e2-8d17-01ffe75eb184` (`优化个人配置`). The workflow correctly
-assessed the task as ready and chose `documentation: skip` because its design,
-sources, and material lessons were already preserved in canonical skill
-references. It then attempted to archive its own calling thread.
-
-Observed result:
-
-- the target became archived;
-- the closeout turn status became `interrupted`;
-- no final `closeout_result` or direct archive confirmation was recorded in the
-  target turn; and
-- an external controller later unarchived the target and could then read the
-  interrupted turn by exact ID.
+On 2026-07-13 an early invocation archived its own calling task. The target
+became archived, the closeout turn became `interrupted`, and no final result or
+direct confirmation was recorded. A separate controller later unarchived the
+target and read the interrupted turn by exact ID.
 
 This is direct evidence that self-archive cannot satisfy the result contract.
-The local design therefore requires an external controller and an explicit,
-different target ID.
+The workflow therefore requires a different controller and exact target IDs.
 
-## Codex App Capability Evidence
+## Product-Surface Evidence
 
-The current Codex App tool surface checked on 2026-07-13 exposes native thread
-read and archive actions. An archived target may be unavailable to thread reads
-until it is unarchived. At runtime:
+The 2026-07-13 observation established native exact-target read and archive
+actions. The later project-sweep design additionally requires a native bounded
+task-list surface; this reference does not claim that every controller exposes
+one. These capabilities are environment-owned and must be rechecked at runtime:
 
-- require the target reference or ID in the controller invocation;
-- read the target by exact ID before archive and page only as far as needed;
-- never omit the target ID or replace it with the controller ID;
-- treat the archive tool result as the only direct evidence that archive
-  occurred; and
-- keep the controller alive to report that result.
+- read and archive explicit targets by exact ID;
+- enumerate only for an explicit project sweep;
+- filter current host and exact project before target content enters context;
+- treat the archive tool result as the only direct archive evidence; and
+- keep the controller alive to report it.
 
-These capabilities are environment-owned and may change independently of the
-portable skill. Their contracts do not authorize raw transcript access,
-cross-host management, or treating archive as proof of task completion.
+This never authorizes raw transcript access, cross-host management, or treating
+archive as proof of completion.
 
 ## Rejected Designs
 
 - implicit invocation at every task ending;
-- self-archive or omission of the target thread ID;
-- archiving merely because the user typed the skill name;
-- title-only search or broad thread enumeration to choose a target;
-- mandatory documentation for short or non-informative failed tasks;
-- one cumulative global lessons file shared by unrelated projects;
-- automatic personal-skill, AGENTS, hook, or profile-kit self-modification;
-- automatic stage, commit, push, PR, merge, worker control, or job control; and
-- claiming archive success when the native action was not observed.
+- self-archive or omission of target IDs;
+- title-only search or broad enumeration outside explicit project sweep;
+- mandatory documentation for short or non-informative failures;
+- one cumulative global lessons file across projects;
+- automatic personal-profile mutation;
+- automatic implementation, Git, publication, worker, or job actions;
+- batch-wide rollback or stopping on a target-local failure; and
+- claiming archive success without the native action result.

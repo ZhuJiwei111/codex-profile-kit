@@ -10,9 +10,10 @@ and cleanup risk require an explicit contract.
 - [Use The Hybrid Pattern](#use-the-hybrid-pattern)
 - [Choose The Owning Root And Paths](#choose-the-owning-root-and-paths)
 - [Classify Artifact Roles](#classify-artifact-roles)
+- [Annotate The Lifecycle](#annotate-the-lifecycle)
 - [Lock A Transformation Contract](#lock-a-transformation-contract)
 - [Verify Without Inventing Semantics](#verify-without-inventing-semantics)
-- [Retain, Clean, Or Promote](#retain-clean-or-promote)
+- [Manual Cleanup And Promotion](#manual-cleanup-and-promotion)
 
 ## Choose The Surface
 
@@ -102,6 +103,13 @@ Use a descriptive stable task slug. Add `runs/<run-id>/` only when repeated
 attempts need separate evidence; do not add hierarchy for a single small run.
 Never clean a parent `tmp/` merely because the task subdirectory is disposable.
 
+Temporary helpers and evidence are excluded from Git and normal search, test,
+lint, typecheck, build, and package inputs by default. On first creation of a
+project-root `tmp/`, add exact `/tmp/` to the applicable `.gitignore` only when
+no tracked `tmp/` content or conflicting convention exists. Otherwise ask.
+Change another scanner's config only after observing that it actually includes
+the task directory.
+
 ## Classify Artifact Roles
 
 | Role | Examples | Default treatment |
@@ -109,13 +117,28 @@ Never clean a parent `tmp/` merely because the task subdirectory is disposable.
 | Canonical input | Existing dataset, source manifest, original artifact | Keep immutable; change or delete only under an explicit recovery contract |
 | Formal deliverable | Converted dataset, requested report, migrated database | Preserve at its declared output path; never treat as cleanup merely because a helper produced it |
 | Traceable helper or evidence | Converter, parser, manifest, count summary | Preserve when small, non-sensitive, and useful for audit, reproduction, or retry |
-| Staging or partial output | `.part`, temporary database, incomplete shard set | Keep isolated; remove after success or according to the failure-recovery contract |
-| Cache or scratch | Derived index, decoded chunk, local tool cache | Remove after its task-owned verification value ends |
+| Staging or partial output | `.part`, temporary database, incomplete shard set | Keep isolated; list for manual cleanup after success or follow the failure-recovery contract |
+| Cache or scratch | Derived index, decoded chunk, local tool cache | List for cleanup after its verification value ends; do not delete merely because verification passed |
 | Sensitive intermediate | Decrypted data, auth dump, secret-bearing log | Avoid creating; never report contents; remove promptly through the authorized mechanism |
 | Pre-existing or unknown provenance | Another task's file, user notes, unexplained cache | Preserve and exclude from cleanup until ownership is established |
 
 A path under `tmp/` does not prove that the current task owns it. A path outside
 `tmp/` does not prove that it is durable. Use provenance and the declared role.
+
+## Annotate The Lifecycle
+
+Retainable or promotable helper code carries a top comment with the semantic
+fields below. Follow project comment style and compress wording when useful, but
+do not drop a field's meaning:
+
+```text
+Purpose | Lifecycle | Background | Inputs | Outputs | Safety
+Usage | Environment | Verification | Limitations
+```
+
+When the format cannot contain comments, use the smallest adjacent README or
+manifest. Keep the annotation after promotion; it records the helper's one-off
+origin, operating boundary, and known limitations.
 
 ## Lock A Transformation Contract
 
@@ -164,18 +187,22 @@ The converter can prove the historical data transformation; it cannot prove the
 new maintained default. The durable behavior check cannot prove existing data
 was converted correctly.
 
-## Retain, Clean, Or Promote
+## Manual Cleanup And Promotion
 
 After verification:
 
 - retain a small helper and manifest when rerun, audit, explanation, or failure
   recovery remains plausible and they contain no sensitive data;
-- remove exact task-owned partial outputs, caches, and sensitive intermediates
-  whose evidence value has ended;
+- report exact task-owned partial outputs and caches as cleanup candidates rather
+  than deleting them automatically;
 - preserve canonical inputs until any separately authorized replacement or
   deletion step succeeds;
-- report every retained and removed path; absence from a report is not cleanup
-  authorization;
+- keep retained helpers excluded from Git and normal project inputs;
+- if the user says “clean tmp” without broader scope, clean only the current
+  task-owned `tmp/<task-slug>`; inventory and ask when ownership is unclear;
+- require explicit scope for project-wide or multi-task cleanup;
+- remove sensitive task-created intermediates promptly after use as the narrow
+  safety exception, and report only their safe path/category;
 - keep retained helpers untracked unless the user separately chooses Git
   inclusion.
 
@@ -188,6 +215,7 @@ Promote a helper only when positive evidence establishes a normal future owner:
   be stated;
 - the narrowest durable location is known.
 
-Promotion is a new maintained-code decision, not a cleanup side effect. Route
-it through the relevant design, test-first, docs, and final-verification
-workflows.
+Promotion is a new durable mutation, not a cleanup side effect. Move into the
+project convention or `scripts/one-off/<task-slug>/`, retain the lifecycle
+annotation, and route behavior, tests, docs, and verification to their owners.
+Promotion does not authorize Git stage or commit.

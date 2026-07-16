@@ -10,8 +10,7 @@ skill owns a bounded delegation decision, the worker contract, exclusive
 mutation boundaries, worker reporting, and delegator intake.
 
 It does not own persistent line or worktree state, authoritative coordination
-status, final completion, Git finish actions, one-shot job status, or temporary
-artifact lifecycle.
+status, final completion, Git finish actions, or temporary artifact lifecycle.
 
 ## Trigger And Independence Gate
 
@@ -72,6 +71,31 @@ the effective sandbox: current-session runtime overrides can be reapplied when
 Codex spawns a child. If read-only enforcement is safety-critical, verify the
 effective child sandbox or keep the task local.
 
+## Keep Four Role Contracts Distinct
+
+- **Main process or coordinator:** owns scope, authority, task packets,
+  scheduling, intake, synthesis, authoritative coordination state, and the only
+  task-level verdict. It keeps context bounded and does not absorb substantive
+  implementation, test, or recurring log work merely because delegation is
+  inconvenient.
+- **Executor:** performs the bounded substantive read, edit, command, test,
+  validation, diagnostic, integration, or one-shot observation work. It returns
+  raw evidence and may report a non-authoritative `recommended_outcome` when
+  that helps intake.
+- **Reviewer:** independently examines a fixed revision or artifact and reports
+  claims, source anchors, semantic scenario evidence, coverage gaps, and
+  uncertainty. It never reports acceptance, rejection, a line state, a
+  `recommended_outcome`, or a task verdict.
+- **Monitor:** is the sole recurring read-only observer for one exact authorized
+  job and phase. It reports evidence events and uncertainty only; it never
+  decides, mutates, repairs, restarts, or advances work.
+
+The main process may write only the compact authoritative coordination state
+owned by the active workflow, such as an intake, verdict, or explicitly
+authorized monitoring record. Product files, tests, generated outputs, command
+logs, and integration mutations belong to an executor with an exclusive
+surface.
+
 ## Build The Minimal Contract
 
 Define this information before spawning:
@@ -79,7 +103,8 @@ Define this information before spawning:
 ```yaml
 delegation:
   objective:
-  mode: explore | review | implement | validate | monitor
+  actor_role: executor | reviewer | monitor
+  mode: explore | implement | validate | diagnose | observe_once | review | monitor
   canonical_cwd:
   branch_or_worktree:
   target_revision:
@@ -135,8 +160,11 @@ formatter or codegen side effects.
 At the stop condition, or when new context, scope, authority, or ownership is
 needed, hand off and wait. A worker must not invent or approve the next stage.
 
+Executors use this report; `recommended_outcome` is optional and never becomes
+a coordinator decision:
+
 ```yaml
-worker_report:
+executor_report:
   execution_status: scope_finished | boundary_reached | needs_input | cannot_continue
   result:
   changed_paths: []
@@ -150,18 +178,33 @@ worker_report:
   verification_run: []
   verification_not_run: []
   risks_and_uncertainties: []
-  recommended_outcome: accept | reject | needs-more-evidence
+  recommended_outcome: accept | reject | needs-more-evidence | omitted
   stop_reason:
   next_safe_action:
 ```
 
-Execution status describes what the worker did, not whether the coordination
-line passed. Only the coordinator may assign authoritative states such as
-`pass`, `no-go`, `needs-more-evidence`, or `blocked` after intake.
+Reviewers use an evidence-only report:
+
+```yaml
+reviewer_report:
+  target_revision:
+  claims_examined: []
+  evidence: []
+  semantic_scenarios: []
+  coverage_gaps: []
+  risks_and_uncertainties: []
+  stop_reason:
+```
+
+Execution status describes what an executor did, not whether the coordination
+line passed. A reviewer report and a monitor event contain no disposition or
+recommendation. Only the main process or coordinator may assign authoritative
+states such as `pass`, `no-go`, `needs-more-evidence`, or `blocked` after
+intake.
 
 ## Intake And Reuse
 
-For a one-shot report, the delegator:
+For a one-shot report, the main process or coordinator:
 
 1. confirms the worker, objective, actual `cwd`, revision, and execution mode;
 2. checks changed paths and indirect side effects against the assigned surface;
@@ -190,9 +233,13 @@ verification needs direct support, or the user asks.
 
 ## Active Monitoring
 
-Do not create a watcher by default. A one-shot status or ETA request is not a
-delegation trigger; handle it as one bounded read-only check, and use
-`personal-long-job-status` only when the user explicitly invokes that skill.
+Do not create a watcher by default. For an ordinary status or ETA request, the
+main process names the exact job and one evidence surface, and a read-only
+executor performs one `observe_once` pass. It reports observed progress,
+timestamp or artifact identity, and uncertainty, then stops. It must not wait
+again, poll, tail, diagnose, repair, restart, or infer an ETA unsupported by
+evidence. This is not active monitoring.
+
 Active monitoring requires explicit authorization in the current Codex thread
 and an enforceable per-job monitoring contract. Unless the user narrows or
 revokes it, that authorization remains valid for later long-running jobs in the
@@ -200,23 +247,20 @@ same thread and on the same host. It authorizes observation only: every new job
 or phase still needs a fresh contract, and launch, repair, restart, and stage
 progression retain their own authority gates.
 
-When authorized, use the configured `monitor` custom agent with
-`gpt-5.6-luna`, high reasoning effort, and a read-only sandbox. If its effective
-model, reasoning effort, and sandbox cannot be selected and verified, default
-to no watcher unless the contract names another verified fallback. The
-supervisor estimates runtime and evidence timing, records the cadence rationale,
-and revises it only when observed evidence changes the estimate. Read [the
+The portable custom file requests `monitor`, `gpt-5.6-luna`, high reasoning,
+and a read-only sandbox; that is `configured_unverified`, not runtime proof. A
+strict monitor is available only when the active spawn surface verifies the
+effective role, model, reasoning effort, and sandbox. `prompt_only` or
+`configured_unverified` enforcement means strict monitoring is unavailable.
+Do not replace it with recurring checks in the main process. Read [the
 monitoring protocol](references/monitoring.md) before spawning. User-visible
 monitoring reports use Chinese event names; monitoring events remain evidence,
 never task completion or a go/no-go decision.
 
 ## Collaboration Boundaries
 
-- `personal-context-optimization` shapes minimal retrieval and evidence
-  anchors; this skill decides whether to delegate them.
 - `personal-multiline-coordination` owns stateful line and worktree
   coordination, recovery, and authoritative coordinator-state workflows.
-- `personal-long-job-status` owns manual one-shot job status and ETA.
 - `personal-temporary-work` owns helper and temporary artifact lifecycle.
 - Domain skills such as brainstorming, review response, test-first changes,
   debugging, and documentation own the substantive work delegated through this

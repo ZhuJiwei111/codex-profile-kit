@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Block likely large transfers that accidentally inherit proxy variables."""
+"""Warn when a likely large transfer inherits proxy variables."""
 
 from __future__ import annotations
 
@@ -19,7 +19,6 @@ PROXY_VARS = (
     "http_proxy",
     "all_proxy",
 )
-APPROVAL_MARKER = "CODEX_APPROVED_PROXY_DOWNLOAD"
 CONTROL_TOKEN_RE = re.compile(r"^[;&|()]+$")
 ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=(.*)$", re.DOTALL)
 LARGE_MARKER_RE = re.compile(
@@ -85,18 +84,13 @@ def assignment(tokens: list[str], index: int) -> tuple[str, str] | None:
     return token.split("=", 1)[0], match.group(1)
 
 
-def unwrap_segment(tokens: list[str]) -> tuple[list[str], set[str], bool, bool]:
-    """Return command tokens, explicitly unset vars, proxy_off, approval."""
+def unwrap_segment(tokens: list[str]) -> tuple[list[str], set[str]]:
+    """Return command tokens and proxy variables explicitly unset for them."""
 
     index = 0
     unset_vars: set[str] = set()
-    proxy_off = False
-    approved = False
 
-    while (item := assignment(tokens, index)) is not None:
-        name, value = item
-        if name == APPROVAL_MARKER and value.casefold() in {"1", "true", "yes"}:
-            approved = True
+    while assignment(tokens, index) is not None:
         index += 1
 
     if index < len(tokens) and tokens[index] == "env":
@@ -116,9 +110,6 @@ def unwrap_segment(tokens: list[str]) -> tuple[list[str], set[str], bool, bool]:
                 continue
             item = assignment(tokens, index)
             if item is not None:
-                name, value = item
-                if name == APPROVAL_MARKER and value.casefold() in {"1", "true", "yes"}:
-                    approved = True
                 index += 1
                 continue
             if token.startswith("-"):
@@ -127,10 +118,9 @@ def unwrap_segment(tokens: list[str]) -> tuple[list[str], set[str], bool, bool]:
             break
 
     if index < len(tokens) and tokens[index] == "proxy_off":
-        proxy_off = True
         index += 1
 
-    return tokens[index:], unset_vars, proxy_off, approved
+    return tokens[index:], unset_vars
 
 
 def curl_download(tokens: list[str]) -> bool:
@@ -173,32 +163,30 @@ def is_large_transfer(tokens: list[str], kind: str) -> bool:
 def risky_segments(command: str) -> list[list[str]]:
     risky: list[list[str]] = []
     for segment in shell_segments(command):
-        command_tokens, unset_vars, proxy_off, approved = unwrap_segment(segment)
+        command_tokens, unset_vars = unwrap_segment(segment)
         kind = transfer_kind(command_tokens)
         if kind is None or not is_large_transfer(command_tokens, kind):
             continue
-        explicitly_direct = proxy_off or all(name in unset_vars for name in PROXY_VARS)
-        if not explicitly_direct and not approved:
+        explicitly_direct = all(name in unset_vars for name in PROXY_VARS)
+        if not explicitly_direct:
             risky.append(command_tokens)
     return risky
 
 
-def emit_deny() -> None:
+def emit_warning() -> None:
     unset_flags = " ".join(f"-u {name}" for name in PROXY_VARS)
-    reason = (
+    context = (
         "A likely large transfer would inherit active proxy variables. Retry the "
-        "same transfer as `proxy_off <download-command>` or "
-        f"`env {unset_flags} <download-command>` to test direct access first. "
-        f"Only after explicit user approval for proxy bandwidth, prefix the command "
-        f"with `{APPROVAL_MARKER}=1`."
+        f"same transfer as `env {unset_flags} <download-command>` to test direct "
+        "access first. This is heuristic guidance, not enforcement or proof of "
+        "authorization; follow the applicable AGENTS.md network policy."
     )
     print(
         json.dumps(
             {
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
-                    "permissionDecision": "deny",
-                    "permissionDecisionReason": reason,
+                    "additionalContext": context,
                 }
             }
         )
@@ -211,7 +199,7 @@ def main() -> int:
     if not command or not any(os.environ.get(name) for name in PROXY_VARS):
         return 0
     if risky_segments(command):
-        emit_deny()
+        emit_warning()
     return 0
 
 

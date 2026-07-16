@@ -72,7 +72,8 @@ scripts or operational references are required by this local skill.
 - `personal-evidence-debugging` owns unknown failure and root-cause
   investigation.
 - `personal-brainstorms` owns consequential design work opened by feedback.
-- `personal-docs-sync-light` owns identified documentation contract drift.
+- `personal-code-documentation` owns identified documentation contract drift
+  through `sync_existing`.
 - `personal-risk-verification` is the single final completion gate.
 - `personal-branch-finish` owns later Git readiness and handoff decisions.
 

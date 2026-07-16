@@ -152,10 +152,13 @@ An unclear item blocks its dependency cluster, not independent understood
 items. If the comments may share a behavior contract or architecture decision,
 clarify that shared decision before implementing any member of the cluster.
 
-Independent evidence gathering may be delegated, but the coordinator owns the
-authoritative disposition. Do not decide by subagent vote. Any delegated edits
-require exclusive file ownership, and workers must not post replies or mutate
-review state.
+Independent evidence gathering may be delegated, but the main process or
+coordinator owns the authoritative disposition. A reviewer subagent reports
+claims, source anchors, semantic evidence, coverage gaps, and uncertainty only;
+it does not report `accepted`, `rejected`, a `recommended_outcome`, or any
+task-level verdict. Do not decide by subagent vote. Any delegated edits require
+exclusive file ownership, and workers must not post replies or mutate review
+state.
 
 ## Implement Only Authorized Accepted Items
 
@@ -167,14 +170,15 @@ review state.
 - Route an unexpected or unexplained test, runtime, or CI failure through
   `personal-evidence-debugging` before accepting a proposed patch as the root
   cause.
-- Use `personal-repo-intake` only when the root, worktree, instructions,
-  generated-source ownership, edit surface, or verification command is unclear.
+- When the root, worktree, instructions, generated-source ownership, edit
+  surface, or verification command remains unclear after bounded inspection,
+  stop the affected item and ask the smallest decision-changing question.
 - Use `personal-brainstorms` when accepted feedback opens a consequential
   design choice. Use `personal-grilling` only when it is explicitly invoked.
   Otherwise ask the smallest ordinary question that changes the decision, or
   keep the unresolved item as `needs-clarification`.
-- Use `personal-docs-sync-light` when an accepted implementation changes an
-  existing documentation contract.
+- Use `personal-code-documentation` in `sync_existing` mode when an accepted
+  implementation changes an existing documentation contract.
 - Obtain focused evidence for each coherent fix, then use
   `personal-risk-verification` as the single final completion gate after the
   last relevant change.

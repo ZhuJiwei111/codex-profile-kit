@@ -53,11 +53,11 @@ runtime dependency of this skill.
 - A clear, simple, low-risk implementation request bypasses brainstorming.
 - The original request supplies discussion, planning, or implementation
   authority; brainstorming does not create or revoke it.
-- When both personal skills are explicitly invoked, brainstorming coordinates
-  initial decomposition and final design synthesis while `personal-grilling`
-  acts as an independent coverage and adversarial gate over one shared sourced
-  ledger. It may reopen a material branch that brainstorming missed or closed
-  without sufficient evidence.
+- When both personal skills are explicitly invoked, brainstorming is the sole
+  design-synthesis owner. `personal-grilling` acts as an independent theme,
+  coverage, and adversarial gate over one shared sourced ledger and returns no
+  competing design or plan. It may reopen a material branch that brainstorming
+  missed or closed without sufficient evidence.
 - Brainstorming's solo lightweight-question filter does not restrict the paired
   grilling coverage model. Grilling still asks only unresolved material user
   decisions rather than turning every covered dimension into a question.

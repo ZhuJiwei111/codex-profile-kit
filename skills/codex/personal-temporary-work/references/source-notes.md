@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-12.
+Checked: 2026-07-16.
 
 This skill is local-origin and is based on the user's recurring project need to
 keep one-time data conversion and repair logic out of maintained runtime code.
@@ -100,6 +100,10 @@ those probes.
 - Separate canonical inputs, formal deliverables, helpers, evidence, staging,
   caches, sensitive intermediates, and unknown-provenance files.
 - Derive validation from the actual transformation contract and risk.
+- Exclude task `tmp/` from Git and normal project inputs by default, using exact
+  `/tmp/` ignore only when it does not conflict with tracked content.
+- Make ordinary cleanup explicit and task-scoped; success alone never deletes.
+- Preserve a semantic lifecycle annotation through promotion.
 
 ## Adapted
 
@@ -111,6 +115,8 @@ those probes.
 - Preserve useful small helpers without equating preservation with Git tracking.
 - Allow output-adjacent staging for large or atomically published deliverables
   while keeping helper code and lightweight evidence in the task `tmp/` folder.
+- Treat sensitive task-created intermediates as the narrow prompt-cleanup
+  exception and report their category without content.
 
 ## Rejected
 
@@ -123,6 +129,7 @@ those probes.
   `.gitignore` to hide them.
 - Generic cache cleanup, project-wide `tmp/` deletion, or ownership inferred
   from path alone.
+- Automatic cleanup merely because verification succeeded.
 - Invented format invariants or unconditional high-cost validation passes.
 - A bundled generic transformation or cleanup script; task contracts are too
   heterogeneous for that to be safe.
@@ -140,3 +147,5 @@ those probes.
   `personal-multiline-coordination` rather than this skill.
 - No mechanical validator or reusable script is bundled. Validation uses the
   profile's skill validators plus isolated behavioral scenarios.
+- Promotion to a project convention or `scripts/one-off/<task-slug>/` is a
+  separate durable mutation and never implies Git stage or commit.

@@ -1,6 +1,6 @@
 ---
 name: personal-codex-audit
-description: Use for current-host, whole-profile audit, drift comparison, export, apply, or sync across AGENTS.md, personal skills, hooks, and codex-profile-kit; not single-artifact work.
+description: Use for current-host, whole-profile audit, drift comparison, export, apply, or preparation of a bounded sync across AGENTS.md, personal skills, hooks, and codex-profile-kit; GitHub publication is handed to github:yeet.
 ---
 
 # Personal Codex Audit
@@ -9,6 +9,12 @@ description: Use for current-host, whole-profile audit, drift comparison, export
 
 Own current-host, whole-profile inventory, drift analysis, and profile-kit
 transfer decisions.
+
+The main process locks direction, authority, host, repository, and transfer
+scope, then owns intake. A bounded profile executor performs substantive audit,
+export, fetch, integration, apply, and verification commands. Reviewers report
+candidate-diff evidence and uncertainty only. The main process alone issues the
+completion verdict or authorizes the next owner.
 
 - Keep audits, comparisons, `sync.py audit`, and dry runs read-only.
 - Require matching intent for writes and publication. Explicit directional sync
@@ -29,6 +35,8 @@ transfer decisions.
 | --- | --- |
 | Audit or compare the whole reusable profile | Deep audit path in `personal-codex-audit` |
 | Routine directional sync to or from `codex-profile-kit` | Fast path in `personal-codex-audit` |
+| Commit, push, and open a GitHub pull request for an outbound candidate | `github:yeet`, after `personal-risk-verification: supported` |
+| Local-only commit without publication | `personal-branch-finish`, after `personal-risk-verification: supported` |
 | Decide one skill, plugin, or hook lifecycle | `personal-skill-hygiene` |
 | Admit one newly created or externally installed skill | `personal-skill-hygiene`, with the owning system author/installer for mechanics |
 | Create or edit one skill | `skill-creator` |
@@ -81,31 +89,30 @@ owning workflow and authorization gate.
 
 Treat these explicit outcomes as matching authority inside the configured
 repository, branch, current host, and safe envelope. Do not ask again at each
-internal stage:
+internal stage that remains inside the exact requested chain:
 
-- **Sync to GitHub** authorizes audit, export, exact-path commit, and push of an
-  isolated portable diff to the existing remote and branch.
+- **Sync to GitHub** authorizes audit, export, final local verification, and a
+  bounded publication handoff to `github:yeet`. That owner exclusively performs
+  branch setup, staging, commit, push, and draft pull-request creation.
 - **Sync GitHub updates to this host** authorizes fetch, non-conflicting
   integration, and confirmed apply of existing admitted portable targets with
   the standard timestamped backup.
 
-Neither intent authorizes a pull request, visibility change, another repository
-or host, conflict resolution with ambiguous ownership, new admission, or
-excluded/sensitive state.
+Neither intent authorizes a ready-for-review transition, merge, visibility
+change, another repository or host, conflict resolution with ambiguous
+ownership, new admission, or excluded/sensitive state. Outbound sync authorizes
+only the default draft pull request owned by `github:yeet`.
 
 Run the smallest direction-specific chain:
 
 1. Lock direction, repository, branch/upstream, visibility when publishing,
    current host, clean ownership, and the host network entrypoint.
 2. For outbound sync, run `sync.py audit`, export once, inspect the exact diff,
-   then stage exact paths and commit before attempting push. Do not make GitHub
-   write authentication a prerequisite for the local commit. If a preliminary
-   auth check is unavailable, continue with the exact-path local Git commit.
-   After commit, do not make `gh` or GitHub connector authentication a
-   prerequisite for `git push`; fall back to ordinary `git push` through the
-   host connection entrypoint. Report remote publication failure only when
-   `git push` itself fails, and report a commit failure only when the local Git
-   commit itself fails. When push succeeds, confirm the remote ref.
+   and obtain `personal-risk-verification: supported`. Then hand the unchanged
+   candidate to `github:yeet` with repository, worktree, target revision, exact
+   paths, remote/base/visibility intent, the host connection entrypoint, and
+   `dependency_install_authorized: false`. The audit executor must not stage,
+   commit, or push first.
 3. For inbound sync, fetch, classify ancestry, integrate without conflict, run
    `sync.py audit` and one apply dry run, then apply the reviewed existing
    targets with backup and require a zero-drift post-apply audit.
@@ -115,6 +122,10 @@ Run the smallest direction-specific chain:
 5. Escalate according to `sync-policy.md`. Stop before a material mutation that
    falls outside the fast-path authority instead of degrading into a broad
    audit or repeated network experiments.
+6. When resuming an interrupted chain, confirm the candidate identity and
+   ownership, then reuse still-valid evidence and resume at the first incomplete
+   stage. Do not reopen completed stages or a deep audit merely because work
+   moved to another turn or task.
 
 ## Hard Boundaries
 
@@ -133,13 +144,15 @@ Run the smallest direction-specific chain:
   concrete authority.
 - Do not stage, commit, push, publish, change visibility, or contact external
   services without matching explicit authority. The two directional sync
-  outcomes above are matching authority only for their bounded fast-path chain.
+  outcomes above are matching authority only for their bounded chains, and
+  outbound publication still remains exclusively executed by `github:yeet`.
 
 ## Resources
 
 - `scripts/collect_codex_profile.py` and `scripts/test_collect_codex_profile.py`: emit and test the safe schema-v3 inventory, including redacted MCP declarations.
 - [references/source-policy.md](references/source-policy.md): allowed evidence, memory, symlink, host, and sensitive-source boundaries.
-- [references/sync-policy.md](references/sync-policy.md): audit, export, apply, commit, and push gates.
+- [references/sync-policy.md](references/sync-policy.md): audit, export, apply,
+  verification, and publication-handoff gates.
 - [references/profile-state-model.md](references/profile-state-model.md): consistent evidence and state labels.
 - [references/compatibility-policy.md](references/compatibility-policy.md): Codex baseline and contract-triggered revalidation.
 - [references/source-notes.md](references/source-notes.md): official sources, checked versions, and local deviations.

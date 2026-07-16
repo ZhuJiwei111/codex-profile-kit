@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Code Documentation"
-  short_description: "Explain code and create evidence-based technical docs"
-  default_prompt: "Use $personal-code-documentation to explain this codebase or create the requested technical documentation for a defined audience and artifact, using verified evidence and only useful visuals."
+  short_description: "Explain, create, or sync technical documentation"
+  default_prompt: "Use $personal-code-documentation to explain code, create or substantially rewrite technical documentation, or run sync_existing for a small stale CLI, API, config, installation, or workflow contract patch from verified repository evidence."

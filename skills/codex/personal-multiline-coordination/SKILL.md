@@ -14,10 +14,16 @@ Keep a star topology:
 
 - the coordinator owns the global plan, scheduling, intake, and authoritative
   line decisions;
-- each writer owns one bounded line and one canonical worktree;
-- workers report evidence and a `recommended_outcome` of `accept`, `reject`,
-  or `needs-more-evidence`, but do not decide the coordination line's result;
+- each executor owns one bounded substantive line and one canonical worktree;
+- executors report evidence and may report a `recommended_outcome` of `accept`, `reject`,
+  or `needs-more-evidence`, but do not decide the line's result;
+- reviewers and monitors report evidence and uncertainty only; and
 - cross-line decisions return to the coordinator or user.
+
+The coordinator is the main-process control plane. It may write only compact
+authoritative coordination state such as manifests, intake, decisions, and
+provenance records. Worktree preparation, source edits, tests, integration Git
+mutations, log inspection, and job actions belong to bounded executors.
 
 This skill does not create a permanent multiline registry. Current truth comes
 from Desktop task state, Git state, and an optional lightweight coordinator
@@ -65,10 +71,11 @@ Use a managed subagent for bounded, one-shot work such as exploration, review,
 validation, helper work, or ordinary conflict resolution. Follow
 `personal-subagent-boundaries` for its prompt and reporting contract.
 
-The coordinator may resolve a tiny deterministic integration conflict locally.
-Route substantive rework that needs its own iteration history back to a
-Desktop-visible worker. Route cross-line design conflicts to the user, using
-`personal-brainstorms` when the decision is consequential.
+The coordinator may classify a tiny deterministic integration conflict and
+grant an exact resolution to the integration executor; it does not stage or
+resolve the conflict itself. Route substantive rework that needs its own
+iteration history back to a Desktop-visible worker. Route cross-line design
+conflicts to the user, using `personal-brainstorms` when consequential.
 
 Do not silently substitute a managed subagent when the approved manifest calls
 for a Desktop worker but the required task capability is unavailable. Report
@@ -85,9 +92,10 @@ the capability gap and preserve the line as planned.
    project data.
 4. Present one launch manifest. Include every task/worktree creation plus any
    separate integration, resource, monitoring, or cleanup grant being sought.
-5. Prepare worktrees only for currently ready writers, from their resolved base
-   OID. Keep future task/worktree creation authorized but deferred. Bind readers
-   to a fixed revision and avoid unnecessary reader worktrees.
+5. Assign a bounded preparation executor to create worktrees only for currently
+   ready writers, from their resolved base OID. Keep future task/worktree
+   creation authorized but deferred. Bind readers to a fixed revision and
+   avoid unnecessary reader worktrees.
 6. Launch only currently ready and non-conflicting lines. Give each worker its
    line card and no broader authority.
 7. Wait for events or handoffs. Intake evidence, inspect Git state and outputs,
@@ -95,12 +103,13 @@ the capability gap and preserve the line as planned.
    `needs-more-evidence`, or `blocked`.
 8. Schedule newly unblocked lines. Do not use a fixed worker count when the
    dependency, conflict, or resource graphs imply a different safe level.
-9. Under an exact integration grant, create a source checkpoint and integrate
-   it through the dedicated integration worktree. Record source and integrated
-   OIDs.
+9. Under an exact integration grant, assign one integration executor to create
+   a source checkpoint and integrate it through the dedicated integration
+   worktree. Intake its evidence, then record source and integrated OIDs.
 10. Run the final completion gate through `personal-risk-verification`, then
-    route formal Git readiness or user-directed commit/PR handling to
-    `personal-branch-finish`.
+    route local Git readiness or a local-only commit to
+    `personal-branch-finish`. Route an authorized GitHub publication flow to
+    `github:yeet`; do not let branch finish commit first.
 
 Read `references/contracts.md` before producing a launch manifest, line card,
 snapshot, worker report, or coordinator intake.
@@ -147,20 +156,23 @@ replacing Desktop-visible workers.
 Workers do not commit. They stop with a dirty or clean line worktree plus a
 structured report.
 
-Only the coordinator may, under an explicit local integration grant:
+Only one assigned integration executor may, under an explicit local integration
+grant issued by the coordinator:
 
-- inspect and accept the exact line diff;
+- inspect the coordinator-accepted exact line diff and confirm it matches the
+  grant;
 - stage only task-owned paths;
 - create the source checkpoint commit on the line branch;
 - integrate it into the dedicated integration branch, normally by
   cherry-pick;
 - record the source checkpoint OID and resulting integrated OID.
 
-If a cherry-pick or rebase stops for a conflict and the coordinator stages any
-manual resolution, record the completed integration as `method: manual`, not
-as the command that initiated it. Preserve the source checkpoint with a named
-`preservation_ref`; manual integration cannot mechanically prove source-patch
-equivalence or make that checkpoint disposable by itself.
+If a cherry-pick or rebase stops for a conflict and the integration executor
+stages any authorized manual resolution, it stops after collecting the exact
+result for coordinator intake. Record the completed integration as
+`method: manual`, not as the command that initiated it. Preserve the source
+checkpoint with a named `preservation_ref`; manual integration cannot
+mechanically prove source-patch equivalence or make that checkpoint disposable.
 
 An internal checkpoint is not final Git readiness and does not authorize a
 user-facing commit, merge, push, PR, or publication.
@@ -175,8 +187,9 @@ from another.
 A monitoring observer is always read-only. It reports trigger evidence and
 never stops, repairs, restarts, mutates outputs, launches a next stage, changes
 resource scope, or makes a line decision, even when an exact contingency was
-preauthorized. After intake, only the supervisor or coordinator may execute
-that preauthorized action and make the authoritative decision.
+preauthorized. After intake, the supervisor or coordinator may act only by
+making the authoritative decision and issuing the exact grant; the job-owning
+executor alone may execute the separately authorized action.
 
 Read `references/resource-grants.md` before scheduling constrained resources or
 long-running lines.

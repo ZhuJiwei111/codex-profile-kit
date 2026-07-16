@@ -1,8 +1,9 @@
 # Git Readiness Reference
 
-Use this reference for actual commit or PR work and whenever linked worktrees,
-detached HEAD, an existing index, mixed ownership, or cleanup pressure makes the
-state non-obvious. Keep all inspection on the current host and target repository.
+Use this reference for local-only commit work, preservation, or a publication
+handoff whenever linked worktrees, detached HEAD, an existing index, mixed
+ownership, or cleanup pressure makes the state non-obvious. Keep all inspection
+on the current host and target repository.
 
 ## Contents
 
@@ -11,7 +12,7 @@ state non-obvious. Keep all inspection on the current host and target repository
 - [Resolve Base And Remote Intent](#resolve-base-and-remote-intent)
 - [Separate Task And Index Ownership](#separate-task-and-index-ownership)
 - [Assess And Execute A Local Commit](#assess-and-execute-a-local-commit)
-- [Assess Or Create A PR](#assess-or-create-a-pr)
+- [Hand Off GitHub Publication](#hand-off-github-publication)
 - [Preserve Worktrees And Jobs](#preserve-worktrees-and-jobs)
 - [Detect Evidence Invalidation](#detect-evidence-invalidation)
 
@@ -63,21 +64,21 @@ ahead/behind evidence comes only from existing local refs.
 - A dirty worktree can still be ready for handoff or a scoped commit. Readiness
   depends on isolating task-owned state, not making status empty.
 - Any merge, rebase, cherry-pick, revert, or bisect in progress blocks a new
-  commit or PR action unless the explicit task owns that operation and its next
-  transition.
+  local commit or publication handoff unless the explicit task owns that
+  operation and its next transition.
 
 ## Resolve Base And Remote Intent
 
 Prefer finish intent in this order:
 
 1. Explicit user request or approved plan.
-2. Multiline Line Card, coordinator intake, or existing PR target.
+2. Multiline Line Card, coordinator intake, or explicit publication target.
 3. Configured upstream and locally recorded remote default branch.
 4. A local merge-base comparison against a known candidate.
 
 Do not guess a base merely because `main` or `master` exists. A merge base is a
-commit, not proof of the intended destination branch. If destination branch,
-remote, or PR base changes the requested action and remains ambiguous, ask one
+commit, not proof of the intended destination branch. If destination branch or
+publication target changes the requested action and remains ambiguous, ask one
 targeted question.
 
 When an upstream is configured, a bounded local snapshot may use:
@@ -144,24 +145,24 @@ If a hook modifies task files, generated outputs, or the index beyond the
 verified state, stop and return to final verification before another finish
 claim or external action.
 
-## Assess Or Create A PR
+## Hand Off GitHub Publication
 
-Keep these outcomes distinct:
+Branch finish does not assess, prepare, or execute a GitHub publication. When
+the requested outcome includes push or a pull request, make no local commit for
+that publication and hand the complete flow to `github:yeet`.
 
-- `assess_pr`: read-only readiness only;
-- `prepare_pr`: draft local title/body and evidence summary only; and
-- `create_pr`: perform the exact authorized task-owned commit, branch push, and
-  PR creation chain when its repository, source branch, remote, and base are
-  locked.
+The handoff includes the `personal-risk-verification: supported` verdict,
+repository and worktree, target revision, exact task-owned paths, unrelated
+state left untouched, intended remote and base when known, and
+`dependency_install_authorized: false`. Publication intent does not grant
+dependency installation. Use an already available ordinary Git path when it is
+sufficient; otherwise the publication owner asks rather than installing a
+missing helper.
 
-Detached HEAD requires an explicit destination branch or ref before commit or
-PR creation. Do not create or switch a branch automatically. If another
-worktree owns the intended branch, return the decision to the coordinator.
-
-Do not force-push, merge, delete refs, rerun CI, reply to review comments, or
-resolve threads. Preserve the worktree after PR creation for later feedback.
-Report the PR URL or remote state only when the corresponding external action
-actually succeeded.
+Detached HEAD, a branch already owned by another worktree, an ambiguous remote,
+or an ambiguous base is reported as handoff evidence. Branch finish does not
+create or switch a publication branch, push, contact GitHub, or mutate remote
+state.
 
 ## Preserve Worktrees And Jobs
 
@@ -176,10 +177,10 @@ scope, cwd, session or PID, launch HEAD and inputs, log/output paths, status
 command, success/failure signals, and worktree dependency. Do not discover,
 poll, terminate, restart, or clean the job from this workflow.
 
-If the job still writes verified task inputs or outputs, block commit and PR
-until its state stabilizes and final verification runs again. If it is
-independent, preserve it and report that it remains active without claiming its
-status or ETA.
+If the job still writes verified task inputs or outputs, block a local commit
+or publication handoff until its state stabilizes and final verification runs
+again. If it is independent, preserve it and report that it remains active
+without claiming its status or ETA.
 
 ## Detect Evidence Invalidation
 
@@ -189,5 +190,6 @@ or revision covered by the prior verdict. A local commit that records identical
 verified content does not by itself invalidate behavior evidence, but inspect
 the resulting commit and tree before relying on that conclusion.
 
-Remote CI, PR creation, reviewer state, and merge results are separate evidence
-domains. Never infer them from the pre-PR local verdict.
+Remote CI, pull-request creation, reviewer state, and merge results are separate
+evidence domains. Never infer them from the local verdict or publication
+handoff.

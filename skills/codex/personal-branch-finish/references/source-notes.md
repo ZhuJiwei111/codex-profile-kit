@@ -51,7 +51,8 @@ workflow source material:
   finish action.
 - Treat detached HEAD differently from a named branch and preserve an external
   or harness-owned worktree.
-- Keep a worktree after PR creation for later feedback.
+- Preserve a worktree after an external publication owner creates a pull
+  request so later feedback remains reproducible.
 - Require explicit destructive confirmation and avoid force-push without an
   exact request.
 - Re-verify a merged or otherwise changed resulting state before claiming it is
@@ -61,12 +62,14 @@ workflow source material:
 
 - Consume the local `personal-risk-verification: supported` verdict instead of
   rerunning a full test suite inside branch finish.
-- Replace fixed option menus with per-action handoff, commit, and PR readiness.
+- Replace fixed option menus with per-action local handoff, local-only commit,
+  preservation, and publication-owner handoff readiness.
 - Separate Git main/linked state from task, coordinator, user, and harness
   ownership; path names are only clues.
-- Split PR assessment, local preparation, branch push, and actual PR creation.
-- Treat detached HEAD as safe for handoff but blocked for commit or PR until an
-  authorized destination ref exists.
+- Delegate the full GitHub commit, push, and pull-request flow to `github:yeet`
+  so branch finish cannot create a duplicate preparatory commit.
+- Treat detached HEAD as safe for handoff but blocked for a local-only commit
+  until an authorized destination ref exists.
 - Preserve approved detached jobs and invalidate earlier verification only when
   they change covered task state.
 
@@ -98,5 +101,9 @@ workflow source material:
   ambiguous checkpoint pair.
 - Merge execution and destructive cleanup stay outside ordinary branch finish.
   Cross-line integration remains in `personal-multiline-coordination`.
-- Job status, ETA, launch, monitoring, termination, and artifact cleanup retain
-  their existing dedicated authorization boundaries.
+- Ordinary job status is one bounded executor observation; launch, active
+  monitoring, termination, and artifact cleanup retain separate authorization
+  boundaries.
+- Publication handoffs explicitly set `dependency_install_authorized: false`.
+  The cached `github:yeet` source remains external and is not a durable profile
+  owner; missing helpers require an already available path or a user decision.

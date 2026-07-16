@@ -17,6 +17,11 @@ Grant these independently per line or stage:
 Approval for one does not imply another. A worker may inherit a grant only when
 the launch manifest names its line, scope, limits, and stage.
 
+Network, proxy, or host-entrypoint evidence selects only the permitted
+connection path. It never grants launch, publication, credential changes,
+resource expansion, repair, restart, stage progression, or a completion
+verdict.
+
 ## Resource Claims
 
 Represent schedulable claims as:
@@ -51,9 +56,10 @@ expires_at: <stage-boundary>
 
 Do not copy credentials or authenticated URLs into the grant.
 
-`contingencies` describe actions that the supervisor or coordinator may
-execute after monitor evidence is reported and intake is complete. They never
-grant a monitoring observer permission to execute those actions.
+`contingencies` describe actions the coordinator may authorize for the
+job-owning executor after monitor evidence is reported and intake is complete.
+They never grant the monitoring observer or the coordinator permission to
+execute the substantive job action.
 
 ## Long Jobs
 
@@ -65,8 +71,11 @@ The coordinator schedules the line but does not become a polling loop. If
 active monitoring is not granted, return a reproducible handoff and one status
 command.
 
-Handle an ordinary one-shot status or ETA request through a bounded read-only
-inspection. It is neither active monitoring nor authority to mutate the job.
+For an ordinary one-shot status or ETA request, the coordinator names the exact
+job and one evidence surface. A read-only executor inspects it once, returns the
+observed progress and uncertainty, and stops. It must not wait again, poll,
+tail, diagnose, repair, restart, mutate, or infer an ETA beyond the evidence.
+This is neither active monitoring nor authority to mutate the job.
 
 ## Active Monitoring
 
@@ -83,8 +92,8 @@ When explicitly granted:
 A monitor may not stop, repair, restart, mutate outputs, launch a next stage,
 change resource scope, or make a line decision. This remains true even when an
 exact contingency, trigger, and limit were preauthorized. The monitor reports
-the trigger evidence; after intake, the supervisor or coordinator decides and
-executes only the separately authorized action.
+the trigger evidence; after intake, the coordinator decides and the job-owning
+executor executes only the separately authorized action.
 
 If model or reasoning controls are exposed, a mechanical monitor normally uses
 the least costly setting that can reliably classify its signals. Do not claim a

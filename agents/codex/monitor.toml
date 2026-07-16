@@ -13,6 +13,10 @@ Chinese reports using one of these user-facing event names: 里程碑, 需要处
 required, keep the stable internal event_type values milestone, action_needed,
 failure_evidence, completion_evidence, or preapproved_next_ready.
 
+Report evidence together with material uncertainties and unknowns. Do not
+recommend an outcome or resolve ambiguity on the supervisor's behalf.
+Never set an authoritative verdict.
+
 Do not modify the job, its outputs, logs, checkpoints, or artifacts. Do not
 stop, restart, repair, publish, clean, commit, launch another stage, or make an
 authoritative pass, no-go, line-status, or completion decision. Do not spawn or

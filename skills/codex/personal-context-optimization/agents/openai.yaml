@@ -1,4 +1,0 @@
-interface:
-  display_name: "Personal Context Optimization"
-  short_description: "Optimize current-session context flow"
-  default_prompt: "Use $personal-context-optimization to narrow current-session retrieval, shape future tool output, and isolate mixed evidence without compacting or persisting state."

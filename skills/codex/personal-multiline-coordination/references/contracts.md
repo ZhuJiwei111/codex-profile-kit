@@ -16,8 +16,18 @@ Keep these axes separate:
 | Coordinator decision | coordinator only | `pending`, `pass`, `no-go`, `needs-more-evidence`, `blocked` |
 | Workspace state | observed Git fact plus coordinator intent | `prepared`, `clean`, `dirty`, `handed_off`, `cleanup_candidate`, `preserved` |
 
-A worker never reports `pass`. It reports evidence and a
-`recommended_outcome`; the coordinator owns the decision.
+An executor never reports `pass`. It reports evidence and may report a
+`recommended_outcome`; the coordinator owns the decision. A reviewer or
+monitor reports evidence and uncertainty without a recommendation or verdict.
+
+## Role Boundary
+
+| Role | Owns | Must not own |
+| --- | --- | --- |
+| Main process / coordinator | scope, authority, manifests, scheduling, intake, line decisions, compact authoritative state | substantive edits, tests, recurring observation, integration Git mutations |
+| Executor | bounded reads, edits, commands, tests, diagnostics, integration, job actions, one-shot observation | line decision, task verdict, ungranted next stage |
+| Reviewer | independent semantic scenarios, source anchors, coverage gaps, uncertainty | disposition, `recommended_outcome`, line or task verdict |
+| Monitor | recurring read-only evidence events for one exact job and phase | mutation, diagnosis, action, recommendation, verdict |
 
 ## Launch Manifest
 
@@ -30,6 +40,7 @@ target_base_oid: <verified-commit>
 integration:
   branch: <dedicated-integration-branch>
   worktree: <absolute-path>
+  executor: <assigned-only-after-exact-grant>
 lines:
   - id: <line-id>
     objective: <bounded-outcome>
@@ -79,7 +90,7 @@ stop_condition: <handoff-boundary>
 report_contract: <fields-below>
 ```
 
-## Worker Report
+## Executor Report
 
 Require:
 
@@ -88,11 +99,11 @@ Require:
 - commands run with exit status and concise evidence;
 - unresolved risks, conflicts, and unverified items;
 - whether the worktree is clean or dirty;
-- the canonical handoff axes:
+- the canonical handoff axes, with `recommended_outcome` optional:
 
   ```yaml
   execution_status: scope_finished | boundary_reached | needs_input | cannot_continue
-  recommended_outcome: accept | reject | needs-more-evidence
+  recommended_outcome: accept | reject | needs-more-evidence | omitted
   ```
 
 - the next event or decision needed.
@@ -100,6 +111,24 @@ Require:
 The report does not authorize integration or a next stage. `rework` is a
 coordinator-requested next action, not a worker outcome. `blocked` is a
 coordinator decision made after intake, not a worker-reported result.
+
+## Reviewer Report
+
+Require only:
+
+```yaml
+target_revision:
+claims_examined: []
+evidence: []
+semantic_scenarios: []
+coverage_gaps: []
+risks_and_uncertainties: []
+stop_reason:
+```
+
+A reviewer never emits `accept`, `reject`, `pass`, `no-go`,
+`recommended_outcome`, or a completion verdict. A monitor uses the event packet
+owned by `personal-subagent-boundaries`, not either report above.
 
 ## Coordinator Intake
 
@@ -109,6 +138,8 @@ Record:
 - Git/worktree facts independently checked;
 - diff and artifact ownership assessed;
 - focused evidence accepted or rejected;
+- optional reviewer or validator evidence assessed without adopting its
+  conclusion as the coordinator decision;
 - coordinator decision;
 - exact missing evidence or rework if applicable;
 - whether an integration grant exists;

@@ -9,8 +9,9 @@ requirements with direct code, diff, artifact, and verification evidence rather
 than trusting the implementer's conclusion. Lead with concrete findings and
 include exact paths, symbols, or reproduction evidence when available.
 
-Report missing evidence, risks, uncertainties, and a recommended outcome. Do
-not edit files, commit, change external state, expand scope, or assign an
-authoritative pass, no-go, line-status, merge-readiness, or completion decision.
-Do not spawn or delegate to another agent.
+Report missing evidence, risks, uncertainties, and unknowns without recommending
+an outcome. Never set an authoritative verdict. Do not edit files, commit,
+change external state, expand scope, or assign a pass, no-go, line-status,
+merge-readiness, or completion decision. Do not spawn or delegate to another
+agent.
 """

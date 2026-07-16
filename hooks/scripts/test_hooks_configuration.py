@@ -29,6 +29,13 @@ def load_hooks() -> dict[str, object]:
 
 
 class HooksConfigurationTest(unittest.TestCase):
+    def test_real_unittest_discovery_collects_hook_tests(self) -> None:
+        suite = unittest.defaultTestLoader.discover(
+            str(SCRIPT_DIR), pattern="test_*.py"
+        )
+
+        self.assertGreater(suite.countTestCases(), 0)
+
     def test_all_controlled_rules_compile_and_have_unique_names(self) -> None:
         rules, diagnostics = hookify_codex_runner.load_rules()
 
@@ -69,6 +76,12 @@ class HooksConfigurationTest(unittest.TestCase):
 
     def test_retired_semantic_rules_are_absent(self) -> None:
         retired = {
+            "warn-gpu-task-without-device-scope.md",
+            "warn-long-running-direct-launch.md",
+            "warn-long-running-monitoring.md",
+            "warn-package-manager-install.md",
+            "warn-sensitive-file-edits.md",
+            "warn-sensitive-path-command.md",
             "warn-goal-long-job-monitoring.md",
             "warn-my-concern-discussion-mode.md",
             "warn-project-output-explainer-style-on-stop.md",

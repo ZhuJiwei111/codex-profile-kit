@@ -1,164 +1,177 @@
 ---
 name: personal-temporary-work
-description: Use when one-off migration, conversion, or artifact work might otherwise add permanent code; split the minimal durable change from a temporary helper. Skip simple checks and normal durable features.
+description: Use when one-off migration, conversion, or artifact work might otherwise add permanent code; split the minimal durable change from an excluded temporary helper, and clean or promote it only under the explicit lifecycle contract.
 ---
 
 # Personal Temporary Work
 
 Protect maintained code from one-off transition logic. Separate what future
-normal operation must keep from what is needed only to migrate, convert,
-repair, inspect, or post-process existing state.
+normal operation must keep from what is needed only to migrate, convert, repair,
+inspect, or post-process existing state.
 
-## Split Steady-State And Transition Work
+## Split Steady State And Transition Work
 
-Classify the request before adding a branch, flag, module, parameter, or public
-API to maintained code:
+Classify the request before adding a branch, flag, module, parameter, or API:
 
-- **Steady-state behavior:** future normal users and workflows need it. Make the
-  smallest coherent durable change and use its owning implementation workflow.
-- **Transition work:** a bounded existing dataset, artifact set, or local state
-  needs one-time treatment. Prefer a temporary helper outside maintained code.
-- **Hybrid:** future behavior changes and historical state must be migrated.
-  Make the minimal durable change for the future and use a temporary helper for
-  the existing state.
-- **Durable migration surface:** promote migration logic only when positive
-  evidence shows repeated operators, environments, releases, versions, formal
-  rollback, or ongoing support need it.
+- **Steady state:** future normal users need it. Make the smallest coherent
+  durable change through its implementation owner.
+- **Transition:** a bounded existing dataset, artifact set, or local state needs
+  one-time treatment. Prefer a temporary helper outside maintained code.
+- **Hybrid:** change future behavior minimally and use a temporary helper for
+  historical state.
+- **Durable migration surface:** promote only when repeated operators,
+  environments, releases, versions, rollback, or support need it.
 
-Do not run this workflow for a simple command that creates no helper or
-artifact. Do not use a temporary helper to avoid implementing a normal durable
-feature. When the boundary is not obvious, read
-[durable versus temporary](references/durable-vs-temporary.md) before editing.
+Skip this workflow for a direct command that creates no helper or artifact. Do
+not use temporary placement to evade a normal durable feature. For an explicit
+one-off case with no ongoing-support evidence, default to the temporary helper.
+Read [durable versus temporary](references/durable-vs-temporary.md) when the
+boundary is consequential or unclear.
 
-Default to the temporary helper in an explicitly one-off case with no ongoing
-support evidence. Require a positive reason to make transition logic permanent,
-not merely the fact that it can be added to the existing script.
+## Lock Ownership And Transformation
 
-## Lock Ownership And The Data Contract
+Before creating files, identify:
 
-Before creating or modifying files, identify:
+- owning project/worktree, applicable instructions, and task-owned paths;
+- canonical inputs, immutability, and provenance;
+- formal deliverable, helper, evidence, staging, and cleanup candidates;
+- ordering, format, overwrite, interruption, recovery, and acceptance;
+- environment, scale, resources, and retention decision.
 
-- the owning project and worktree, applicable instructions, and task-owned
-  mutation surface;
-- canonical inputs, whether they must remain immutable, and their provenance;
-- the formal deliverable, temporary helper, evidence, staging, and cleanup
-  candidates as separate roles;
-- ordering, format, overwrite behavior, failure recovery, and the exact
-  invariants that prove the requested result;
-- the environment, expected scale, resource needs, and retention decision.
+Use bounded core repository inspection when root, convention, dirty overlap, or
+output ownership is unclear. Ask one decision-changing question when ambiguity
+changes semantics, placement, destructive behavior, or scope.
 
-Ask one decision-changing question when a missing fact would change output
-semantics, ownership, destructive behavior, or placement. Do not invent data
-requirements such as ordering, empty-record rules, normalization, or backward
-compatibility merely to make a helper look robust.
+Prefer regeneration when an affordable deterministic canonical generator owns
+the output. Prefer direct transformation when regeneration is unavailable or
+materially costlier and contract-relevant equivalence can be checked.
 
-Compare regeneration with direct transformation. Prefer regeneration when a
-canonical source and affordable deterministic generator already own the result.
-Prefer direct transformation when regeneration is unavailable or materially
-more expensive and contract-relevant equivalence can be verified.
+## Place And Exclude Temporary Work
 
-## Place Temporary Work
+Follow an existing project scratch convention. Otherwise use:
 
-Follow an existing project scratch convention first. Otherwise:
+```text
+<owning-project-or-worktree>/tmp/<task-slug>/
+```
 
-- put helper code and lightweight evidence under the owning project or
-  worktree root at `tmp/<task-slug>/`;
-- use an independently managed monorepo subproject's own
-  `tmp/<task-slug>/` only when that subproject truly owns the task;
-- keep formal deliverables in their explicit output location; a deliverable is
-  not a cleanup candidate merely because a temporary helper produced it;
-- use output-adjacent staging when atomic publication, same-filesystem rename,
-  or large-artifact capacity requires it;
-- keep each worker's temporary files in its owning worktree and do not share
-  mutable scratch state across workers.
+An independently managed monorepo subproject may use its own task `tmp/` only
+when it fully owns the work. Keep formal deliverables at their explicit output
+paths and use output-adjacent staging when same-filesystem publication or
+capacity requires it. Workers keep scratch in their own worktrees.
 
-Do not scatter temporary helpers through source directories, silently edit
-`.gitignore` to hide them, or default traceable work to a host-global temporary
-directory. Read `~/.codex/HOST_LOCAL.md` only when host-specific storage or temp
-behavior matters.
+Temporary state is excluded by default from:
 
-## Execute And Verify Proportionately
+- Git tracking and ordinary delivery diffs; and
+- normal search, test, lint, typecheck, build, and package inputs.
 
-- Keep source inputs immutable by default and write a new output. Treat an
-  in-place rewrite, overwrite, or source deletion according to its destructive
-  and recovery boundary.
-- Reuse stable project utilities when appropriate, but do not add a production
-  API solely to make a one-off helper easier to write.
-- Use a dry run, small sample, staged output, or manifest when it materially
-  reduces risk. Do not require every mechanism for every task.
-- Verify the actual contract with suitable counts, keys, schemas, checksums,
-  ordering checks, semantic comparisons, sampled reads, or consumer checks.
-  Do not substitute invented invariants for the requested behavior.
-- Treat temporary code as real task-owned code: make inputs explicit, fail
-  safely, avoid secrets, and keep side effects bounded.
-- Follow global authorization for package installation, large artifacts,
-  destructive replacement, heavy resources, and long-running execution. This
-  skill does not launch or monitor such work by itself.
+When creating a project-root `tmp/` for the first time, add exact `/tmp/` to the
+applicable `.gitignore` if no tracked `tmp/` content or conflicting convention
+exists. If tracked content, overlapping rules, multiple owners, or ambiguity
+exists, ask first. Change other tool exclusion config only after observing that
+the actual tool includes task `tmp/`; do not preemptively edit every scanner.
 
-## Retain And Clean By Ownership
+Do not hide helpers in source directories or use a host-global temp directory
+for traceable work by default. Exclusion from Git never authorizes stage, commit,
+or deletion.
 
-Use the role matrix in the reference before a non-trivial cleanup.
+## Annotate Helper Lifecycle
 
-- Preserve small, non-sensitive helpers, manifests, or evidence when they make
-  the result reproducible or auditable.
-- Remove task-owned staging, cache, partial output, and sensitive intermediate
-  files after their verification value ends.
-- Never delete a formal deliverable, canonical input, pre-existing file, or
-  item of unknown provenance merely because it is under `tmp/`.
-- Clean exact task-owned paths; do not clear an entire project `tmp/`, system
-  temp directory, or generic cache by inference.
-- Treat preservation and Git tracking separately. Do not stage or commit a
-  retained helper without explicit authority.
-- Reconsider promotion when the helper becomes a normal repeated workflow. Move
-  it into the narrowest durable migration, operations, or product surface only
-  with tests, ownership, and support expectations appropriate to that surface.
+A helper that may be retained or promoted must carry a concise top-of-file
+comment, adapted to project convention but preserving these meanings:
+
+```text
+Purpose:
+Lifecycle:
+Background:
+Inputs:
+Outputs:
+Safety:
+Usage:
+Environment:
+Verification:
+Limitations:
+```
+
+For formats that cannot contain comments, place the same contract in the
+smallest adjacent README or manifest and link it from the helper name or usage
+record. The annotation is not throwaway boilerplate: it remains after promotion
+so future operators understand the one-off origin and limits.
+
+## Execute And Verify
+
+- Keep canonical inputs immutable and write a new output by default. Treat
+  overwrite, in-place rewrite, and deletion under their destructive boundary.
+- Reuse stable project utilities, but do not add a production API only for the
+  helper.
+- Use dry run, sample, staging, or manifest when it materially reduces risk.
+- Verify the actual contract with relevant counts, keys, schemas, checksums,
+  ordering, semantic comparisons, sampled reads, or consumer checks.
+- Treat helper code as task-owned code: explicit inputs, bounded side effects,
+  safe failure, and no secrets.
+- Follow global authorization for installation, large artifacts, destructive
+  replacement, heavy resources, and long-running execution.
+
+Verify durable steady-state behavior and historical transition separately in a
+hybrid change. Neither half proves the other.
+
+## Manual Cleanup Contract
+
+Success or verification never triggers ordinary cleanup automatically.
+
+- If the user explicitly says “clean tmp” without a broader scope, that
+  authorizes cleanup only of the current task-owned `tmp/<task-slug>`.
+- If ownership is unclear, perform a read-only inventory and ask. Do not delete
+  by path name alone.
+- Project-wide or multi-task cleanup requires explicit scope.
+- Clean exact task-owned paths; never clear an entire project `tmp/`, system temp,
+  cache, formal deliverable, canonical input, pre-existing file, or unknown item
+  by inference.
+- Sensitive task-created temporary files are the exception: remove them promptly
+  after their required use through the authorized mechanism and report the safe
+  path/category, never the value.
+
+An explicit cleanup request needs no second per-file approval when every selected
+path is inside the already authorized current task directory and ownership is
+clear. Report retained and removed paths.
+
+## Retain Or Promote
+
+Retain a small non-sensitive helper, manifest, or evidence only when it supports
+audit, reproduction, retry, or recovery. Retention does not make it tracked or
+part of the formal deliverable.
+
+Promotion is a separate durable mutation. Require positive evidence of a normal
+future owner, then move the helper into the project's established convention or
+`scripts/one-off/<task-slug>/`. Add appropriate tests, docs, compatibility,
+rollback, and maintenance ownership. Keep the lifecycle annotation after
+promotion. Promotion still does not authorize Git stage or commit.
 
 ## Report The Handoff
 
-Keep the record conversational unless a multi-run, long-running, or handoff
-contract needs a small manifest:
-
-```yaml
-temporary_work:
-  steady_state_change:
-  transition_work:
-  owning_root:
-  helper:
-  canonical_inputs: []
-  deliverables: []
-  staging: []
-  verification:
-  retained: []
-  removed: []
-  remaining_risk:
-```
-
 Report exact paths, command and environment owner, transformation boundary,
-verification evidence, retention result, and anything not run. A helper's pass
-does not prove the overall task complete.
+verification, exclusions, cleanup scope, and anything not run. Use a small
+manifest only when repeated runs or handoff require it.
 
-## Collaborate Without Taking Domain Ownership
+If ordinary retained tmp actually remains, end with exactly one compact line
+containing its path, purpose, approximate size, and `manual-retention`. Omit that
+line when no retained tmp remains. A helper pass never proves the overall task
+complete.
+
+## Ownership Boundaries
 
 - `personal-brainstorms` resolves a consequential durable-versus-temporary
-  choice when the evidence does not decide it directly.
-- `personal-repo-intake` resolves an unclear root, worktree, project convention,
-  dirty-state overlap, or output owner.
-- Domain skills such as `personal-evidence-debugging`,
-  `personal-context-optimization`, `personal-docs-sync-light`, and
-  `personal-code-simplifier` own the hypothesis, evidence use, docs patch, or
-  cleanup contract; this skill owns only helper and temporary artifact
-  boundaries.
-- `personal-test-first-changes` owns the durable behavior change and its focused
-  evidence. A temporary converter does not replace a regression test for the
-  new steady state.
-- `personal-subagent-boundaries` owns delegation, while
-  `personal-multiline-coordination` owns worktrees and shared immutable data
-  bindings.
-- Global `AGENTS.md` owns long-job, resource, sensitive-data, and destructive
-  authorization. `personal-long-job-status` may later provide an explicitly
-  requested one-shot status check.
-- `personal-risk-verification` owns the only final completion verdict, and
-  `personal-branch-finish` owns later Git readiness and untracked-file handoff.
+  choice when evidence does not decide it.
+- Core task inspection resolves project root, worktree, conventions, and dirty
+  overlap.
+- Domain workflows own debugging hypotheses, context use, small project-doc
+  edits, code simplification, tests, and artifact semantics. This skill owns only
+  helper placement, exclusion, lifecycle annotation, cleanup, and promotion.
+- `personal-subagent-boundaries` owns delegation and
+  `personal-multiline-coordination` owns worktrees and shared data bindings.
+- Global instructions own long-job/resource/destructive/sensitive boundaries;
+  ordinary status uses one bounded core read-only check.
+- `personal-risk-verification` owns the final verdict and
+  `personal-branch-finish` owns later Git readiness.
 
-See [source notes](references/source-notes.md) for local provenance, official
-Codex design evidence, baseline observations, and deliberate deviations.
+See [source notes](references/source-notes.md) for provenance and local design
+evidence.

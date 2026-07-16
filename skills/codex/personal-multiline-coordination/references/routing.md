@@ -11,11 +11,11 @@
 | Ordinary unresolved requirements | normal targeted questions; `personal-brainstorms` when consequential |
 | Explicit `$personal-grilling` invocation | `personal-grilling` (manual-only) |
 | Explicit file-backed planning request | `personal-planning-with-files-zh` |
-| Ordinary one-time long-job status request | bounded read-only status path |
-| Explicit `$personal-long-job-status` invocation | `personal-long-job-status` (manual-only) |
+| Ordinary one-time long-job status request | one exact read-only executor pass, then main-process intake |
 | Unexpected failure or failed repair attempt | `personal-evidence-debugging` |
 | Final evidence-backed completion decision | `personal-risk-verification` |
-| Formal Git readiness, user commit/PR choice, or handoff | `personal-branch-finish` |
+| Local Git readiness, local-only commit, preservation, or handoff | `personal-branch-finish` |
+| Authorized GitHub commit/push/PR publication flow | `github:yeet` |
 
 Multiline coordination remains the coordinator when it invokes an adjacent
 skill. The adjacent skill owns only its specialized decision or artifact.
@@ -37,10 +37,14 @@ worktree, resource, and intake decisions.
   Default to a reproducible handoff, optionally using an existing snapshot.
 - Route to `personal-planning-with-files-zh` only after an explicit request for
   file-backed planning; that skill then owns the plan root and artifacts.
-- Use `personal-context-compression` to produce a compact continuation summary;
-  it does not write or restore state.
-- Use `personal-context-save-restore` only for an explicit immutable
-  cross-session packet; restoring it never launches workers or mutates Git.
+- For continuation of an existing visible task, require its exact task id and a
+  current-host metadata precheck through the exact-target task read operation.
+  The main process builds the bounded continuation packet defined in
+  `desktop-workers.md`; it does not enumerate unrelated tasks, restore an
+  archive, or forward an unbounded conversation.
+- If the exact task or current-host identity cannot be verified, stop and ask
+  for the exact target. Continuation never implies worker launch, Git mutation,
+  resource use, or stage progression.
 
 ## Verification And Finish
 
@@ -49,21 +53,22 @@ Neither is the final completion verdict.
 
 After all accepted lines are integrated, use `personal-risk-verification` as
 the only final completion gate. If it supports handoff, use
-`personal-branch-finish` for branch/worktree readiness and explicit user Git
-decisions. This skill does not push, open PRs, or merge.
+`personal-branch-finish` for local branch/worktree readiness, preservation, or
+a local-only commit. Use `github:yeet` for an authorized GitHub publication;
+branch finish must not commit first. This skill does not push, open PRs, or
+merge.
 
 ## Long Jobs
 
 This skill schedules authorized long-job lines and records their resource
 contracts. Durable launch and monitoring rules still apply. Handle an ordinary
-one-time status or ETA request through a bounded read-only inspection. The
-manual-only `personal-long-job-status` skill requires the user to invoke
-`$personal-long-job-status` explicitly; it does not become the coordinator or
-monitor.
+one-time status or ETA request through one exact read-only executor inspection,
+followed by main-process intake. It never becomes recurring monitoring.
 
 ## Conflict Routing
 
-1. Tiny deterministic integration conflict: coordinator, within grant.
+1. Tiny deterministic integration conflict: coordinator grants the exact
+   resolution; integration executor applies it.
 2. Bounded independent conflict analysis: managed subagent.
 3. Substantive implementation rework: Desktop-visible worker.
 4. Cross-line design conflict: ask the user a normal targeted question, using

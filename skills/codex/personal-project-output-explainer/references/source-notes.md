@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-12.
+Checked: 2026-07-16.
 
 This skill is local-origin. It comes from the user's recurring difficulty
 reading Codex outputs that contain project-local shorthand, professional terms,
@@ -48,11 +48,10 @@ teach common AI concepts from zero or treat biology as wholly unfamiliar.
 Instead, it should explain the specific biological role, assumption, proxy, or
 mechanistic limit needed to interpret the current result.
 
-The accepted core job is comprehension, not generic reporting. The skill
-decodes a supplied output by default and, when explicitly requested, synthesizes
-multi-stage evidence for a reader who did not follow the work. It may be
-selected without the skill name only when the user explicitly signals a need to
-understand or decode existing output, evidence, or a decision.
+The accepted core job is comprehension, not generic reporting. The skill is
+manual-only, decodes an explicitly named output first, and defaults an unnamed
+target to the current Codex task. It synthesizes project evidence only when the
+user explicitly requests that broader chain.
 
 ## Baseline Observations
 
@@ -62,10 +61,7 @@ Read-only probes against the pre-rewrite skill showed:
   meaning, local-term mappings, evidence gaps, and a defensible no-cutover
   decision; this core behavior is preserved;
 - a live progress and ETA request was correctly recognized as outside
-  comprehension; its former `personal-long-job-status` route is now retired, so
-  an unnamed request leaves specialist workflows and uses one bounded ordinary
-  read-only status check, while only explicit `$personal-long-job-status`
-  invocation enters that skill;
+  comprehension and belongs to one bounded ordinary read-only status check;
 - an under-evidenced CI error correctly routed to
   `personal-evidence-debugging` and refused to invent a root cause; and
 - the metadata description was 74 characters long, while the profile UI budget
@@ -77,7 +73,9 @@ progressive-disclosure references were still present.
 
 ## Adopted
 
-- Narrow implicit triggering for explicit comprehension signals.
+- Manual-only invocation, with no description-based implicit trigger.
+- An unnamed explicit target defaults to the current task; other tasks require
+  an exact user-supplied current-host reference.
 - A default AI-PhD/AI-for-biology reader profile with asymmetric domain depth.
 - Layered explanation: practical meaning, necessary terms, relationships,
   evidence boundary, and decision impact.
@@ -105,6 +103,8 @@ progressive-disclosure references were still present.
   biology assumptions implicit.
 - Turning a visible reasoning gap into an unauthorized investigation or new
   verdict.
+- Enumerating tasks or scanning a project merely because explicit invocation did
+  not name an object.
 
 ## Local Deviations And Limits
 
@@ -112,9 +112,9 @@ progressive-disclosure references were still present.
   exact identifiers, metrics, paths, and established technical terms remain
   unchanged.
 - An explicitly requested audience or format overrides the personal default.
-- Adjacent workflows retain ownership of status, diagnosis, review,
-  verification, Git readiness, docs, writing, persistence, design, and external
-  deliberation. This skill does not claim those responsibilities.
+- Core task handling and adjacent active workflows retain ownership of status,
+  diagnosis, review, verification, Git readiness, docs, writing, continuation,
+  design, and external deliberation. This skill does not claim them.
 - No mechanical validator or reusable script is bundled. Metadata and link
   checks plus isolated engineering, AI-for-biology, multi-stage, missing-data,
   and adjacent-routing probes provide more proportionate evidence.

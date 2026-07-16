@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-12.
+Checked: 2026-07-16.
 
 This skill is local-origin and grew from the user's experience coordinating a
 complex project discussion between Codex and a GPT Pro conversation during an
@@ -96,6 +96,11 @@ on the user to negate the older broad trigger.
   and independent evidence work when collection itself becomes substantial.
 - One kickoff brief, event-driven checkpoints, optional same-Project restart,
   and a final decision synthesis.
+- One coordinator-written project memo for an explicitly invoked multi-round
+  discussion. Prefer an existing decision-note convention; otherwise use
+  `.triad/<topic-slug>/working.md` and `decision.md`.
+- Update working state after material rounds and curate a transcript-free final
+  decision. GPT Pro and subagents never write the memo.
 
 ## Rejected Or Retired
 
@@ -105,8 +110,9 @@ on the user to negate the older broad trigger.
 - Fixed phases, mandatory phase summaries, or approval before every phase move.
 - Approval before bounded in-scope read-only inspection.
 - Automatic worker or subagent use for ordinary evidence checks.
-- Local `live_context.md`, discussion directories, archives, or formal handoff
-  files created by default.
+- Fixed phase documents, message registries, transcript archives, or a generic
+  `live_context.md`. The later bounded topic memo supersedes this earlier
+  rejection and exists only after explicit multi-round invocation.
 - Treating `/side`, `/fork`, a Codex subagent, or a worktree worker as the third
   GPT participant.
 - Treating external consensus as implementation or resource authorization.
@@ -127,3 +133,6 @@ on the user to negate the older broad trigger.
 - No mechanical validator or reusable script is bundled. Profile validators,
   metadata checks, link checks, stale-protocol searches, and isolated behavior
   probes are more proportionate to this qualitative workflow.
+- Memo write failure is a persistence failure, not evidence that the discussion
+  result is false. Planning may reference the curated decision; no adjacent
+  workflow may rewrite it.

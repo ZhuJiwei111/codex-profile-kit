@@ -10,14 +10,14 @@ single-skill lifecycle work.
 - Preflight and portable asset boundaries
 - Escalation triggers
 - Export and apply
-- Commit and push
+- Publication handoff
 
 ## Repository Boundary
 
 - Default repository: `~/codex-profile-kit`.
 - Default remote: `ZhuJiwei111/codex-profile-kit`.
-- Visibility may be public or private; confirm the actual visibility before
-  publication and ensure the user's publication intent covers that exposure.
+- Visibility may be public or private. Before publication, confirm the actual
+  visibility and authorization to publish the isolated diff at that visibility.
 - Do not change repository visibility without separate explicit authority.
 - Export source of truth: active current-host `~/.codex` and `~/.agents`
   portable assets.
@@ -36,8 +36,7 @@ Do not turn the complete Codex home into a Git repository.
 | `sync.py verify` | No intended profile write | Normal verification after export or before apply |
 | `sync.py apply` | Dry-run only | Read-only apply comparison |
 | `sync.py apply --confirm` | Writes active profile and backup | Explicit apply authority, or bounded inbound-sync intent whose plan remains inside the fast path |
-| Commit | Changes local Git history | Explicit commit authority, or bounded outbound-sync intent whose diff remains inside the fast path |
-| Push/publication | Changes external state | Explicit push/publication authority, or bounded outbound-sync intent for the existing remote, branch, and visibility |
+| Publication handoff | No Git mutation by this workflow | Bounded outbound-sync intent plus `personal-risk-verification: supported` |
 
 Do not infer a later stage from a bare audit, export, apply, or comparison. An
 explicit directional sync outcome is different: it authorizes its complete
@@ -45,16 +44,19 @@ bounded chain below, so do not ask again at each internal stage.
 
 ## Directional Intent
 
-- **Sync to GitHub** means audit, export, exact-path commit, and push to the
-  already configured remote and branch at its confirmed visibility.
+- **Sync to GitHub** means audit, export, final local verification, and a
+  bounded handoff to `github:yeet`, which owns the complete branch, commit,
+  push, and draft pull-request flow.
 - **Sync GitHub updates to this host** means fetch, non-conflicting integration,
   and confirmed apply of existing admitted portable targets with the standard
   timestamped backup.
 
-These mappings do not authorize a pull request, repository or visibility
-change, another host, conflict resolution with ambiguous ownership, credential
-changes, or newly admitted content. A plan-only, audit-only, export-only, or
-apply-only request remains limited to the named stage.
+These mappings do not authorize a ready-for-review transition, merge,
+repository or visibility change, another host, conflict resolution with
+ambiguous ownership, credential changes, or newly admitted content. Outbound
+sync authorizes only the default draft pull request owned by `github:yeet`. A
+plan-only, audit-only, export-only, or apply-only request remains limited to the
+named stage.
 
 ## Preflight
 
@@ -76,22 +78,18 @@ apply-only request remains limited to the named stage.
 ### Outbound
 
 1. Preflight branch/upstream, author identity, worktree/index ownership, remote,
-   visibility, and host network entrypoint. GitHub write authentication is not
-   a prerequisite for creating the authorized local commit.
+   visibility, and host network entrypoint. Network, proxy, and connection
+   evidence selects only the transport path; it grants no publication,
+   credential, installation, launch, or verdict authority.
 2. Run `sync.py audit`, then `sync.py export`. Export verifies the staged
    candidate, so do not run a redundant standalone `verify` while the exported
    state remains unchanged.
-3. Inspect the exact portable diff and sensitive-path boundary. Stage only the
-   approved paths and commit once. Do not make GitHub write authentication a
-   prerequisite for the local commit. If a write-auth check is blocked,
-   continue with the exact-path local Git commit.
-4. Attempt ordinary `git push` through the host entrypoint after the commit. Do
-   not make `gh` or GitHub connector authentication a prerequisite for `git
-   push`. If either higher-level path is unavailable, fall back to ordinary
-   `git push` through the host connection entrypoint. Report remote publication
-   failure only when `git push` itself fails; do not describe a successful local
-   commit as failed. When push succeeds, compare the resulting remote ref with
-   `HEAD`.
+3. Inspect the exact portable diff and sensitive-path boundary, then obtain a
+   `personal-risk-verification: supported` verdict for the unchanged candidate.
+   The profile executor must not stage, commit, or push it.
+4. Hand the complete publication flow to `github:yeet` with the schema below.
+   That owner starts from the uncommitted candidate and owns branch setup,
+   staging, commit, push, and draft pull-request creation.
 
 ### Inbound
 
@@ -109,6 +107,18 @@ Use one verification pass per unchanged state. Rerun only the check whose input
 or artifact identity changed; do not stack `audit`, `verify`, export validation,
 and apply validation merely for ceremony.
 
+Emit a visible checkpoint after preflight that names the locked candidate and
+the next incomplete stage. If a command or worker hits a deterministic blocker,
+report the blocker before another attempt; do not accumulate silent retries or
+serial handoffs around the same unchanged failure.
+
+Run Python-based audit, export, and validation commands with
+`PYTHONDONTWRITEBYTECODE=1` so they do not create `__pycache__`. If an ignored
+`__pycache__` or `.pyc` still appears, classify it once as a transient validation
+artifact. It does not reopen semantic review or justify repeating completed
+gates. Any removal remains governed by the active cleanup and temporary-work
+authorization boundary.
+
 ## Escalation Triggers
 
 Leave the routine fast path and pause or invoke the owning workflow when any of
@@ -122,11 +132,11 @@ these appears:
 - unrelated or ambiguous worktree state, a pre-populated index of uncertain
   ownership, a merge conflict, or ambiguous branch ancestry;
 - a repository visibility change, different remote/branch/host, unconfirmed
-  public exposure, or a pull-request/publication expansion;
+  public exposure, or a ready-for-review, merge, or publication expansion beyond
+  the bounded draft-PR handoff;
 - an admission/provenance conflict, changed Codex compatibility contract, a
   transport anomaly after using the documented host path, or a request to
-  change credentials. Mere write-auth unavailability does not block an already
-  authorized, verified local commit.
+  change credentials. Missing publication helpers do not authorize installation.
 
 Ordinary content updates to existing admitted portable targets do not require a
 whole-profile collector or a second authorization round merely because they
@@ -174,8 +184,9 @@ git status --short
 ```
 
 Export verifies its candidate. Review the actual diff and confirm that no
-unrelated path was added. Do not stage, commit, or push as part of a bare
-export request; bounded outbound-sync intent is the explicit exception.
+unrelated path was added. Do not stage, commit, or push from this workflow.
+Bounded outbound-sync intent authorizes only the publication handoff after the
+final supported verdict.
 
 Admission does not authorize export, and export does not grant admission. A
 new portable vendor normally requires `admitted + complete + vendor`. A
@@ -196,31 +207,46 @@ targets and the standard backup behavior. Re-check the backup path and run a
 zero-drift audit after the write. `AGENTS.portable.md` and config templates
 remain manual-review inputs, not automatic replacements for host-specific state.
 
-## Commit And Push
+## Publication Handoff
 
-The routine outbound fast path already exported and verified its candidate, so
-do not call `sync.py push --confirm` after a completed export. Stage the exact
-reviewed paths and use ordinary commit/push commands through the host network
-entrypoint. Keep the local commit and remote push as separate outcomes: a
-`gh` or connector authentication failure must fall back to ordinary `git push`
-through the host connection entrypoint. Report remote publication failure only
-when `git push` itself fails, and report a commit failure only when `git commit`
-itself fails.
+Do not call `sync.py push --confirm` after a completed export—or at any other
+stage. The legacy `sync.py push` parser entry is fail-closed compatibility only:
+with or without `--confirm`, it exits nonzero before export, status inspection,
+staging, commit, or push. It directs the operator to `audit` → `export` →
+`inspect` → `personal-risk-verification` → `github:yeet` and contains no
+executable publication implementation.
 
-`sync.py push --confirm` remains a standalone all-in-one option only when no
-separate export has run and the entire worktree diff is intentionally approved;
-it exports, verifies, stages with `git add -A`, commits, and pushes. Do not use
-it when the worktree contains unrelated or unapproved changes. Before either
-push path, require all of the following:
+After final export and `personal-risk-verification: supported`, produce:
 
-1. Explicit commit and push authority, including bounded outbound-sync intent.
-2. A clean or intentionally isolated diff containing only approved profile
-   changes.
-3. Verification success after the final export.
-4. Confirmed intended remote and branch, actual repository visibility, and the
-   user's authorization to publish the isolated diff at that exposure level.
-5. For a public repository, confirmation that the isolated diff contains only
-   approved portable assets and no excluded or sensitive state.
+```yaml
+publication_handoff:
+  owner: github:yeet
+  intent: publish_to_github
+  repository:
+  worktree:
+  target_revision:
+  exact_paths: []
+  unrelated_state: []
+  intended_remote:
+  intended_base:
+  confirmed_visibility:
+  host_connection_entrypoint:
+  completion_verdict: supported
+  dependency_install_authorized: false
+```
 
-If those conditions are not all met, stop after local export and report the
-remaining external action.
+Publication intent does not authorize dependency installation. If an already
+available ordinary Git path is sufficient for the requested stage, the
+publication owner may use it. If a required helper is missing, it asks the user
+instead of installing. The cached plugin source is external and is not modified
+or promoted to a durable profile owner.
+
+The audit/local-finish route and `github:yeet` publication route are
+outcome-exclusive; choose one from the requested outcome and do not run both.
+Do not install or enable a dependency for publication or `github:yeet` unless
+that exact action is separately authorized.
+
+The handoff is ready only when the candidate is unchanged since verification,
+the exact paths are isolated, remote/base/visibility intent is known, and no
+excluded or sensitive state is present. Otherwise stop after export and report
+the missing evidence or decision.

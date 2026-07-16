@@ -19,16 +19,20 @@ Before spawning or rearming a monitoring observer, confirm:
 - checks can remain read-only with respect to the job and its outputs;
 - the `monitor` custom profile can be selected and its effective model,
   reasoning effort, and read-only sandbox are verified; and
-- the supervisor will remain responsible for judgment and any later action.
+- the main process will remain responsible for judgment while the job-owning
+  executor remains responsible for any separately authorized later action.
 
 Thread-scoped authorization permits reuse of the monitoring capability without
 another user prompt, but it does not carry a prior PID, cadence, evidence path,
 or action authority into a new job. Create a fresh contract for every job or
 phase and keep at most one observer on the same monitored job.
 
-If the configured Luna/high, read-only profile cannot be selected and verified,
-default to no watcher. Use another profile only when the contract explicitly
-names a verified fallback and its cost and reasoning implications are accepted.
+The checked portable profile is only `configured_unverified`. If the requested
+Luna/high, read-only profile cannot be selected and verified by the live spawn
+surface, record `strict_monitor_state: unavailable` and create no watcher. Do
+not make the main process poll as a fallback. Use another profile only when the
+contract explicitly names a verified fallback and its cost and reasoning
+implications are accepted.
 
 ## Monitoring Contract
 
@@ -54,8 +58,10 @@ monitoring:
     requested_model: gpt-5.6-luna
     requested_reasoning_effort: high
     selection_mechanism: custom_agent | explicit_override | runtime_choice
-    enforcement: verified
+    configuration_state: configured_unverified
+    runtime_enforcement: verified
     fallback: no_monitor
+  strict_monitor_state: available
   health_signals: []
   job_specific_thresholds: []
   fallback_thresholds: []
@@ -73,19 +79,23 @@ monitoring:
   preapproved_next_actions: []
 ```
 
-`preapproved_next_actions` lists actions the supervisor may later execute. It
-does not authorize the monitoring observer to execute them.
+`preapproved_next_actions` lists actions the main process may later authorize
+for the job-owning executor.
+Preapproval does not authorize the monitoring observer to execute them. It does
+not turn the main process into the substantive executor.
 
 ## Model And Reasoning Boundary
 
-The configured `monitor` role uses `gpt-5.6-luna` at high reasoning effort for
-bounded evidence synthesis while remaining a read-only observer. High reasoning
-does not authorize diagnosis, mutation, or a stage decision, and the parent
-agent's current profile is not the monitor's quality or cost baseline.
+The configured `monitor` file requests `gpt-5.6-luna` at high reasoning effort
+for bounded evidence synthesis while remaining a read-only observer. This is a
+requested profile, not runtime proof. High reasoning does not authorize
+diagnosis, mutation, or a stage decision, and the parent agent's current profile
+is not the monitor's quality or cost baseline.
 
 When a monitoring contract requires causal analysis that cannot be expressed as
-bounded checks, keep that analysis with the supervisor. Do not change a running
-observer's model or reasoning effort. If the work becomes diagnosis, emit
+bounded checks, hand it to a separately scoped diagnostic executor after main
+intake. Do not change a running observer's model or reasoning effort. If the
+work becomes diagnosis, emit
 `需要处理` with internal `event_type: action_needed` and hand off to a
 separately scoped diagnostic workflow.
 
@@ -192,18 +202,19 @@ job and evidence paths and return an event to the supervisor. It must not:
 - make a go/no-go, line-status, or completion decision.
 
 Do not create a durable monitoring directory by default. If the user requires a
-record, assign a separate authorized writer—normally the supervisor—to a
-specific path such as `.codex/monitoring/<job-id>/`. Keep only compact state and
-a short report, make that path an exclusive mutation, and redact secrets. A
-read-only observer does not write the record itself.
+record, the main process may write the compact authoritative control-plane
+record to a specific authorized path such as `.codex/monitoring/<job-id>/`.
+Keep only compact state and a short report, make that path an exclusive
+mutation, and redact secrets. A read-only observer does not write the record.
 
-## Supervisor Intake
+## Main-Process Intake
 
-The supervisor waits for agreed events without duplicating observer polling.
+The main process waits for agreed events without duplicating observer polling.
 On an event it checks provenance, current phase, contract thresholds, and the
 observer's evidence before deciding what happens next.
 
-The supervisor may repair, restart, terminate, or launch another stage only
-when that exact action was preapproved. Ask before an unapproved action, scope
-change, material cost change, resource change, environment change, or data-risk
-change.
+After that decision, the job-owning executor may repair, restart, terminate, or
+launch another stage only when that exact action was preapproved. The main
+process scopes and authorizes the action; it does not execute substantive job
+work. Ask before an unapproved action, scope change, material cost change,
+resource change, environment change, or data-risk change.

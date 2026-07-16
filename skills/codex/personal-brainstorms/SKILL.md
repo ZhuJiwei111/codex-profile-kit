@@ -33,17 +33,20 @@ interrogation to that skill. If both skills are explicitly invoked, keep
 brainstorming as the design coordinator and use grilling as an independent
 coverage gate over the shared decision tree.
 
-If repository facts needed for the design are unclear, perform only bounded
-inspection or use `personal-repo-intake`. Do not scan files or history by
-default when the relevant context is already known.
+If repository facts needed for the design are unclear, perform only bounded core
+inspection of the task-owned root, instructions, state, edit surface, and
+verification path. Ask when ownership remains ambiguous. Do not scan files or
+history by default when the relevant context is already known.
 
 ## Composition With Personal Grilling
 
-When both skills are invoked, brainstorming owns initial scope decomposition,
-evidence synthesis, alternatives, recommendations, component boundaries, and
-final design synthesis. `personal-grilling` independently owns coverage-tree
-construction, answer lockability, material-risk disposition, the three closure
-passes, and the explicit coverage-confirmation gate.
+When both skills are invoked, brainstorming is the sole synthesis owner. It owns
+initial scope decomposition, evidence synthesis, alternatives, recommendations,
+component boundaries, and the final bounded design. `personal-grilling`
+independently owns theme and coverage-tree construction, answer lockability,
+material-risk disposition, the three closure passes, and the explicit
+coverage-confirmation gate. Grilling returns a sourced ledger and gate status,
+never a parallel design, plan, recommendation synthesis, or ready claim.
 
 Brainstorming supplies its current design hypothesis and decision state; it
 does not certify that the state is complete. Grilling may reopen a decision
@@ -62,8 +65,9 @@ Ask one material decision at a time. After each answer, update the shared
 ledger and propagate consequences into the design instead of beginning a
 second interview. While the grilling coverage gate remains active, do not
 present the design as ready for planning. After its three closure passes and
-explicit user confirmation, return to brainstorming for synthesis, inline
-self-review, and the authorized handoff.
+explicit user confirmation, return the ledger to brainstorming for the only
+synthesis, inline self-review, and the authorized handoff. Preserve every
+locked decision, risk disposition, and accepted limitation.
 
 ## Workflow
 

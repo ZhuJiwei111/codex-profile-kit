@@ -1,4 +1,4 @@
 interface:
   display_name: "Personal Branch Finish"
-  short_description: "Finish verified Git work without losing ownership"
-  default_prompt: "Use $personal-branch-finish after a supported final-verification verdict to inspect Git and worktree provenance, isolate task-owned changes, and assess or execute only the authorized commit, PR, preservation, or handoff action."
+  short_description: "Finish verified local Git work without losing ownership"
+  default_prompt: "Use $personal-branch-finish after a supported verdict for local Git readiness, an explicit local-only commit, preservation, or handoff; route any GitHub publication flow intact to $github:yeet."

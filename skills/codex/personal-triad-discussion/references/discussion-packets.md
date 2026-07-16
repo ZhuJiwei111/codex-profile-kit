@@ -8,9 +8,9 @@ user's language, and link or cite evidence instead of copying large artifacts.
 
 - [Kickoff Brief](#kickoff-brief)
 - [Evidence Packet](#evidence-packet)
-- [Decision Checkpoint](#decision-checkpoint)
+- [Working Project Memo](#working-project-memo)
 - [Restart Brief](#restart-brief)
-- [Final Decision Synthesis](#final-decision-synthesis)
+- [Final Decision Memo](#final-decision-memo)
 
 ## Kickoff Brief
 
@@ -86,26 +86,33 @@ Never turn a worker's recommendation into the coordinator's verdict. Preserve
 exact error text, paths, versions, metrics, and commands only when they are
 decision-relevant; otherwise link to the source or provide a bounded excerpt.
 
-## Decision Checkpoint
+## Working Project Memo
 
-Create only after a material state change. A checkpoint is an in-thread recovery
-and decision aid, not proof and not execution authority.
+Update the coordinator-owned project memo after each material round or
+checkpoint. Prefer an unambiguous project decision-note convention; otherwise
+write `.triad/<topic-slug>/working.md`. This is mutable recovery state, not proof
+or execution authority.
 
 ```markdown
-## Decision Checkpoint
+## Working Decision Memo
 
 - Current question:
+- Current outcome/status:
 - Locked user decisions:
 - Verified facts and cutoff:
+- Decisive reasoning:
 - Current best-supported options:
-- Material disagreement:
-- Invalidated or rejected assumptions:
-- Unknowns that could change the decision:
-- Next targeted question or evidence task:
+- Rejected options and why:
+- Residual risks and unknowns:
+- Superseded assumptions:
+- Artifacts and paths:
+- Reopen conditions:
+- Next authority or action, if any:
 ```
 
 If an older checkpoint is wrong, create a correction that names what changed
-and why. Do not silently rewrite history or keep forwarding a known-bad premise.
+and why in the current memo. Do not keep forwarding a known-bad premise. Only the
+current Codex coordinator writes this file; external participants return evidence.
 
 ## Restart Brief
 
@@ -141,22 +148,29 @@ Use when opening a clean GPT Pro chat in the same ChatGPT Project.
 Do not replay the full transcript. Include only state needed to continue safely,
 and remind GPT Pro that Project memory may contain superseded material.
 
-## Final Decision Synthesis
+## Final Decision Memo
 
-Use when the discussion stops, even if the result is a deferral rather than a
-consensus.
+Use `.triad/<topic-slug>/decision.md` or the established project convention when
+the discussion stops, even if the result is a deferral. Curate verified state;
+do not dump the transcript.
 
 ```markdown
-## Decision Synthesis
+## Decision Memo
 
-- Outcome: selected / deferred / needs evidence / reopened
-- Selected option or remaining decision:
-- Decisive evidence and cutoff:
-- Strongest unresolved disagreement:
-- Rejected alternatives and reasons:
-- Unverified items and residual risk:
-- Next discriminator or separately authorized workflow:
+- Question:
+- Outcome/status: selected / deferred / needs evidence / reopened
+- User decisions:
+- Verified facts, sources, and evidence cutoff:
+- Decisive reasoning:
+- Rejected options and why:
+- Residual risks and unknowns:
+- Superseded assumptions:
+- Artifacts and paths:
+- Reopen conditions:
+- Next authority or action, if any:
 ```
 
-Keep the synthesis decision-focused. Use a separate explanation or planning
-workflow when the user needs a broad report or an executable plan.
+Keep the memo decision-focused. Planning may reference it but cannot rewrite it;
+closeout and documentation workflows cannot rewrite it either. A failed write
+makes persistence unsupported but does not by itself invalidate the in-thread
+decision result.

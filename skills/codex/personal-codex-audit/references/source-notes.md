@@ -37,16 +37,19 @@ state, task, or required claim materially changes.
   `~/.codex/skills/`; public documentation also identifies
   `$HOME/.agents/skills` as a user skill root.
 - `codex-profile-kit/scripts/sync.py` is the local transfer mechanism. Its
-  `push --confirm` path stages with `git add -A`, so this skill adds a clean-diff
-  authorization gate without modifying the sync script.
+  legacy `push` parser remains only for fail-closed compatibility: it exits
+  before export, status inspection, staging, commit, or push and routes the
+  supported publication workflow to `github:yeet`.
 - Current-host workflow evidence on 2026-07-14 separated routine execution cost
   from orchestration delay: the documented network path completed fetch in
   seconds, while repeated transport fallbacks, duplicated verification,
   Git-state surprises, and per-stage authorization round trips dominated
   elapsed time.
 - The user-approved directional fast path treats an explicit sync-to-GitHub or
-  sync-from-GitHub outcome as authority for its bounded ordinary chain. It
-  retains escalation gates for new assets, broad policy surfaces, conflicts,
+  sync-from-GitHub outcome as authority for its bounded ordinary chain. The
+  outbound chain ends with a verified candidate handoff to `github:yeet`, which
+  exclusively owns branch setup, commit, push, and draft pull-request creation.
+  It retains escalation gates for new assets, broad policy surfaces, conflicts,
   visibility changes, credentials, compatibility, and sensitive state.
 - The user-approved 2026-07-14 admission design keeps `.system/skill-creator`
   and `.system/skill-installer` product-owned while adding local provenance,
@@ -88,3 +91,8 @@ state, task, or required claim materially changes.
   not make memory part of the ordinary portable snapshot.
 - Whole-profile audit aggregates admission state; it does not decide or mutate
   one candidate's admission. That remains owned by `personal-skill-hygiene`.
+- Outbound publication handoffs carry
+  `dependency_install_authorized: false`. Network or proxy evidence selects a
+  path only; it does not grant publication, credential, installation, launch,
+  or verdict authority. The cached `github:yeet` source remains external and is
+  not modified by this profile skill.

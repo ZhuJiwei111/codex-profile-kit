@@ -1,19 +1,25 @@
 ---
 name: personal-branch-finish
-description: Use after a supported final-verification verdict for Git readiness, explicit commit or PR decisions, branch or worktree preservation, or repository handoff; not for verification, merge execution, or ordinary summaries.
+description: Use after a supported final-verification verdict for local Git readiness, an explicit local-only commit, branch or worktree preservation, or repository handoff; route every GitHub publication flow to github:yeet.
 ---
 
 # Personal Branch Finish
 
 Consume a fresh `personal-risk-verification: supported` verdict and decide the
-remaining repository handoff, commit, or PR readiness. Own Git and worktree
-provenance, task-change isolation, and only the finish actions authorized by
-the requested outcome.
+remaining local repository handoff, local-only commit, or preservation state.
+Own Git and worktree provenance, task-change isolation, and only the local
+finish actions authorized by the requested outcome.
 
 A clean worktree is not the goal. Preserve unrelated changes, externally owned
 workspaces, and approved detached jobs. Do not treat the words “finish” or
 “complete” as authorization to stage, commit, push, create a PR, merge, delete,
 or clean anything.
+
+The main process locks whether the request is local-only or publication and
+owns intake. A bounded branch executor may inspect, stage, and create one
+authorized local-only commit. If the requested outcome includes push, a pull
+request, or GitHub publication, branch finish performs no commit and hands the
+entire flow to `github:yeet`.
 
 ## Accept The Verification Handoff
 
@@ -37,7 +43,7 @@ depends on the worktree:
 
 ```yaml
 finish_request:
-  mode: handoff | assess_commit | commit | assess_pr | prepare_pr | create_pr | preserve
+  mode: handoff | assess_commit | commit | preserve
   authorized_actions: []
 completion_input:
   verdict: supported
@@ -47,7 +53,7 @@ completion_input:
   not_run:
   remaining_risk:
 coordination:
-  actor_role: single_owner | coordinator | worker
+  actor_role: single_owner | coordinator | executor
   task_owner:
   coordination_id:
   coordinator_decision: pending | pass | no-go | needs-more-evidence | blocked
@@ -59,8 +65,12 @@ coordination:
       integrated_oid:
 git_intent:
   destination_branch:
+publication_handoff:
+  requested: false
+  owner: github:yeet
   remote:
-  pr_base:
+  base:
+  dependency_install_authorized: false
 detached_jobs:
   - job_id:
     owner:
@@ -81,7 +91,7 @@ intake, final integration HEAD, and one provenance record per integrated line
 that current evidence provides. Omit those fields for a single-owner request
 rather than inventing coordination state. A worker recommendation such as
 `accept` is not a coordinator decision. Require `pass` before treating an
-integrated multiline result as commit- or PR-ready; another coordinator state
+integrated multiline result as local-commit-ready; another coordinator state
 may still be preserved in an accurate handoff without being promoted.
 
 Map each multiline integration record's `source_oid` to
@@ -96,8 +106,8 @@ specific Git outcome authorizes handoff only.
 ## Inspect Provenance And Ownership
 
 Read [Git readiness](references/git-readiness.md) before staging or committing,
-preparing or creating a PR, handling a linked worktree or detached HEAD, or
-reasoning about a populated index or cleanup request.
+preparing a publication handoff, handling a linked worktree or detached HEAD,
+or reasoning about a populated index or cleanup request.
 
 Determine from current-host evidence:
 
@@ -111,11 +121,12 @@ Determine from current-host evidence:
   or resources that another owner still uses.
 
 Do not infer ownership from a directory name, a clean-looking status, current
-cwd alone, or the fact that a worker produced the files. A multiline worker is
-handoff-only for Git mutations. After coordinator intake, only the coordinator
-may create a source checkpoint or integrate under an explicit integration
-grant. Later user-directed commit or PR work starts from the coordinator-owned
-integration state, not from a worker line.
+cwd alone, or the fact that a worker produced the files. A multiline
+implementation worker is handoff-only for Git mutations. After coordinator
+intake, only the assigned integration executor may create a source checkpoint
+or integrate under an explicit integration grant. Later local-only commit or
+publication work starts from the coordinator-owned integration state, not from
+a worker line.
 
 ## Issue Per-Action Readiness
 
@@ -126,7 +137,7 @@ finish_result:
   readiness:
     handoff: ready | blocked
     commit: ready | blocked | not_requested
-    pr: ready | blocked | not_requested
+    publication_handoff: ready | blocked | not_requested
   provenance:
     repo_root:
     git_common_dir:
@@ -159,8 +170,9 @@ finish_result:
   blockers can be reproduced accurately, even if a Git mutation is blocked.
 - Mark `commit` ready only when verification is current, ownership is exact,
   the index can be preserved, and a named destination exists for detached HEAD.
-- Mark `pr` ready only when commit reachability, source branch, remote, and base
-  are unambiguous and the requested outcome authorizes the external action.
+- Mark `publication_handoff` ready only when branch finish has made no local
+  commit for that publication request, the exact task-owned scope is known, and
+  the `supported` verdict can be handed to `github:yeet`.
 - Mark unrequested mutations `not_requested`; do not turn technical readiness
   into permission.
 
@@ -169,8 +181,9 @@ finish_result:
 Keep `detached_HEAD` and `detached_job` distinct:
 
 - Detached HEAD does not block handoff. Record the exact OID. Without an
-  authorized destination branch or ref, block commit and PR rather than
-  attaching, switching, or creating a branch automatically.
+  authorized destination branch or ref, block a local-only commit rather than
+  attaching, switching, or creating a branch automatically. Publication branch
+  setup remains with `github:yeet`.
 - Preserve an approved `tmux`, `nohup`, scheduler, or other detached job. Do not
   stop, restart, close, monitor, or clean its artifacts from branch finish.
 - Do not move, remove, switch, or mutate a worktree while a known job depends on
@@ -179,10 +192,10 @@ Keep `detached_HEAD` and `detached_job` distinct:
   after that state stabilizes. If it is independent, preserve it and include
   its known handoff fields without broad process discovery.
 
-For an unnamed ordinary status or ETA request, leave this specialist workflow
-and use one bounded ordinary read-only status check. Use
-`$personal-long-job-status` only after explicit skill invocation. Branch finish
-does not acquire monitoring authority.
+For an ordinary status or ETA request, leave this specialist workflow. The main
+process names the exact job and evidence surface, one read-only executor checks
+it once, and the main process reports observed evidence and uncertainty. Branch
+finish does not acquire monitoring authority.
 
 ## Execute Only The Authorized Action
 
@@ -207,26 +220,45 @@ amend, merge, branch deletion, cleanup, or inclusion of unrelated changes.
 - After commit, inspect the actual commit and remaining worktree. If hooks or
   another actor changed task state, return to final verification.
 
-### PR Assessment, Preparation, Or Creation
+### GitHub Publication Handoff
 
-Treat “assess PR readiness” and “prepare PR” as read-only; drafting local PR
-text is not creation. An explicit “create/open PR” request may authorize the
-ordinary task-owned commit, branch push, and PR creation needed for that exact
-outcome only when repository, source branch, remote, and base are unambiguous.
-Record the actions before executing them and ask one decision-changing question
-when a target is unresolved.
+Any request whose intended outcome includes push, a pull request, or GitHub
+publication belongs wholly to `github:yeet`, including branch setup, staging,
+commit, push, and draft PR creation. Branch finish must not create a preparatory
+commit first. The local-finish route and publication route are outcome-exclusive;
+choose one from the requested outcome and do not run both.
 
-Do not force-push, merge, delete a branch or worktree, rerun remote CI, reply to
-reviewers, resolve threads, or claim reviewer or CI acceptance. Preserve the
-worktree for PR iteration.
+Return this bounded handoff:
+
+```yaml
+publication_handoff:
+  owner: github:yeet
+  completion_verdict: supported
+  repository:
+  worktree:
+  target_revision:
+  exact_task_owned_paths: []
+  unrelated_state: []
+  intended_remote:
+  intended_base:
+  dependency_install_authorized: false
+```
+
+Publication intent does not authorize dependency installation. Do not install
+or enable a dependency for publication or `github:yeet` unless that exact action
+is separately authorized. If an already available ordinary Git path is
+sufficient, the publication owner may use it; if a required helper is missing,
+it must ask rather than install. Plugin cache is an external source and is not
+modified by this workflow.
 
 ## Exclude Merge And Cleanup Execution
 
 Report merge, branch-deletion, discard, worktree-removal,
 session-termination, and artifact-cleanup blockers or required ownership, but
 do not execute those operations under ordinary branch finish. Cross-line
-integration belongs to the coordinator; any destructive cleanup needs a
-separate exact, recoverable authorization.
+integration belongs to `personal-multiline-coordination` and its assigned
+integration executor; any destructive cleanup needs a separate exact,
+recoverable authorization.
 
 ## Produce The Repository Handoff
 
@@ -255,10 +287,11 @@ that did not occur.
   type promotes its own recommended outcome.
 - `personal-review-response` owns review disposition, remote CI interpretation,
   replies, and thread state.
-- `$personal-long-job-status` owns one-shot job status and ETA only after
-  explicit skill invocation. For an unnamed ordinary request, leave specialist
-  workflows and use one bounded ordinary read-only status check. Long-running
-  launch and monitoring authorization remain outside this skill.
+- Ordinary one-shot status uses the bounded executor check above. Long-running
+  launch and active-monitoring authorization remain outside this skill.
+- `github:yeet` exclusively owns an authorized GitHub publication flow,
+  including its commit. `personal-branch-finish` exclusively owns local
+  readiness, preservation, handoff, and an explicitly local-only commit.
 - `personal-project-output-explainer` may decode an existing completion verdict
   or repository handoff only when the user explicitly expresses a comprehension
   need. It does not own ordinary status, summary, report, completion, or

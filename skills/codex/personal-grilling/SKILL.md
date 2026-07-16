@@ -1,159 +1,158 @@
 ---
 name: personal-grilling
-description: Manual only. Use $personal-grilling to pressure-test a plan or design through coverage, consistency, and adversarial closure, asking one material decision at a time and blocking handoff until every material branch and residual risk is explicitly dispositioned.
+description: Manual only. Use $personal-grilling to pressure-test a plan or design one theme at a time, opening each theme with one neutral open question before narrowing decisions, with no timeout and with coverage, consistency, adversarial, risk, and explicit-confirmation closure.
 ---
 
 # Personal Grilling
 
 Run a coverage-first requirements interrogation before consequential planning or
-implementation. Optimize for a sourced, internally consistent, adversarially
-tested decision state—not the fewest questions. Be rigorous and direct without
-becoming hostile or theatrical.
+implementation. Optimize for a sourced, consistent, adversarially tested state,
+not the fewest questions. Be rigorous without becoming hostile or theatrical.
 
 ## Contract
 
 - Run only after explicit invocation. Keep implicit invocation disabled.
-- Treat the proposed solution as a hypothesis. Test the problem framing,
-  necessity, smaller alternatives, hidden coupling, second-order effects, and
-  failure conditions.
+- Treat the proposed solution as a hypothesis. Test problem framing, necessity,
+  smaller alternatives, hidden coupling, second-order effects, and failure.
 - Separate facts from decisions. Investigate discoverable facts; put every
   material user-owned decision to the user and wait.
-- Ask exactly one material decision per user turn. Set no session question cap.
+- Work on one material theme at a time. Open each new theme with exactly one
+  neutral, open-ended question before recommendations or options.
+- After the opening answer, ask exactly one material decision per user turn. Set
+  no session question cap.
+- Questions have no timeout and never auto-resolve. Silence, elapsed time, a UI
+  expiry, or a tool default is not an answer. Wait until the user answers,
+  explicitly defers, pauses, or stops.
 - Do not edit, launch, or implement while the gate is active. Bounded,
   decision-relevant read-only evidence collection remains allowed.
-- Keep the ledger in the conversation by default. Do not create persistent
-  state merely because grilling is long.
+- Keep the ledger in the conversation unless another workflow explicitly owns
+  persistence.
 
 A decision is material when it can change the goal, scope, behavior,
-architecture, state or data contract, dependencies, safety, compatibility,
-cost, resources, operations, rollback, acceptance, or likely rework. Only a
+architecture, data or state, dependencies, safety, compatibility, cost,
+resources, operations, rollback, acceptance, or likely rework. Only a
 non-material, low-risk, reversible detail may become an assumption.
 
-## Build Coverage Before Filtering
+## Build Themes And Coverage
 
 Before the first question, read
-[coverage-model.md](references/coverage-model.md). Build a tree from its
-universal core, every applicable task-type pack, observed evidence, dependency
-edges, user answers, and risks.
+[coverage-model.md](references/coverage-model.md). Build themes and leaves from
+its universal core, every applicable task pack, observed evidence, dependencies,
+user answers, and risks.
 
-Account for every core dimension before deciding what to ask. Close leaves with
+Account for every core dimension before filtering questions. Close leaves with
 sufficient evidence, inherited constraints, a safe assumption, explicit user
-deferral, or a justified `not-applicable` result. Only unresolved material
-user-owned leaves become questions. Every leaf must retain status, provenance,
-dependencies, consequence, and any material risk disposition.
+deferral, or justified `not-applicable`. Only unresolved material user-owned
+leaves become questions. Every theme and leaf retains status; every leaf also
+retains provenance, dependencies, consequence, and material risk disposition.
 
 ## Investigate Decision-Changing Facts
 
 At the start and between themes, inspect scoped code, config, tests, docs,
-necessary Git history, runtime facts, or authoritative external sources when
-the result can change a branch or recommendation.
+necessary Git history, runtime facts, or authoritative sources when the result
+can change a branch or recommendation.
 
 - Distinguish `observed`, `inference`, and `unknown`.
-- Reuse a deterministic source or tool failure until a material precondition
-  changes.
-- Do not enumerate unrelated repositories, tasks, sessions, memories, hosts,
-  or credentials, and never expose secret values.
+- Reuse a deterministic source or failure until a material precondition changes.
+- Do not enumerate unrelated repositories, tasks, sessions, memories, hosts, or
+  credentials, and never expose secret values.
 - Stop when more evidence would no longer change a decision, risk, or acceptance
   criterion.
 
-## One-Decision Loop
+## Open-Then-Narrow Theme Loop
 
-1. Select the unresolved material leaf with the highest dependency or rework
-   impact.
-2. State why it matters and the minimum lockable answer.
-3. Offer a recommended default or two or three real alternatives with their
-   material tradeoff.
-4. Ask only that decision and wait.
-5. Lock only the answered leaf. Use
-   [answer-discipline.md](references/answer-discipline.md) for an unlockable
-   answer.
-6. Propagate the choice through dependencies, consequences, risks, acceptance,
-   and task packs. Open or reopen newly material leaves.
-7. Report a concise delta: what locked, what branch appeared, and why the next
-   question now has priority.
+1. Select the unresolved material theme with the highest safety, dependency, or
+   rework impact.
+2. If it is unopened, state why it matters and ask one neutral open-ended
+   question. Do not include a recommendation, default, menu, or proposed answer.
+3. Wait without a timeout. Classify the answer, discover its leaves, and inspect
+   decision-changing facts.
+4. For each remaining material user-owned leaf, state the minimum lockable
+   answer. Only after the open answer may you offer a recommendation or two or
+   three real alternatives with material tradeoffs.
+5. Ask only that decision and wait without auto-resolution.
+6. Lock only the answered leaf. Use
+   [answer-discipline.md](references/answer-discipline.md) when it is not
+   lockable.
+7. Propagate the answer through dependencies, risks, acceptance, and task packs;
+   open or reopen newly material leaves.
+8. Report a concise delta: what locked, what appeared, whether the theme can
+   close, and why the next question has priority.
 
-An unambiguous `1`, `yes`, or “use the recommendation” resolves the exact
-choice without requiring a fabricated rationale. It does not close the entire
-theme. New evidence or a concern reopens only affected leaves and invalidates
-only closure evidence that depended on them.
+An unambiguous `1`, `yes`, or “use the recommendation” resolves the presented
+choice without a fabricated rationale. It does not close the entire theme.
+Close a theme only after its material leaves and consequences are dispositioned.
+New evidence reopens only affected leaves and dependent closure evidence.
 
 ## Assumptions, Deferral, And Risks
 
 - A material item may be deferred only through an explicit user choice.
-- `not-applicable` requires evidence that the dimension cannot affect this
-  delivery slice.
+- `not-applicable` requires evidence that the dimension cannot affect this slice.
 - An assumption must be non-material, low-risk, reversible, small in blast
   radius, and unable to alter material acceptance.
 - Every material residual risk requires `avoid`, `mitigate`, `accept`, or
-  `defer`. Merely recording a risk is not acceptance.
+  `defer`. Recording a risk is not acceptance.
 
 ## Composition With Personal Brainstorms
 
-When both skills are invoked, brainstorming owns initial decomposition,
-alternatives, component boundaries, and final synthesis. Grilling independently
-audits coverage and may reopen weak, contradictory, or missing decisions.
+When both skills are invoked, brainstorming is the sole design-synthesis owner.
+Grilling independently opens themes, audits coverage, and may reopen weak,
+contradictory, or missing decisions. It does not emit a parallel design, plan,
+recommendation synthesis, or ready claim.
 
 Reuse sufficient evidence, but do not assume brainstorming's selective
-clarification found every material branch. Brainstorming must not filter out a
-material branch merely because its solo workflow would stay light. After
-explicit coverage confirmation, return the sourced ledger for synthesis and
-the authorized handoff.
+clarification found every branch. After explicit coverage confirmation, return
+only the sourced ledger and gate status to brainstorming for synthesis and the
+authorized handoff.
 
 ## Three-Pass Closure
 
-Do not infer completion from `blocking == 0`. After the last material answer:
+Do not infer completion from `blocking == 0`. After the last material answer,
+run these passes in order:
 
-- **Coverage pass:** every universal dimension, applicable pack, derived
-  branch, and material risk has a justified status, provenance, and consequence.
-- **Consistency pass:** decisions, evidence, dependencies, scope, constraints,
-  and acceptance agree; late choices have propagated.
-- **Adversarial pass:** challenge problem framing, failure and recovery,
-  security, compatibility and migration, operations, ownership, second-order
-  effects, rollback, and whether acceptance evidence can actually prove the
-  outcome.
+1. **Coverage pass:** every universal dimension, applicable pack, derived branch,
+   theme, and material risk has justified status, provenance, and consequence.
+2. **Consistency pass:** decisions, evidence, dependencies, scope, constraints,
+   and acceptance agree; late choices have propagated.
+3. **Adversarial pass:** challenge framing, failure and recovery, security,
+   compatibility, migration, operations, ownership, second-order effects,
+   rollback, and whether acceptance can prove the outcome.
 
-Any material gap resumes the one-decision loop. Do not bundle newly discovered
-decisions into a final questionnaire.
+Any material gap resumes the open-then-narrow loop at the affected theme. Do not
+bundle newly discovered decisions into a final questionnaire.
 
 ## Explicit Coverage Confirmation
 
-After all three passes succeed, show a complete but proportionate ledger:
-retain every material leaf while grouping evidence-backed non-material or
+After all three passes succeed, show a complete but proportionate ledger. Retain
+every material leaf while grouping evidence-backed non-material or
 not-applicable details by dimension. Include assumptions, deferrals,
 not-applicable reasons, risk dispositions, and accepted method limitations.
-Ask the user to confirm coverage completeness.
+Ask the user to confirm coverage completeness, and wait without a timeout.
 
-Explicit coverage confirmation is required even after preauthorization. It
-confirms requirements, not implementation authority. After confirmation,
-preserve any original same-scope authorization instead of asking again. A new
-material concern reopens affected leaves and the relevant closure evidence.
+Confirmation is required even after preauthorization. It confirms requirements,
+not implementation authority. Preserve original same-scope authorization after
+confirmation. A new material concern reopens affected leaves and closure
+evidence.
 
 ## Stop And Handoff
 
-While the gate is active, do not present an implementation plan, execution
-checklist, or ready claim. If the user stops early, return an **incomplete
-requirements brief** with locked decisions, evidence, assumptions, deferrals,
-risk dispositions, and blockers.
+While the gate is active, do not present an implementation plan, checklist, or
+ready claim. If the user stops, return an incomplete requirements ledger with
+locked decisions, evidence, assumptions, deferrals, risks, and blockers.
 
-After confirmation, return the ledger to `personal-brainstorms` when paired;
-otherwise enter a downstream workflow only when the original request authorized
-it. Stop after the brief when no downstream work was requested.
+After confirmation, return the ledger to `personal-brainstorms` when paired. If
+grilling ran alone, return a requirements ledger rather than synthesizing a
+design; route a requested design synthesis to brainstorming. Enter another
+workflow only when the original request authorized it.
 
-Use Chinese by default. A compact brief should cover:
-
-- **目标、问题、用户与责任人**
-- **当前证据**
-- **范围、非目标、行为、状态与接口**
-- **约束、兼容、运维与验收**
-- **关键决定及来源**
-- **默认、假设、延期与不适用项**
-- **风险、处置与未决问题**
+Use Chinese by default. A compact ledger should cover goal and owners, evidence,
+scope and behavior, state and interfaces, constraints and acceptance, decisions
+and sources, assumptions and deferrals, risks, and unresolved items.
 
 ## Resources
 
-- Read [coverage-model.md](references/coverage-model.md) before constructing the
-  tree and when a new task type appears.
-- Read [answer-discipline.md](references/answer-discipline.md) when an answer or
-  closure status is not lockable.
-- Read [source-notes.md](references/source-notes.md) only for provenance or
-  maintenance.
+- [coverage-model.md](references/coverage-model.md): theme and leaf discovery,
+  task packs, ordering, and closure passes.
+- [answer-discipline.md](references/answer-discipline.md): open-first and lockable
+  answer rules.
+- [source-notes.md](references/source-notes.md): provenance and local decisions.

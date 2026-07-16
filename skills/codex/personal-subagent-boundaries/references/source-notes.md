@@ -68,8 +68,9 @@ revision retains the useful contract in a progressive-disclosure reference.
 - Give each worker a focused, self-contained objective, scope, constraints,
   stop condition, and evidence-bearing report.
 - Use raw artifacts and minimal context for independent review.
-- Require changed paths, verification evidence, concerns, and a recommended
-  outcome from workers.
+- Require changed paths, verification evidence, concerns, and an optional
+  recommended outcome from executors; reviewers and monitors return evidence
+  and uncertainty without a disposition or verdict.
 - Keep integration and authoritative coordination decisions with the
   coordinator.
 - Use current Codex custom-agent profiles for roles with stable model,
@@ -83,6 +84,8 @@ revision retains the useful contract in a progressive-disclosure reference.
   generated artifacts and indirect side effects.
 - Separate worker execution status and `recommended_outcome` from coordinator
   states such as `pass` and `no-go`.
+- Separate main-process control-plane ownership from executor work, reviewer
+  evidence, and monitor observation; role count is not an evidence substitute.
 - Use custom `monitor` and `reviewer` profiles without treating the parent
   agent's current model or reasoning effort as a baseline.
 - Keep the portable parent config model- and effort-neutral while making the
@@ -125,11 +128,12 @@ revision retains the useful contract in a progressive-disclosure reference.
 - The supervisor estimates runtime and owns the cadence rationale. Numerical
   ranges are non-binding sanity checks, and user-visible event reports use
   Chinese names while optional machine-readable event types remain stable.
-- The local `monitor` profile is pinned to user-selected `gpt-5.6-luna` with
-  high reasoning. Parser acceptance is local evidence; effective model
-  selection remains product-confirmed at spawn time.
-- If the configured monitoring profile cannot be enforced, the default fallback
-  is no watcher rather than silently inheriting an unknown parent profile.
+- The local `monitor` profile requests user-selected `gpt-5.6-luna` with high
+  reasoning. Parser acceptance is `configured_unverified`, not evidence of the
+  effective role, model, effort, or sandbox at spawn time.
+- If the monitoring profile cannot be enforced and verified at runtime, strict
+  monitoring is unavailable. The default is no watcher, not recurring main-
+  process checks or silent inheritance of an unknown parent profile.
 - Explorer, worker, validator, and diagnostic model choices remain
   task-dependent.
 - Persistent worktree and line state belongs to

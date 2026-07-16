@@ -50,17 +50,19 @@ class DirectDownloadGuardTest(unittest.TestCase):
             check=True,
         )
 
-    def assert_denied(self, result: subprocess.CompletedProcess[str]) -> None:
+    def assert_warned(self, result: subprocess.CompletedProcess[str]) -> dict[str, object]:
+        self.assertNotEqual(result.stdout, "", "expected one warning JSON object")
         value = json.loads(result.stdout)
         output = value["hookSpecificOutput"]
         self.assertEqual(output["hookEventName"], "PreToolUse")
-        self.assertEqual(output["permissionDecision"], "deny")
-        self.assertTrue(output["permissionDecisionReason"])
+        self.assertNotIn("permissionDecision", output)
+        self.assertTrue(output["additionalContext"])
+        return output
 
-    def test_blocks_large_download_with_inherited_proxy(self) -> None:
+    def test_warns_for_large_download_with_inherited_proxy(self) -> None:
         result = self.invoke("wget https://example.test/models/model.bin -O models/model.bin")
 
-        self.assert_denied(result)
+        self.assert_warned(result)
 
     def test_direct_env_wrapper_allows_download(self) -> None:
         unset_flags = " ".join(f"-u {name}" for name in PROXY_VARS)
@@ -70,12 +72,12 @@ class DirectDownloadGuardTest(unittest.TestCase):
 
         self.assertEqual(result.stdout, "")
 
-    def test_proxy_off_wrapper_allows_download(self) -> None:
+    def test_proxy_off_text_is_not_a_portable_direct_path_bypass(self) -> None:
         result = self.invoke(
             "proxy_off wget https://example.test/models/model.bin -O models/model.bin"
         )
 
-        self.assertEqual(result.stdout, "")
+        self.assert_warned(result)
 
     def test_unrelated_env_wrapper_does_not_allow_later_download(self) -> None:
         unset_flags = " ".join(f"-u {name}" for name in PROXY_VARS)
@@ -84,7 +86,7 @@ class DirectDownloadGuardTest(unittest.TestCase):
             "wget https://example.test/models/model.bin -O models/model.bin"
         )
 
-        self.assert_denied(result)
+        self.assert_warned(result)
 
     def test_unexecuted_unset_does_not_allow_later_download(self) -> None:
         unset_vars = " ".join(PROXY_VARS)
@@ -93,32 +95,32 @@ class DirectDownloadGuardTest(unittest.TestCase):
             "wget https://example.test/models/model.bin -O models/model.bin"
         )
 
-        self.assert_denied(result)
+        self.assert_warned(result)
 
     def test_proxy_off_for_other_command_does_not_allow_later_download(self) -> None:
         result = self.invoke(
             "proxy_off true; wget https://example.test/models/model.bin -O models/model.bin"
         )
 
-        self.assert_denied(result)
+        self.assert_warned(result)
 
-    def test_approved_proxy_marker_allows_download(self) -> None:
+    def test_self_declared_proxy_marker_is_not_authorization(self) -> None:
         result = self.invoke(
             "CODEX_APPROVED_PROXY_DOWNLOAD=1 "
             "wget https://example.test/models/model.bin -O models/model.bin"
         )
 
-        self.assertEqual(result.stdout, "")
+        self.assert_warned(result)
 
     def test_aws_listing_is_not_treated_as_transfer(self) -> None:
         result = self.invoke("aws s3 ls s3://example/models/")
 
         self.assertEqual(result.stdout, "")
 
-    def test_aws_copy_of_large_artifact_is_blocked(self) -> None:
+    def test_aws_copy_of_large_artifact_warns(self) -> None:
         result = self.invoke("aws s3 cp s3://example/model.bin models/model.bin")
 
-        self.assert_denied(result)
+        self.assert_warned(result)
 
     def test_package_install_is_not_a_hard_download_guard(self) -> None:
         result = self.invoke("pip install -r requirements.txt")

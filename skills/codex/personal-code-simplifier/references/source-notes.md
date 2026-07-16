@@ -85,7 +85,8 @@ pinned source is design evidence, not a runtime dependency.
 - `personal-review-response` owns review feedback disposition and local
   implementation authorization.
 - `personal-evidence-debugging` owns unexplained failures.
-- `personal-repo-intake` owns uncertain repository and generated-source facts.
+- Uncertain repository and generated-source facts stop at bounded inspection
+  and the smallest decision-changing question.
 - `personal-temporary-work` owns approved one-off helpers and codemods.
 - `personal-risk-verification` owns final completion evidence.
 - `personal-branch-finish` owns Git readiness and handoff.

@@ -158,13 +158,14 @@ mathematical equivalence from tests alone.
   comparison.
 - `personal-evidence-debugging` owns unexpected, flaky, hanging, or
   wrong-reason failures.
-- `personal-repo-intake` owns genuinely unclear root, worktree, overlap,
-  generated ownership, edit surface, or verification facts.
+- When root, worktree, overlap, generated ownership, edit surface, or
+  verification facts remain unclear after bounded inspection, narrow the
+  transformation or ask the smallest decision-changing question.
 - `personal-brainstorms` owns consequential design choices and requests that
   permit behavior change.
-- `personal-docs-sync-light` owns identified documentation contract drift, but
-  a required user-facing contract change first exits this behavior-preserving
-  workflow.
+- `personal-code-documentation` in `sync_existing` mode owns identified
+  documentation contract drift, but a required user-facing contract change
+  first exits this behavior-preserving workflow.
 - `personal-temporary-work` owns any approved one-off codemod or helper; this
   skill still owns the source cleanup contract.
 - `personal-risk-verification` is the single final completion gate.

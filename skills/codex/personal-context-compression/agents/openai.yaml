@@ -1,4 +1,0 @@
-interface:
-  display_name: "Personal Context Compression"
-  short_description: "Create verified continuation summaries"
-  default_prompt: "Use $personal-context-compression to create a compact, self-contained continuation summary with verified evidence, redacted secrets, and explicit next actions."

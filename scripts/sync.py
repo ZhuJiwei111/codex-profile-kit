@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit, export, verify, push, and apply a portable Codex profile kit."""
+"""Audit, export, verify, and apply a portable Codex profile kit."""
 
 from __future__ import annotations
 
@@ -101,9 +101,147 @@ ALLOWED_AGENT_SANDBOX_MODES = {
     "workspace-write",
     "danger-full-access",
 }
+
+
+@dataclass(frozen=True)
+class RetiredCodexSkill:
+    """Reviewed retirement policy for one historical Codex skill identity."""
+
+    hash_algorithm: str
+    digests: tuple[str, ...]
+    replacement: str
+    replacement_skills: tuple[str, ...] = ()
+    active_contract_markers: tuple[str, ...] = ()
+    replacement_contract_markers: tuple[str, ...] = ()
+    replacement_provenance_markers: tuple[str, ...] = ()
+
+
+RETIRED_CODEX_SKILLS = {
+    "context-save-restore": RetiredCodexSkill(
+        hash_algorithm="sha256-path-content-v1",
+        digests=(
+            "79a94c43f613d8c8fd8fb078b3fcb87aaaf4de6c1b6b0c9d357ad5a8323b429b",
+        ),
+        replacement=(
+            "current-host exact-task bounded reads; use "
+            "personal-planning-with-files-zh only for explicit durable state"
+        ),
+        replacement_skills=("personal-planning-with-files-zh",),
+        active_contract_markers=(
+            "for continuation on the current host",
+            "exact task id",
+            "bounded evidence request",
+        ),
+    ),
+    "personal-context-compression": RetiredCodexSkill(
+        hash_algorithm="sha256-path-content-v1",
+        digests=(
+            "d97d4095802982300cd7a4f102a3094208d7654a5a71bfb86074a7fd86f2b3c7",
+            "3444c65483bf122b70440741b7c113f42b249dc6dca2affb402da0c3d6cfb5cc",
+        ),
+        replacement=(
+            "ordinary compact handoff; use exact-task reads, "
+            "personal-planning-with-files-zh, or a Triad memo only when applicable"
+        ),
+        replacement_skills=(
+            "personal-planning-with-files-zh",
+            "personal-triad-discussion",
+        ),
+        active_contract_markers=(
+            "keep context bounded",
+            "handoffs",
+            "state evidence boundaries",
+        ),
+    ),
+    "personal-context-optimization": RetiredCodexSkill(
+        hash_algorithm="sha256-path-content-v1",
+        digests=(
+            "060a7de6a56d0be89f24ad8beb0037e9f552637f9917285e646e2c4ed85f2010",
+            "1e19d268044d4d95695385c8e73076474ed717a17093fd4de94ed12cf494f92d",
+        ),
+        replacement="AGENTS targeted retrieval plus a bounded evidence executor",
+        replacement_skills=("personal-subagent-boundaries",),
+        active_contract_markers=(
+            "keep context bounded",
+            "prefer targeted inspection",
+            "bounded evidence request",
+        ),
+        replacement_contract_markers=("bounded substantive read",),
+    ),
+    "personal-context-save-restore": RetiredCodexSkill(
+        hash_algorithm="sha256-path-content-v1",
+        digests=(
+            "6ea5c7b02b56863ef1b570c5f0c5a623559388f10f3414a2af6f606b354fb420",
+            "a5ec4a2e6adcb614247cb5193c2328637483e44803ccb28eb89005e640c285cb",
+        ),
+        replacement=(
+            "current-host exact-task bounded reads; use "
+            "personal-planning-with-files-zh only for explicit durable state"
+        ),
+        replacement_skills=("personal-planning-with-files-zh",),
+        active_contract_markers=(
+            "for continuation on the current host",
+            "exact task id",
+            "bounded evidence request",
+        ),
+    ),
+    "personal-docs-sync-light": RetiredCodexSkill(
+        hash_algorithm="sha256-path-content-v1",
+        digests=(
+            "36c32775022ea3590690ea533ed798f2732a9953f3bd12df4c0216341f58ea70",
+            "d724aa2b0afdff7f4cb5f2a671a64328c9fcca1ec18011dde395ef0a0c54d9ea",
+            "52089bce134700c1a4d891afeca4e282b39bcdf642ab177e5650bae6da6bb430",
+        ),
+        replacement="personal-code-documentation mode sync_existing",
+        replacement_skills=("personal-code-documentation",),
+        replacement_contract_markers=(
+            "sync_existing",
+        ),
+        replacement_provenance_markers=(
+            "personal-docs-sync-light",
+            "36c32775022ea3590690ea533ed798f2732a9953f3bd12df4c0216341f58ea70",
+            "d724aa2b0afdff7f4cb5f2a671a64328c9fcca1ec18011dde395ef0a0c54d9ea",
+            "52089bce134700c1a4d891afeca4e282b39bcdf642ab177e5650bae6da6bb430",
+        ),
+    ),
+    "personal-long-job-status": RetiredCodexSkill(
+        hash_algorithm="sha256-path-content-v1",
+        digests=(
+            "ce9c278b5c6967ee94d10024917a0cd5cf90943c65c28bb1a5be3bc8ab315f8a",
+            "7e1dd49c8defb5bc4f33b61e259176e38e372f4c584865b12af9ea37fa0859d8",
+        ),
+        replacement=(
+            "ordinary bounded one-shot status; active monitoring uses "
+            "personal-subagent-boundaries/references/monitoring.md"
+        ),
+        replacement_skills=("personal-subagent-boundaries",),
+        active_contract_markers=(
+            "ordinary status or eta request is one bounded read-only one-shot check",
+            "active monitoring requires explicit observation authority",
+        ),
+        replacement_contract_markers=(
+            "active monitoring",
+            "references/monitoring.md",
+        ),
+    ),
+    "personal-repo-intake": RetiredCodexSkill(
+        hash_algorithm="sha256-path-content-v1",
+        digests=(
+            "84ec07eb713d208c98ab5497f4a5a4741a724a59b208f4acf406dc4fa05c6809",
+            "944b137f2733088ff2aa17ea35740afe19dad3538d9a3cc4505bc714461c3153",
+            "9fd34a5f80de9c3994ecaa455993c4e4f92f7bb15f7a0a2712865e25ba03a298",
+        ),
+        replacement="AGENTS bounded repository preflight",
+        active_contract_markers=(
+            "before broad repository edits",
+            "dirty state",
+            "verification path",
+        ),
+    ),
+}
+
 RENAMED_CODEX_SKILLS = {
     "hookify-writing-rules": "personal-codex-hook-rules",
-    "context-save-restore": "personal-context-save-restore",
     "code-simplifier": "personal-code-simplifier",
     "code-documentation": "personal-code-documentation",
 }
@@ -134,7 +272,46 @@ RETIRED_HOOK_TARGETS = (
     ".codex/hookify/warn-my-concern-discussion-mode.md",
     ".codex/hookify/warn-project-output-explainer-style-on-stop.md",
     ".codex/hookify/warn-useful-next-steps-on-stop.md",
+    ".codex/hookify/warn-gpu-task-without-device-scope.md",
+    ".codex/hookify/warn-long-running-direct-launch.md",
+    ".codex/hookify/warn-long-running-monitoring.md",
+    ".codex/hookify/warn-package-manager-install.md",
+    ".codex/hookify/warn-sensitive-file-edits.md",
+    ".codex/hookify/warn-sensitive-path-command.md",
 )
+# Reviewed from Git revision 24b4ef88e6545b018c94bb18b3bf260ed87bdcca.
+REVIEWED_RETIRED_HOOK_TARGET_SHA256 = {
+    ".codex/hookify/warn-gpu-task-without-device-scope.md": (
+        "866364be7890d90faf08533c2e9e40fc9074bf9905980ea972fec1b2c8587438"
+    ),
+    ".codex/hookify/warn-long-running-direct-launch.md": (
+        "ce09d5abef36adb88f84e8b2a5f3c742b31889f48f7e28f8e20b4b46e9c5a1c0"
+    ),
+    ".codex/hookify/warn-long-running-monitoring.md": (
+        "6e159a09e3efcc899431f18abff11217f6b03ff5b3f0f1f9d338ac0d5072c8e1"
+    ),
+    ".codex/hookify/warn-package-manager-install.md": (
+        "56023e289b942e979497b8ee55f081968082bbe8ff5acf5fbd4a79a27f5cbb66"
+    ),
+    ".codex/hookify/warn-sensitive-file-edits.md": (
+        "5e3d5e228106f51174f2cb4633c6809ae20cc29510d4c80be3d82ce142ffdcb8"
+    ),
+    ".codex/hookify/warn-sensitive-path-command.md": (
+        "b7cf3fd950692784ec773f6e780eac9e4dce9648559bce247218c67ba8b2b726"
+    ),
+}
+REVIEWED_HOOK_SNAPSHOT_SHA256 = {
+    "hooks/rules/README.md": "4642a0f45229b8edb18b8b01710c3091b664a7d94f2c47ead48d5fc7ac541929",
+    "hooks/rules/block-base-conda-install.md": "590c70f67a75443791e9039f0537478586e630b6fbe863f2e9116c3636f19309",
+    "hooks/rules/block-sensitive-file-edits.md": "653e4e0331261cd30c48cf0312cbd6db269b35adfdd6fa778ba49eea50a201eb",
+    "hooks/rules/block-sensitive-path-command.md": "58b413968c5842065c817557724f38e2dd55ea95b1d2f0720bc53f96d848bd87",
+    "hooks/scripts/direct_download_guard.py": "1c3799338a241ad0cc48563e08688bc9f4668b8f17d157e24a48330982f819db",
+    "hooks/scripts/hookify_codex_runner.py": "615ebcad5ff5c68096a34eaaae15857d12e70aee1a313a1c2f9aab8bbcb85275",
+    "hooks/scripts/test_direct_download_guard.py": "e98a6bd8ac39830b33cac97384a79028ce95c08dc8a3566f976deb28534d052f",
+    "hooks/scripts/test_hookify_codex_runner.py": "4e1b953f415742f0610ef4714d5852aa6160701fa17449584cc8e78735c11188",
+    "hooks/scripts/test_hooks_configuration.py": "3708f3d3ba3e86a4ba299eaf15d3e75907369736b90330ba9bcf0d49112f82cc",
+    "templates/hooks.json.template": "f1834239a0ecc009f6da652d645ebc0505186f33c346676f6dfc23269e23995f",
+}
 
 
 HOST_LOCAL_TEMPLATE = """# Host Local Overlay Template
@@ -212,6 +389,107 @@ secrets in it.
 
 - Control-plane owner:
 - Contract file to read before changing transport, proxy, launcher, or app-server startup:
+"""
+
+
+REMOTE_CONNECTION_EXAMPLE = """# Remote Connection Contract — Portable Example
+
+This is a reviewed, static, manual-only schema. Copy it outside the profile
+repository before filling it. Never commit host values or credential material.
+Unresolved placeholders are not executable. Profile export regenerates this
+example from `scripts/sync.py`; export, audit, verify, and apply never read,
+copy, create, overwrite, back up, or delete the active connection contract.
+
+## Scope And Ownership
+
+- Scope: current execution host only
+- Control-plane owner: `{{CONTROL_PLANE_OWNER_ROLE}}`
+- Runtime owner: `{{RUNTIME_OWNER_ROLE}}`
+- Change authority: `{{EXPLICIT_USER_CONTROLLED_WORKFLOW}}`
+- Active contract location: `{{HOST_LOCAL_CONTRACT_LOCATION}}`
+- Required access mode: `{{RESTRICTIVE_LOCAL_ACCESS_MODE}}`
+
+Record ownership boundaries before any transport, proxy, launcher, or
+app-server change. A portable profile snapshot must not replace an externally
+managed connection contract.
+
+## Stable Entrypoints
+
+- Codex launcher: `{{CODEX_ENTRYPOINT}}`
+- Transport entrypoint: `{{TRANSPORT_ENTRYPOINT}}`
+- Proxy or direct wrapper: `{{NETWORK_WRAPPER_OR_NONE}}`
+- App-server startup owner: `{{APP_SERVER_STARTUP_OWNER}}`
+- Managed runtime category: `{{RUNTIME_CATEGORY}}`
+- Repository work-root category: `{{WORK_ROOT_CATEGORY}}`
+
+Entrypoints must describe user-invoked interfaces, not embedded credentials or
+an assumed shell mutation.
+
+## Network Routes
+
+| Route | Purpose | Endpoint category | Authentication category | Direct/proxy policy | Owner |
+| --- | --- | --- | --- | --- | --- |
+| `{{ROUTE_ID}}` | `{{PURPOSE}}` | `{{ENDPOINT_CATEGORY}}` | `{{AUTH_CATEGORY}}` | `{{ROUTE_POLICY}}` | `{{OWNER_ROLE}}` |
+
+- Small direct-access preflight: `{{LOW_TRAFFIC_PREFLIGHT}}`
+- Escalation entrypoint after a direct failure: `{{USER_CONTROLLED_FALLBACK}}`
+- Revocation or disable path: `{{REVOCATION_WORKFLOW}}`
+
+Store only route categories and reviewed entrypoints here. Keep tokens,
+passwords, cookies, keys, authenticated URLs, and secret environment values in
+their dedicated credential mechanisms.
+
+## Health Verification
+
+- Low-risk connectivity check: `{{CONNECTIVITY_CHECK}}`
+- Launcher or service status check: `{{STATUS_CHECK}}`
+- Expected healthy signal: `{{HEALTHY_SIGNAL}}`
+- Expected failure classification: `{{FAILURE_CLASSIFICATION}}`
+- Maximum bounded check duration: `{{CHECK_DURATION}}`
+
+Verification must be non-destructive and small enough to distinguish transport,
+authentication, proxy, launcher, and service failures without exposing secret
+values.
+
+## Logs And Diagnosis
+
+- Primary log category or location: `{{PRIMARY_LOG_REFERENCE}}`
+- Secondary diagnostic source: `{{SECONDARY_DIAGNOSTIC_REFERENCE}}`
+- Redaction boundary: `{{REDACTION_RULE}}`
+- Bounded inspection command: `{{BOUNDED_LOG_CHECK}}`
+- Dynamic facts to re-check: `{{DYNAMIC_FACTS}}`
+
+Do not copy whole logs into durable profile artifacts. Record only the evidence
+needed to locate and classify a failure.
+
+## Recovery And Rollback
+
+- Last-known-good reference: `{{LAST_KNOWN_GOOD_REFERENCE}}`
+- Backup location category: `{{BACKUP_LOCATION_CATEGORY}}`
+- Rollback owner: `{{ROLLBACK_OWNER_ROLE}}`
+- Stop condition: `{{STOP_CONDITION}}`
+- Restore sequence: `{{RESTORE_SEQUENCE}}`
+- Post-restore verification: `{{POST_RESTORE_CHECK}}`
+
+Rollback must preserve the external control-plane owner's contract and stop for
+new authority when recovery would touch credentials, broaden access, or replace
+an unowned launcher or service.
+
+## Known Limitations
+
+- Unsupported route or environment: `{{UNSUPPORTED_CASE}}`
+- External dependency: `{{EXTERNAL_DEPENDENCY}}`
+- User action required: `{{USER_ACTION}}`
+- Evidence gap: `{{UNVERIFIED_ASSUMPTION}}`
+
+## Verification Record
+
+- Last verified: `{{DATE_AND_TIME_ZONE}}`
+- Runtime or client version category: `{{VERSION_REFERENCE}}`
+- Verified by: `{{VERIFIER_ROLE}}`
+- Evidence boundary: `{{WHAT_WAS_AND_WAS_NOT_TESTED}}`
+- Re-check trigger: `{{CHANGE_OR_EXPIRY_TRIGGER}}`
+- Re-check command: `{{LOW_RISK_RECHECK}}`
 """
 
 
@@ -464,6 +742,8 @@ def sanitize_skill(skill_file: Path) -> None:
 
 
 def is_portable_codex_skill(name: str) -> bool:
+    if name in RETIRED_CODEX_SKILLS:
+        return False
     return name.startswith("personal-") or name in PORTABLE_CODEX_SKILL_NAMES
 
 
@@ -1089,9 +1369,10 @@ def clear_managed_snapshot(root: Path) -> None:
 
 def render_export_snapshot(root: Path, home: Path) -> None:
     """Render a complete managed snapshot into a disposable candidate root."""
+    codex = home / ".codex"
+    preflight_retired_skills(home, codex / "skills")
     validate_export_renamed_skill_sources(home)
     validate_export_custom_agent_sources(home)
-    codex = home / ".codex"
     agents = home / ".agents"
     clear_managed_snapshot(root)
 
@@ -1100,6 +1381,10 @@ def render_export_snapshot(root: Path, home: Path) -> None:
 
     (root / "templates").mkdir(parents=True, exist_ok=True)
     write_text(root / "templates" / "HOST_LOCAL_TEMPLATE.md", HOST_LOCAL_TEMPLATE)
+    write_text(
+        root / "templates" / "REMOTE_CONNECTION_EXAMPLE.md",
+        REMOTE_CONNECTION_EXAMPLE,
+    )
     write_text(root / "templates" / "config.toml.template", CONFIG_TEMPLATE)
     write_text(root / "templates" / "hooks.json.template", render_hooks_template(codex / "hooks.json", home))
 
@@ -1123,9 +1408,14 @@ def render_export_snapshot(root: Path, home: Path) -> None:
     hooks_root = root / "hooks"
     (hooks_root / "scripts").mkdir(parents=True, exist_ok=True)
     (hooks_root / "rules").mkdir(parents=True, exist_ok=True)
+    retired_hook_sources = {home / relative for relative in RETIRED_HOOK_TARGETS}
     for path in sorted((codex / "hooks").glob("*.py")):
+        if path in retired_hook_sources:
+            continue
         shutil.copy2(path, hooks_root / "scripts" / path.name)
     for path in sorted((codex / "hookify").glob("*.md")):
+        if path in retired_hook_sources:
+            continue
         shutil.copy2(path, hooks_root / "rules" / path.name)
 
     write_text(root / "CONNECTORS.md", CONNECTORS)
@@ -1355,6 +1645,8 @@ Generated for a clean Codex profile kit.
 
 - `rules/AGENTS.portable.md`: machine-neutral durable Codex behavior rules.
 - `templates/HOST_LOCAL_TEMPLATE.md`: target-machine overlay template.
+- `templates/REMOTE_CONNECTION_EXAMPLE.md`: reviewed static, manual-only remote
+  connection example; it is never populated from the active host contract.
 - `templates/hooks.json.template`: Codex hook wiring template with placeholders.
 - `templates/config.toml.template`: minimal portable Codex config reference
   without a fixed parent model or reasoning effort, including reviewed public
@@ -1369,8 +1661,11 @@ Generated for a clean Codex profile kit.
 - `skills/agents/find-skills/`: portable agent skill discovery helper.
 - `agents/codex/`: allowlisted custom Codex agent profiles from
   `~/.codex/agents`.
-- `hooks/scripts/`: hook scripts and tests from `~/.codex/hooks`.
-- `hooks/rules/`: controlled global Markdown rules from `~/.codex/hookify`.
+- `hooks/scripts/`: reviewed hook scripts and tests from `~/.codex/hooks`;
+  export filters retired targets and verifies the pinned snapshot before code
+  execution.
+- `hooks/rules/`: reviewed controlled global Markdown rules from
+  `~/.codex/hookify`, limited to the pinned portable inventory.
 - `CONNECTORS.md`: re-authentication and public MCP review checklist.
 - `INSTALL.md`: target-machine install and smoke-test guide.
 
@@ -1474,13 +1769,253 @@ def skill_tree_sha256(skill_dir: Path) -> str:
     for path in sorted(skill_dir.rglob("*")):
         if path.is_symlink():
             raise SystemExit(f"third-party skill snapshot contains symlink: {path}")
-        if not path.is_file():
+        try:
+            info = path.stat(follow_symlinks=False)
+        except OSError as exc:
+            raise SystemExit(
+                f"retired skill snapshot entry cannot be inspected: {path}"
+            ) from exc
+        if stat.S_ISDIR(info.st_mode):
             continue
+        if not stat.S_ISREG(info.st_mode):
+            raise SystemExit(
+                f"retired skill snapshot contains non-regular entry: {path}"
+            )
         relative = path.relative_to(skill_dir).as_posix().encode("utf-8")
         digest.update(relative)
         digest.update(b"\0")
         digest.update(hashlib.sha256(path.read_bytes()).digest())
     return digest.hexdigest()
+
+
+@dataclass(frozen=True)
+class RetiredSkillSnapshot:
+    identity: str
+    path: Path
+    digest: str
+    policy: RetiredCodexSkill
+
+
+def validate_retired_skill_registry() -> None:
+    seen_digests: set[str] = set()
+    for identity, policy in RETIRED_CODEX_SKILLS.items():
+        if policy.hash_algorithm != "sha256-path-content-v1":
+            raise SystemExit(f"unsupported retired skill hash algorithm: {identity}")
+        if not policy.digests:
+            raise SystemExit(f"retired skill has no reviewed digests: {identity}")
+        for digest in policy.digests:
+            if re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+                raise SystemExit(f"invalid retired skill digest: {identity}: {digest}")
+            if digest in seen_digests:
+                raise SystemExit(f"duplicate retired skill digest: {digest}")
+            seen_digests.add(digest)
+        if not policy.replacement.strip():
+            raise SystemExit(f"retired skill has no replacement contract: {identity}")
+
+
+def _normalized_contract_text(text: str) -> str:
+    return " ".join(text.casefold().split())
+
+
+def replacement_live_contract_text(source: Path, skill_file: Path) -> str:
+    """Read the SKILL contract and its linked Markdown references only."""
+
+    pending = [skill_file]
+    visited: set[Path] = set()
+    chunks: list[str] = []
+    while pending:
+        path = pending.pop()
+        resolved = path.resolve()
+        if resolved in visited:
+            continue
+        try:
+            resolved.relative_to(source.resolve())
+        except ValueError as exc:
+            raise RuntimeError(
+                f"retired skill replacement contract link escapes skill root: {path}"
+            ) from exc
+        if path.name == "source-notes.md" or path.suffix.lower() != ".md":
+            continue
+        if path.is_symlink() or not path.is_file():
+            raise RuntimeError(
+                f"retired skill replacement contract reference is unavailable: {path}"
+            )
+        text = path.read_text(encoding="utf-8")
+        visited.add(resolved)
+        chunks.append(text)
+        for raw_target in MARKDOWN_LINK_RE.findall(text):
+            target = raw_target.strip()
+            if target.startswith("<") and target.endswith(">"):
+                target = target[1:-1]
+            target = target.split("#", 1)[0]
+            if not target or target.startswith(("/", "#")):
+                continue
+            if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
+                continue
+            destination = path.parent / target
+            if destination.suffix.lower() == ".md":
+                pending.append(destination)
+    return "\n".join(chunks)
+
+
+def validate_retired_replacement_sources(
+    skill_root: Path,
+    policies: Iterable[RetiredCodexSkill],
+) -> None:
+    """Verify every replacement exists and contains its reviewed contract."""
+
+    unique_policies = tuple(dict.fromkeys(policies))
+    for policy in unique_policies:
+        replacement_text: list[str] = []
+        provenance_text: list[str] = []
+        for name in policy.replacement_skills:
+            if name in RETIRED_CODEX_SKILLS:
+                raise RuntimeError(
+                    f"retired skill replacement points at another tombstone: {name}"
+                )
+            source = skill_root / name
+            if source.is_symlink() or not source.is_dir():
+                raise RuntimeError(
+                    f"retired skill replacement prerequisite is unavailable: {source}"
+                )
+            skill_file = source / "SKILL.md"
+            if not skill_file.is_file() or skill_file.is_symlink():
+                raise RuntimeError(
+                    f"retired skill replacement prerequisite lacks SKILL.md: {source}"
+                )
+            frontmatter = parse_frontmatter(skill_file.read_text(encoding="utf-8"))
+            if frontmatter.get("name") != name or not frontmatter.get("description"):
+                raise RuntimeError(
+                    f"retired skill replacement prerequisite has invalid metadata: {source}"
+                )
+            for path in sorted(source.rglob("*")):
+                if path.is_symlink():
+                    raise RuntimeError(
+                        f"retired skill replacement prerequisite contains a symlink: {path}"
+                    )
+            replacement_text.append(
+                replacement_live_contract_text(source, skill_file)
+            )
+            notes = source / "references" / "source-notes.md"
+            if notes.is_file() and not notes.is_symlink():
+                provenance_text.append(notes.read_text(encoding="utf-8"))
+
+        normalized = _normalized_contract_text("\n".join(replacement_text))
+        missing = [
+            marker
+            for marker in policy.replacement_contract_markers
+            if _normalized_contract_text(marker) not in normalized
+        ]
+        if missing:
+            raise RuntimeError(
+                "retired skill replacement contract prerequisite is pending migration: "
+                + ", ".join(missing)
+            )
+        normalized_provenance = _normalized_contract_text(
+            "\n".join(provenance_text)
+        )
+        missing_provenance = [
+            marker
+            for marker in policy.replacement_provenance_markers
+            if _normalized_contract_text(marker) not in normalized_provenance
+        ]
+        if missing_provenance:
+            raise RuntimeError(
+                "retired skill replacement provenance prerequisite is incomplete: "
+                + ", ".join(missing_provenance)
+            )
+
+
+def validate_active_retirement_contract(
+    home: Path,
+    snapshots: Iterable[RetiredSkillSnapshot],
+) -> None:
+    snapshots = tuple(snapshots)
+    markers = sorted(
+        {
+            marker
+            for snapshot in snapshots
+            for marker in snapshot.policy.active_contract_markers
+        }
+    )
+    if not markers:
+        return
+    agents = home / ".codex" / "AGENTS.md"
+    try:
+        safe_home_relative(
+            agents,
+            home,
+            label="active AGENTS retirement prerequisite",
+            expected_leaf="file",
+        )
+    except RuntimeError as exc:
+        raise RuntimeError(
+            f"pending migration: active AGENTS contract prerequisite is unsafe: {agents}"
+        ) from exc
+    if agents.is_symlink() or not agents.is_file():
+        raise RuntimeError(
+            f"pending migration: active AGENTS contract prerequisite is unavailable: {agents}"
+        )
+    normalized = _normalized_contract_text(agents.read_text(encoding="utf-8"))
+    missing = [
+        marker
+        for marker in markers
+        if _normalized_contract_text(marker) not in normalized
+    ]
+    if missing:
+        raise RuntimeError(
+            "pending migration: active AGENTS contract prerequisite is incomplete: "
+            + ", ".join(missing)
+        )
+
+
+def preflight_retired_skills(
+    home: Path,
+    replacement_skill_root: Path,
+) -> list[RetiredSkillSnapshot]:
+    """Inspect every tombstoned identity before any profile mutation."""
+
+    home = normalized_home(home)
+    skill_root = home / ".codex" / "skills"
+    snapshots: list[RetiredSkillSnapshot] = []
+    errors: list[str] = []
+    for identity, policy in sorted(RETIRED_CODEX_SKILLS.items()):
+        path = skill_root / identity
+        if not path_lexists(path):
+            continue
+        try:
+            safe_home_relative(
+                path,
+                home,
+                label="retired skill destination",
+                expected_leaf="dir",
+            )
+            if path.is_symlink() or not path.is_dir():
+                raise RuntimeError("not a regular directory")
+            digest = skill_tree_sha256(path)
+        except (RuntimeError, SystemExit) as exc:
+            errors.append(f"{identity}: unsafe retired skill: {exc}")
+            continue
+        if digest not in policy.digests:
+            errors.append(
+                f"{identity}: retired skill conflict/divergence; unreviewed digest {digest}"
+            )
+            continue
+        snapshots.append(
+            RetiredSkillSnapshot(
+                identity=identity,
+                path=path,
+                digest=digest,
+                policy=policy,
+            )
+        )
+    if errors:
+        raise RuntimeError("retired skill preflight failed:\n" + "\n".join(errors))
+
+    policies = [snapshot.policy for snapshot in snapshots]
+    validate_retired_replacement_sources(replacement_skill_root, policies)
+    validate_active_retirement_contract(home, snapshots)
+    return snapshots
 
 
 def validate_personal_skill_source_notes(skill_dir: Path, root: Path) -> None:
@@ -1662,6 +2197,10 @@ def validate_skills(root: Path) -> None:
         if not skill_root.is_dir():
             continue
         for skill_dir in sorted(p for p in skill_root.iterdir() if p.is_dir()):
+            if skill_dir.name in RETIRED_CODEX_SKILLS:
+                raise SystemExit(
+                    f"retired skill identity remains in profile: {rel(skill_dir, root)}"
+                )
             skill_file = skill_dir / "SKILL.md"
             if not skill_file.is_file():
                 raise SystemExit(f"missing SKILL.md: {rel(skill_dir, root)}")
@@ -1814,8 +2353,59 @@ def validate_json(root: Path) -> None:
     json.loads(rendered)
 
 
+def validate_reviewed_hook_snapshot(root: Path) -> None:
+    """Reject exported hook code before compiling or executing candidate tests."""
+
+    expected = set(REVIEWED_HOOK_SNAPSHOT_SHA256)
+    observed: set[str] = set()
+    for relative_dir in ("hooks/scripts", "hooks/rules"):
+        directory = root / relative_dir
+        if directory.is_symlink() or not directory.is_dir():
+            raise SystemExit(
+                f"reviewed hook snapshot directory is unavailable: {directory}"
+            )
+        for path in sorted(directory.iterdir()):
+            relative = rel(path, root)
+            if path.is_symlink() or not path.is_file():
+                raise SystemExit(
+                    f"reviewed hook snapshot contains a non-regular entry: {relative}"
+                )
+            observed.add(relative)
+
+    template = root / "templates" / "hooks.json.template"
+    if template.is_symlink() or not template.is_file():
+        raise SystemExit(
+            f"reviewed hook snapshot template is unavailable: {template}"
+        )
+    observed.add(rel(template, root))
+
+    missing = sorted(expected - observed)
+    extra = sorted(observed - expected)
+    if missing or extra:
+        details = []
+        if missing:
+            details.append("missing=" + ",".join(missing))
+        if extra:
+            details.append("extra=" + ",".join(extra))
+        raise SystemExit(
+            "reviewed hook snapshot inventory mismatch: " + "; ".join(details)
+        )
+
+    changed = [
+        relative
+        for relative, expected_digest in REVIEWED_HOOK_SNAPSHOT_SHA256.items()
+        if sha256(root / relative) != expected_digest
+    ]
+    if changed:
+        raise SystemExit(
+            "reviewed hook snapshot digest mismatch: " + ", ".join(sorted(changed))
+        )
+
+
 def validate_hooks(root: Path) -> None:
-    scripts = sorted((root / "hooks" / "scripts").glob("*.py"))
+    validate_reviewed_hook_snapshot(root)
+    scripts_root = root / "hooks" / "scripts"
+    scripts = sorted(scripts_root.glob("*.py"))
     if scripts:
         cache = Path(tempfile.mkdtemp(prefix="codex-profile-pycache-"))
         try:
@@ -1833,10 +2423,39 @@ def validate_hooks(root: Path) -> None:
         env = os.environ.copy()
         env["HOME"] = str(tmp_home_path)
         env["PYTHONDONTWRITEBYTECODE"] = "1"
-        for test_path in sorted((root / "hooks" / "scripts").glob("test_*.py")):
-            result = run(["python3", str(test_path)], cwd=root, env=env)
-            if result.returncode:
-                raise SystemExit(result.stdout + result.stderr)
+        count_script = (
+            "import pathlib, sys, unittest; "
+            "suite = unittest.defaultTestLoader.discover("
+            "str(pathlib.Path(sys.argv[1])), pattern='test_*.py'); "
+            "print(suite.countTestCases())"
+        )
+        count = run(["python3", "-c", count_script, str(scripts_root)], cwd=root, env=env)
+        if count.returncode:
+            raise SystemExit(count.stdout + count.stderr)
+        try:
+            test_count = int(count.stdout.strip())
+        except ValueError as exc:
+            raise SystemExit(
+                f"hook test discovery returned an invalid count: {count.stdout!r}"
+            ) from exc
+        if test_count == 0:
+            raise SystemExit("hook validation found zero tests")
+        result = run(
+            [
+                "python3",
+                "-m",
+                "unittest",
+                "discover",
+                "-s",
+                str(scripts_root),
+                "-p",
+                "test_*.py",
+            ],
+            cwd=root,
+            env=env,
+        )
+        if result.returncode:
+            raise SystemExit(result.stdout + result.stderr)
 
 
 def validate_portable_config(root: Path) -> None:
@@ -1867,16 +2486,32 @@ def validate_portable_config(root: Path) -> None:
         raise SystemExit(f"portable config contains non-portable auth state: {found}")
 
 
+def validate_remote_connection_example(root: Path) -> None:
+    path = root / "templates" / "REMOTE_CONNECTION_EXAMPLE.md"
+    if not path.is_file() or path.is_symlink():
+        raise SystemExit(f"static remote connection example is unavailable: {path}")
+    if path.read_text(encoding="utf-8") != REMOTE_CONNECTION_EXAMPLE:
+        raise SystemExit(
+            "remote connection example differs from the reviewed static generator"
+        )
+
+
 def verify_repo(root: Path = REPO_ROOT) -> None:
+    validate_retired_skill_registry()
     validate_managed_snapshot_paths(root)
     bad = scan_forbidden(root)
     if bad:
         raise SystemExit("forbidden paths:\n" + "\n".join(bad))
     validate_skills(root)
+    validate_retired_replacement_sources(
+        root / "skills" / "codex",
+        RETIRED_CODEX_SKILLS.values(),
+    )
     validate_third_party_skill_lock(root)
     validate_renamed_skills(root)
     validate_custom_agents(root)
     validate_custom_agents_with_codex(root)
+    validate_remote_connection_example(root)
     validate_portable_config(root)
     validate_hookify(root)
     validate_json(root)
@@ -1913,30 +2548,10 @@ def cmd_verify(args: argparse.Namespace) -> int:
 
 
 def cmd_push(args: argparse.Namespace) -> int:
-    export_to(REPO_ROOT, Path(args.home))
-    verify_repo(REPO_ROOT)
-    status = run(["git", "status", "--short"])
-    print(status.stdout, end="")
-    if not args.confirm:
-        print("push skipped: rerun with --confirm to commit and push")
-        return 0
-    if not status.stdout.strip():
-        print("nothing to commit")
-        return 0
-    run(["git", "add", "-A"], check_git_cwd())
-    message = args.message or f"Sync Codex profile kit {datetime.now().strftime('%Y-%m-%d')}"
-    commit = run(["git", "commit", "-m", message])
-    if commit.returncode:
-        raise SystemExit(commit.stdout + commit.stderr)
-    push = run(["git", "push", "-u", "origin", "main"])
-    if push.returncode:
-        raise SystemExit(push.stdout + push.stderr)
-    print(push.stdout, end="")
-    return 0
-
-
-def check_git_cwd() -> Path:
-    return REPO_ROOT
+    raise SystemExit(
+        "legacy sync.py push is disabled and fails closed; use "
+        "audit -> export -> inspect -> personal-risk-verification -> github:yeet"
+    )
 
 
 def normalized_home(home: Path) -> Path:
@@ -2106,9 +2721,50 @@ def apply_pairs(home: Path) -> list[tuple[Path, Path]]:
     return pairs
 
 
-def validate_apply_plan(home: Path, pairs: list[tuple[Path, Path]], hooks_dst: Path) -> None:
+def validate_reviewed_retired_hook_targets(home: Path) -> None:
+    """Fail closed when a reviewed retired Hookify target drifted."""
+
+    home = normalized_home(home)
+    retired_targets = set(RETIRED_HOOK_TARGETS)
+    for relative, approved_digest in sorted(
+        REVIEWED_RETIRED_HOOK_TARGET_SHA256.items()
+    ):
+        if relative not in retired_targets:
+            raise RuntimeError(
+                f"reviewed retired hook is not registered for retirement: {relative}"
+            )
+        if re.fullmatch(r"[0-9a-f]{64}", approved_digest) is None:
+            raise RuntimeError(
+                f"reviewed retired hook has an invalid digest: {relative}"
+            )
+        target = home / relative
+        safe_home_relative(
+            target,
+            home,
+            label="reviewed retired hook target",
+            expected_leaf="file",
+        )
+        if not path_lexists(target):
+            continue
+        observed_digest = sha256(target)
+        if observed_digest != approved_digest:
+            raise RuntimeError(
+                f"unreviewed retired hook digest: {relative}: {observed_digest}"
+            )
+
+
+def validate_apply_plan(
+    home: Path,
+    pairs: list[tuple[Path, Path]],
+    hooks_dst: Path,
+) -> list[RetiredSkillSnapshot]:
     """Reject unsafe apply sources and targets before any target read or mutation."""
     home = normalized_home(home)
+    validate_reviewed_retired_hook_targets(home)
+    retired_snapshots = preflight_retired_skills(
+        home,
+        REPO_ROOT / "skills" / "codex",
+    )
     planned_targets: list[Path] = []
     for src, dst in pairs:
         if src.is_symlink():
@@ -2156,6 +2812,8 @@ def validate_apply_plan(home: Path, pairs: list[tuple[Path, Path]], hooks_dst: P
             expected_leaf="dir",
         )
         planned_targets.extend((legacy.absolute(), successor.absolute()))
+    for snapshot in retired_snapshots:
+        planned_targets.append(snapshot.path.absolute())
     safe_home_relative(
         home / "codex-migration-archive",
         home,
@@ -2170,6 +2828,7 @@ def validate_apply_plan(home: Path, pairs: list[tuple[Path, Path]], hooks_dst: P
                 raise RuntimeError(
                     f"apply destinations overlap unsafely: {target} and {other}"
                 )
+    return retired_snapshots
 
 
 def retired_hook_paths(home: Path) -> list[Path]:
@@ -2227,12 +2886,153 @@ def retire_renamed_skills(pairs: list[tuple[Path, Path]]) -> None:
         shutil.rmtree(legacy)
 
 
+def create_unique_apply_backup_root(home: Path) -> Path:
+    archive_root = home / "codex-migration-archive"
+    safe_home_relative(
+        archive_root,
+        home,
+        label="apply backup archive",
+        expected_leaf="dir",
+    )
+    archive_root.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    base_name = f"{stamp}-before-profile-kit-apply"
+    for index in range(10_000):
+        suffix = "" if index == 0 else f"-{index}"
+        candidate = archive_root / f"{base_name}{suffix}"
+        if path_lexists(candidate):
+            continue
+        safe_home_relative(
+            candidate,
+            home,
+            label="apply backup root",
+            expected_leaf="dir",
+        )
+        try:
+            candidate.mkdir(exist_ok=False)
+        except FileExistsError:
+            continue
+        return candidate
+    raise RuntimeError("could not allocate a unique apply backup directory")
+
+
+def backup_retired_skills(
+    snapshots: Iterable[RetiredSkillSnapshot],
+    backup_root: Path,
+    home: Path,
+) -> None:
+    for snapshot in snapshots:
+        relative = safe_home_relative(
+            snapshot.path,
+            home,
+            label="retired skill destination",
+            expected_leaf="dir",
+        )
+        backup = backup_root / relative
+        safe_home_relative(
+            backup,
+            home,
+            label="retired skill backup",
+            expected_leaf="dir",
+        )
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        copytree(snapshot.path, backup)
+        archived_digest = skill_tree_sha256(backup)
+        if archived_digest != snapshot.digest:
+            raise RuntimeError(
+                f"retired skill archive digest mismatch: {snapshot.identity}"
+            )
+
+
+def write_retired_skill_archive_manifest(
+    snapshots: Iterable[RetiredSkillSnapshot],
+    backup_root: Path,
+    home: Path,
+) -> None:
+    entries = []
+    for snapshot in snapshots:
+        original = safe_home_relative(
+            snapshot.path,
+            home,
+            label="retired skill destination",
+            expected_leaf="dir",
+        ).as_posix()
+        entries.append(
+            {
+                "identity": snapshot.identity,
+                "hash_algorithm": snapshot.policy.hash_algorithm,
+                "digest": snapshot.digest,
+                "original_path": original,
+                "archive_path": original,
+                "replacement": snapshot.policy.replacement,
+            }
+        )
+    manifest = {
+        "schema_version": 1,
+        "retired_skills": entries,
+        "restore_guidance": [
+            (
+                "Restore only while using a profile-kit revision that does not "
+                "contain the corresponding retirement tombstone."
+            ),
+            "Require the original destination path to be absent before restore.",
+            (
+                "Recompute sha256-path-content-v1 for the archived directory and "
+                "require the recorded digest before restore."
+            ),
+        ],
+    }
+    manifest_path = backup_root / "retired-skills-manifest.json"
+    safe_home_relative(
+        manifest_path,
+        home,
+        label="retired skill archive manifest",
+        expected_leaf="file",
+    )
+    atomic_write_text(
+        manifest_path,
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        mode=0o600,
+    )
+
+
+def retire_reviewed_skills(snapshots: Iterable[RetiredSkillSnapshot], home: Path) -> None:
+    skill_root = home / ".codex" / "skills"
+    retirable: list[Path] = []
+    for snapshot in snapshots:
+        safe_home_relative(
+            snapshot.path,
+            home,
+            label="retired skill destination",
+            expected_leaf="dir",
+        )
+        if skill_tree_sha256(snapshot.path) != snapshot.digest:
+            raise RuntimeError(
+                f"retired skill changed after preflight: {snapshot.identity}"
+            )
+        for replacement_name in snapshot.policy.replacement_skills:
+            installed = skill_root / replacement_name
+            source = REPO_ROOT / "skills" / "codex" / replacement_name
+            if installed.is_symlink() or not installed.is_dir():
+                raise RuntimeError(
+                    f"installed retirement replacement is unavailable: {installed}"
+                )
+            summary = diff_dirs(source, installed)
+            if summary.only_left or summary.only_right or summary.different:
+                raise RuntimeError(
+                    f"installed retirement replacement differs from profile: {installed}"
+                )
+        retirable.append(snapshot.path)
+    for path in retirable:
+        shutil.rmtree(path)
+
+
 def cmd_apply(args: argparse.Namespace) -> int:
     home = normalized_home(Path(args.home))
     verify_repo(REPO_ROOT)
     pairs = apply_pairs(home)
     hooks_dst = home / ".codex" / "hooks.json"
-    validate_apply_plan(home, pairs, hooks_dst)
+    retired_snapshots = validate_apply_plan(home, pairs, hooks_dst)
     renamed_pairs = pending_renamed_skills(home)
     changed: list[str] = []
     for src, dst in pairs:
@@ -2251,6 +3051,10 @@ def cmd_apply(args: argparse.Namespace) -> int:
             changed.append(f"retire {path}")
     for legacy, successor in renamed_pairs:
         changed.append(f"retire {legacy} after verified successor {successor}")
+    for snapshot in retired_snapshots:
+        changed.append(
+            f"retire {snapshot.path} after archived digest {snapshot.digest}"
+        )
 
     print("manual review only: rules/AGENTS.portable.md and templates/config.toml.template")
     print(f"changed portable targets: {len(changed)}")
@@ -2262,21 +3066,9 @@ def cmd_apply(args: argparse.Namespace) -> int:
         print("dry-run only: rerun with --confirm to apply")
         return 0
 
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
-    backup_root = home / "codex-migration-archive" / f"{stamp}-before-profile-kit-apply"
-    safe_home_relative(
-        backup_root,
-        home,
-        label="apply backup root",
-        expected_leaf="dir",
-    )
-    backup_root.mkdir(parents=True, exist_ok=False)
-    safe_home_relative(
-        backup_root,
-        home,
-        label="apply backup root",
-        expected_leaf="dir",
-    )
+    backup_root = create_unique_apply_backup_root(home)
+    backup_retired_skills(retired_snapshots, backup_root, home)
+    write_retired_skill_archive_manifest(retired_snapshots, backup_root, home)
     backup_renamed_skills(renamed_pairs, backup_root, home)
     for path in retired_hook_paths(home):
         if not path.exists():
@@ -2330,6 +3122,7 @@ def cmd_apply(args: argparse.Namespace) -> int:
         mode=0o600,
     )
     retire_renamed_skills(renamed_pairs)
+    retire_reviewed_skills(retired_snapshots, home)
     print(f"applied; backup: {backup_root}")
     return 0
 
@@ -2344,7 +3137,10 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--tarball", action="store_true")
     export.set_defaults(func=cmd_export)
     sub.add_parser("verify").set_defaults(func=cmd_verify)
-    push = sub.add_parser("push")
+    push = sub.add_parser(
+        "push",
+        help="legacy compatibility command; always exits nonzero",
+    )
     push.add_argument("--confirm", action="store_true")
     push.add_argument("-m", "--message")
     push.set_defaults(func=cmd_push)

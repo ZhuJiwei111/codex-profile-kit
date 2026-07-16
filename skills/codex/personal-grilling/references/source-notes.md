@@ -96,6 +96,10 @@ order:
 - Challenge the proposed solution while leaving final material decisions with
   the user.
 - Keep exactly one material decision per turn.
+- Work one material theme at a time and open every new theme with one neutral
+  open-ended question before recommendations or options.
+- Give every question no timeout; silence and elapsed UI time never resolve,
+  defer, or confirm it.
 - Require explicit coverage confirmation even after preauthorization.
 - Investigate decision-changing facts proactively and boundedly.
 - Require an explicit disposition for every material residual risk.
@@ -104,6 +108,8 @@ order:
 - Record a source type for every leaf.
 - Accept the bounded residual risk that semantic completeness cannot be
   formally proven.
+- Keep brainstorming as the sole design-synthesis owner; grilling returns only
+  its sourced ledger and closure status.
 
 Post-implementation forward probes added explicit branches for profile
 bootstrap/self-update trust roots, deletion/rename/tombstone propagation,

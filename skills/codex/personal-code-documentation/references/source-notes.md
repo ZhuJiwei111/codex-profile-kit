@@ -5,9 +5,9 @@ Checked: 2026-07-12.
 ## Local Artifact
 
 - Skill: `personal-code-documentation`
-- Local purpose: explain existing code and create evidence-grounded
-  architecture, API, onboarding, tutorial, reference, or walkthrough artifacts
-  for a defined reader.
+- Local purpose: explain existing code, create evidence-grounded architecture,
+  API, onboarding, tutorial, reference, or walkthrough artifacts, and
+  synchronize an existing stale documentation contract for a defined reader.
 - Lifecycle disposition: renamed from `code-documentation` with no
   compatibility entry.
 - A current-host recovery copy was verified during the rename. Recovery paths
@@ -106,6 +106,36 @@ upstream command template or substantial block is copied into the skill.
 - Integrated repository instructions, protected user changes, final local
   verification, and explicit Git and external-state boundaries.
 
+## Merged `sync_existing` Provenance
+
+The retired `personal-docs-sync-light` workflow was upstream-derived from a
+user-identified OpenAI Agents JS `docs-sync` source, with substantial local
+narrowing and redesign. Its exact historical upstream commit is not established.
+The fixed comparison and internalization baseline is:
+
+- Repository: <https://github.com/openai/openai-agents-js>
+- Fixed comparison commit: `901fb94c0fb9ffc8cb2d8275d99622475f77f401`
+- Skill:
+  <https://github.com/openai/openai-agents-js/blob/901fb94c0fb9ffc8cb2d8275d99622475f77f401/.agents/skills/docs-sync/SKILL.md>
+- Coverage checklist:
+  <https://github.com/openai/openai-agents-js/blob/901fb94c0fb9ffc8cb2d8275d99622475f77f401/.agents/skills/docs-sync/references/doc-coverage-checklist.md>
+- License: MIT, Copyright (c) 2025 OpenAI:
+  <https://github.com/openai/openai-agents-js/blob/901fb94c0fb9ffc8cb2d8275d99622475f77f401/LICENSE>
+
+Reviewed portable tree identities retained for retirement and provenance
+closure (`sha256-path-content-v1`):
+
+- `36c32775022ea3590690ea533ed798f2732a9953f3bd12df4c0216341f58ea70`
+- `d724aa2b0afdff7f4cb5f2a671a64328c9fcca1ec18011dde395ef0a0c54d9ea`
+- `52089bce134700c1a4d891afeca4e282b39bcdf642ab177e5650bae6da6bb430`
+
+The merged mode internalizes the bounded contract delta, path-plus-symbol or
+setting evidence, doc-first and code-first passes, target-page reasoning, and
+narrow snippet validation. It rejects repository-specific paths, tools,
+language exclusions, comprehensive main-branch scans, automatic installation,
+publication, or external mutation. Retain this attribution and license record
+when distributing the substantially derived `sync_existing` material.
+
 ## Rejected Or Deliberately Omitted
 
 - No `model: sonnet`, `model: opus`, `Use PROACTIVELY`, `$ARGUMENTS`, slash
@@ -125,18 +155,17 @@ upstream command template or substantial block is copied into the skill.
 
 ## Local Ownership Boundaries
 
-- `personal-code-documentation` owns codebase-derived explanations and new or
-  substantially rewritten standalone documentation.
-- `personal-docs-sync-light` owns bounded stale-contract patches to existing
-  documentation.
+- `personal-code-documentation` owns codebase-derived explanations, new or
+  substantially rewritten standalone documentation, and bounded stale-contract
+  patches through `sync_existing`.
 - `personal-project-output-explainer` owns comprehension of existing Codex or
   project outputs and decisions.
 - `personal-writing-polish` owns expression-only revision after facts and
   evidence are locked.
 - `personal-review-response` owns feedback disposition and authorization;
   `personal-evidence-debugging` owns unexpected failure investigation.
-- `personal-brainstorms` owns unresolved consequential design;
-  `personal-repo-intake` owns unclear repository facts; and
-  `personal-temporary-work` owns one-off evidence helpers.
+- `personal-brainstorms` owns unresolved consequential design, and
+  `personal-temporary-work` owns one-off evidence helpers. Unclear repository
+  facts stop at bounded inspection and the smallest decision-changing question.
 - `personal-risk-verification` is the final completion gate after file changes,
   and `personal-branch-finish` owns later Git readiness.

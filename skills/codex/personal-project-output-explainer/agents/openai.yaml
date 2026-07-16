@@ -1,4 +1,7 @@
 interface:
   display_name: "Project Output Explainer"
-  short_description: "Decode project outputs for informed readers."
-  default_prompt: "Use $personal-project-output-explainer to translate this Codex or project output into a layered explanation with clear terms, evidence boundaries, and decision impact."
+  short_description: "Explicitly decode the current task's output"
+  default_prompt: "Use $personal-project-output-explainer to decode the current task's latest relevant output, unless I name a different exact source."
+
+policy:
+  allow_implicit_invocation: false

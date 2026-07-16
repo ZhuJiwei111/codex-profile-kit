@@ -5,12 +5,38 @@ It is a coverage aid, not a finite proof that no semantic branch exists.
 
 ## Contents
 
+- [Theme Contract](#theme-contract)
 - [Leaf Contract](#leaf-contract)
 - [Universal Core](#universal-core)
 - [Task-Type Packs](#task-type-packs)
 - [Branch Discovery And Ordering](#branch-discovery-and-ordering)
 - [Closure Passes](#closure-passes)
 - [Calibration](#calibration)
+
+## Theme Contract
+
+Group coupled leaves into decision themes so the user can frame one area before
+the interview narrows it. Use this conceptual state:
+
+```yaml
+theme_id:
+question:
+status: unopened | exploring | narrowing | closed | deferred
+leaf_ids: []
+dependencies: []
+reopen_condition:
+```
+
+- `unopened`: no neutral open question has been answered for this theme.
+- `exploring`: the open answer is being classified and facts are still needed.
+- `narrowing`: remaining material leaves are being locked one at a time.
+- `closed`: every material leaf and propagated consequence has a disposition.
+- `deferred`: the user explicitly moved the whole theme outside this slice.
+
+Open one theme at a time. Its first user question must be neutral and open-ended;
+do not anchor it with a recommendation, default, option list, or proposed answer.
+After the answer, narrow real choices leaf by leaf. Reopen a theme when a later
+answer, dependency, or closure pass changes one of its material leaves.
 
 ## Leaf Contract
 
@@ -20,6 +46,7 @@ every answer.
 
 ```yaml
 id:
+theme_id:
 dimension:
 question:
 status: open | blocking | locked | assumption | deferred | not-applicable
@@ -159,7 +186,7 @@ universal core.
 
 ## Branch Discovery And Ordering
 
-Generate candidate leaves from five sources:
+Generate themes and candidate leaves from five sources:
 
 1. universal core and applicable packs;
 2. the user's goal, proposal, answers, concerns, and stated preferences;
@@ -167,7 +194,7 @@ Generate candidate leaves from five sources:
 4. interfaces, dependency edges, state transitions, and failure paths;
 5. contradictions, second-order effects, risks, and missing acceptance proof.
 
-Order unresolved material leaves by:
+Order unresolved material themes by:
 
 1. safety and authorization;
 2. problem framing and scope;
@@ -177,7 +204,8 @@ Order unresolved material leaves by:
 6. acceptance and operational details;
 7. low-coupling implementation preferences.
 
-A user choice closes only the stated leaf. Propagate it immediately. If an
+A user choice closes only the stated leaf, not its theme. Propagate it
+immediately. If an
 answer selects persistence, for example, reopen security, retention,
 compatibility, recovery, and ownership when those consequences are material.
 
@@ -219,10 +247,14 @@ Coverage-first does not mean maximal questioning.
   dimensions immediately. Ask only the remaining material user decision.
 - For a large system, research, migration, or profile change, expect multiple
   themes and second-order branches. Do not stop because one theme is clear.
+- Open every new theme before narrowing it. Do not substitute a generic
+  “anything else?” after options have already anchored the user.
 - Do not ask a discoverable fact, repeat sufficient evidence, or require a
   rationale for an unambiguous option choice.
 - Do not mark a branch non-material merely to reduce interaction length.
 - If the user stops, retain the open branches and label the brief incomplete.
+- Waiting has no timeout. Never reinterpret elapsed time or silence as an
+  answer, default selection, deferral, or confirmation.
 
 The coverage model reduces false negatives; it cannot formally prove semantic
 completeness. The user has accepted that bounded residual risk under the

@@ -6,6 +6,8 @@ Generated for a clean Codex profile kit.
 
 - `rules/AGENTS.portable.md`: machine-neutral durable Codex behavior rules.
 - `templates/HOST_LOCAL_TEMPLATE.md`: target-machine overlay template.
+- `templates/REMOTE_CONNECTION_EXAMPLE.md`: reviewed static, manual-only remote
+  connection example; it is never populated from the active host contract.
 - `templates/hooks.json.template`: Codex hook wiring template with placeholders.
 - `templates/config.toml.template`: minimal portable Codex config reference
   without a fixed parent model or reasoning effort, including reviewed public
@@ -20,8 +22,11 @@ Generated for a clean Codex profile kit.
 - `skills/agents/find-skills/`: portable agent skill discovery helper.
 - `agents/codex/`: allowlisted custom Codex agent profiles from
   `~/.codex/agents`.
-- `hooks/scripts/`: hook scripts and tests from `~/.codex/hooks`.
-- `hooks/rules/`: controlled global Markdown rules from `~/.codex/hookify`.
+- `hooks/scripts/`: reviewed hook scripts and tests from `~/.codex/hooks`;
+  export filters retired targets and verifies the pinned snapshot before code
+  execution.
+- `hooks/rules/`: reviewed controlled global Markdown rules from
+  `~/.codex/hookify`, limited to the pinned portable inventory.
 - `CONNECTORS.md`: re-authentication and public MCP review checklist.
 - `INSTALL.md`: target-machine install and smoke-test guide.
 

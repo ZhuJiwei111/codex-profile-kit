@@ -101,6 +101,8 @@ When a requested style change conflicts with semantic preservation, state the co
 
 ## Collaboration Boundaries
 
-- `personal-project-output-explainer`, `personal-code-documentation`, `personal-docs-sync-light`, and `personal-review-response` own their substantive content before this skill edits expression.
+- `personal-project-output-explainer`, `personal-code-documentation` (including
+  `sync_existing`), and `personal-review-response` own their substantive
+  content before this skill edits expression.
 - `awesome-rebuttal` always owns live submission rules, reviewer strategy, and rebuttal content; this skill may polish only a locked draft.
 - This skill grants no Git, publication, external-message, or broader file-edit authority.

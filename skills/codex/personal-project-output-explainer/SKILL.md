@@ -1,6 +1,6 @@
 ---
 name: personal-project-output-explainer
-description: Use when the user explicitly asks to understand or decode an existing Codex response, project result, artifact summary, multi-stage evidence chain, or decision rationale because project-local jargon, cross-domain terminology, or missing context blocks comprehension. Do not use for ordinary status, summary, report, completion, next-step output, diagnosis, canonical docs, review disposition, or prose polishing.
+description: Manual only. Use $personal-project-output-explainer when the user explicitly wants an existing output or evidence chain decoded; default an unnamed target to the current Codex task, and do not use for ordinary status, diagnosis, docs, review, verification, or prose polishing.
 ---
 
 # Personal Project Output Explainer
@@ -11,10 +11,9 @@ Translate an existing Codex or project output into a reader-oriented
 explanation. Make its terms, relationships, evidence boundary, and decision
 impact understandable without redoing the original task.
 
-- Use this skill only when the user explicitly expresses a comprehension or
-  decode need for existing output, evidence, or a decision. An explicit
-  `$personal-project-output-explainer` invocation satisfies this when it
-  identifies the material to explain.
+- Run only after explicit `$personal-project-output-explainer` invocation. Keep
+  implicit invocation disabled. The invocation itself is sufficient; it need
+  not repeat the target when the current task default below is unambiguous.
 - Decode a supplied response, result, artifact summary, evidence chain, or
   decision rationale. Ordinary status, summary, report, completion, or
   next-step wording alone is not a comprehension request.
@@ -23,6 +22,19 @@ impact understandable without redoing the original task.
 - Preserve exact identifiers, metrics, paths, modes, and technical terms while
   explaining their role and consequence.
 - Follow an explicitly named audience, depth, or format over the defaults below.
+
+## Resolve The Target
+
+Use an explicitly supplied response, artifact, path, or evidence chain first.
+Otherwise explain the most recent relevant Codex output in the current task.
+When several current-task outputs are plausible and the choice changes the
+explanation, ask one targeted question.
+
+Do not enumerate tasks or infer another task from a similar title. Explaining a
+different task requires an exact current-host reference or ID supplied by the
+user and bounded read-only access. A project-wide evidence synthesis still
+requires an explicit request; the current-task default does not authorize a
+repository scan, live status collection, or new verification campaign.
 
 ## Default Reader
 
@@ -154,18 +166,18 @@ changes the reader's understanding of the conclusion or its boundary.
 
 ## Route Adjacent Requests
 
-- For an unnamed ordinary status or ETA request, leave specialist workflows and
-  use one bounded ordinary read-only status check. Use
-  `$personal-long-job-status` only after explicit skill invocation.
+- For an ordinary status or ETA request, leave this skill and use one bounded
+  core read-only status check.
 - `personal-evidence-debugging`: reproduction and root-cause work.
 - `personal-review-response`: review-feedback disposition.
 - `personal-risk-verification`: final completion verdict;
   `personal-branch-finish`: Git readiness or repository handoff.
-- `personal-code-documentation`: new standalone architecture, API, onboarding, tutorial,
-  or walkthrough artifacts; `personal-docs-sync-light`: stale canonical docs.
+- `personal-code-documentation`: substantial standalone architecture, API,
+  onboarding, tutorial, or walkthrough artifacts. A small identified stale fact
+  uses an ordinary scoped project-doc edit.
 - `personal-writing-polish`: expression-only revision after facts are locked.
-- `personal-context-compression` or `personal-context-save-restore`:
-  continuation or persistence.
+- Native task context and ordinary in-thread handoff own continuation; this skill
+  does not persist session state.
 - `personal-brainstorms` and manual-only `$personal-grilling`: unresolved
   design; manual-only `$personal-triad-discussion`: user-mediated GPT Pro
   deliberation.

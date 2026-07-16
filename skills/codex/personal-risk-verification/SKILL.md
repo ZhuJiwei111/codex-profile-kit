@@ -10,6 +10,11 @@ task-owned state supports the intended completion claims after the last
 relevant change. Consume earlier workflow evidence without confusing an
 intermediate pass, a worker report, or a clean-looking diff with completion.
 
+The main process alone issues the task-level verdict. Executors and validators
+may supply raw evidence, and reviewers may supply semantic findings and
+uncertainty, but none of those reports is the verdict. The three evidence
+layers below are coverage requirements, not a mandatory three-actor chain.
+
 Do not create missing implementation, investigate an unexpected failure, or
 start the next workflow from inside this gate. Report the actual state and hand
 the gap to its owner.
@@ -28,6 +33,13 @@ completion_claims:
   - requirement:
     claim:
     evidence_needed:
+evidence_layers:
+  structure_static:
+    coverage: covered | not_applicable | missing
+  semantic_scenarios:
+    coverage: covered | not_applicable | missing
+  runtime_product_smoke:
+    coverage: covered | not_applicable | missing
 final_state:
   task_owned_changes:
   unrelated_changes:
@@ -50,6 +62,31 @@ remaining_risk:
 
 Keep the record implicit for one small, obvious change. Do not create a state
 file merely to perform final verification.
+
+## Cover Three Evidence Layers
+
+For every material claim, consider all three layers and record direct evidence,
+a justified `not_applicable`, or a gap:
+
+1. **Deterministic structure or static checks.** Inspect exact paths, schemas,
+   parsers, types, generated ownership, literal contracts, links, diffs, or
+   other deterministic invariants that can fail cheaply and reproducibly.
+2. **Independent semantic scenarios.** Review the change against real incidents,
+   acceptance criteria, requirements, boundary cases, or representative user
+   flows that are independent of the implementation's own assertion that it is
+   correct. Independence belongs to the scenario and evidence source; it does
+   not universally require a separate reviewer agent.
+3. **Selective runtime or product smoke.** Exercise the affected capability at
+   the narrowest useful runtime, CLI, integration, rendering, or product
+   boundary. Select only smoke evidence that can discriminate the material
+   claim; when runtime execution is genuinely inapplicable or unavailable,
+   record why and the consequence instead of inventing a pass.
+
+A simple task may use one executor or the main process across layers when the
+checks remain safe, bounded, and discriminating. Delegate substantive command
+execution, large diffs, logs, or independent validation proportionately so the
+main context stays focused on scope, provenance, intake, and verdict. Do not
+create a reviewer merely to satisfy a role count.
 
 ## Invalidate Evidence By Relevance
 
@@ -86,7 +123,7 @@ for the affected blast radius.
 | Build or package succeeds | The actual build or packaging command and artifact/result | Lint, typecheck, or import success |
 | API, schema, or types are valid | Contract, schema, type, parser, import, or consumer check for the changed surface | Unrelated unit tests |
 | CLI, script, or config works | Parser, `--help`, syntax, dry-run, or bounded smoke evidence for the changed contract | Documentation text alone |
-| Existing docs are current | Post-edit docs evidence from `personal-docs-sync-light` and final readback/diff | Runtime tests alone |
+| Existing docs are current | Post-edit `personal-code-documentation: sync_existing` evidence plus final readback/diff | Runtime tests alone |
 | An artifact is ready | Inspection or validator against the artifact produced from current inputs | Generator invocation without output checks |
 | Requirements are met | Requirement-by-requirement review against current behavior and artifacts | Tests passing without scope review |
 | Delegated work is complete | Worker evidence plus coordinator inspection of provenance, diff, and required checks | The worker's recommended outcome |
@@ -102,7 +139,10 @@ evidence required for a material claim is.
 
 ## Run And Read The Evidence
 
-For each check that must be run or refreshed:
+For each check that must be run or refreshed, the main process locks its claim,
+scope, and expected signal. A bounded executor or validator should run
+substantive checks and return raw provenance; the main process may run a simple
+safe check directly when delegation would add no useful separation.
 
 1. Record the exact command or inspection, `cwd`, environment owner, target
    revision or artifact, expected signal, and material side effects.
@@ -185,10 +225,11 @@ short or a worker is waiting.
   authority, and external review state.
 - `personal-evidence-debugging` owns unexpected failures after the gate reports
   them; verification does not silently become diagnosis.
-- `personal-docs-sync-light` owns factual documentation synchronization and
-  returns post-edit evidence to this final gate.
-- `personal-repo-intake` owns genuinely unclear repository root, instructions,
-  worktree, harness, or artifact ownership facts.
+- `personal-code-documentation` in `sync_existing` mode owns factual
+  documentation synchronization and returns post-edit evidence to this gate.
+- If repository root, instructions, worktree, harness, or artifact ownership
+  remains unclear after bounded inspection, record missing evidence and ask the
+  smallest decision-changing question; do not guess a completion basis.
 - `personal-subagent-boundaries` owns worker scope and reporting contracts.
 - `personal-multiline-coordination` owns authoritative coordination-line
   intake, per-line decisions, and integration provenance when multiline or
@@ -200,9 +241,10 @@ short or a worker is waiting.
   coordinator decisions.
 - `personal-project-output-explainer` may explain a completed verdict to a
   broader audience without changing it.
-- `personal-branch-finish` consumes a `supported` verdict for Git readiness,
-  commit or PR decisions, and handoff. This skill does not stage, commit, push,
-  publish, or create a PR.
+- `personal-branch-finish` consumes a `supported` verdict for local Git
+  readiness, local-only commit decisions, preservation, and handoff.
+  `github:yeet` consumes it for an explicitly authorized GitHub publication
+  flow. This skill does not stage, commit, push, publish, or create a PR.
 
 ## Source Provenance
 

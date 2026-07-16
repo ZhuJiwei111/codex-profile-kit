@@ -22,9 +22,11 @@ Set `diagnosis_scope` before acting:
 A verification-only failure does not automatically authorize diagnosis. Report
 it and stop unless diagnosis is already in scope. A reason-matched expected RED
 remains with `personal-test-first-changes`; a wrong-reason RED, flake, hang, or
-unexpected GREEN belongs here. For an unnamed ordinary status or ETA request,
-leave specialist workflows and use one bounded ordinary read-only status check.
-Use `$personal-long-job-status` only after explicit skill invocation.
+unexpected GREEN belongs here. For an ordinary status or ETA request, leave
+specialist workflows: the main process names the exact job and evidence surface,
+one read-only executor inspects it once, and the main process reports only the
+observed evidence and uncertainty. That one-shot check never grants polling,
+monitoring, diagnosis, repair, restart, or a stronger ETA than the evidence.
 
 ## Keep A Failure Packet
 
@@ -67,9 +69,9 @@ credential-bearing environment data.
   diverge.
 - Distinguish an expected nonzero result, an expected test RED, and an
   unexpected failure.
-- Confirm the task-owned `cwd`, environment owner, and relevant input. Use
-  `personal-repo-intake` only when those repository facts are genuinely
-  unclear.
+- Confirm the task-owned `cwd`, environment owner, and relevant input. If those
+  repository facts remain unclear after bounded inspection, stop and ask the
+  smallest question that changes the investigation boundary.
 - Separate related evidence from unrelated baseline failures. Never hide a
   failed command or expand scope to repair unrelated failures.
 
@@ -196,11 +198,10 @@ that the whole architecture is wrong.
 
 ## Collaboration And Durable Guidance
 
-- `personal-context-optimization` may reduce repeated log reads or preserve
-  precise anchors; it does not own the causal investigation.
 - `personal-subagent-boundaries` may isolate independent read-only evidence
-  domains. Give workers the same failure packet and allow only one fix owner;
-  do not vote among competing root causes—design a discriminating check.
+  domains or assign one diagnostic executor. Give executors the same bounded
+  failure packet and allow only one fix owner; do not vote among competing root
+  causes—design a discriminating check.
 - `personal-temporary-work` owns the lifecycle of an approved one-off
   reproducer, parser, or transformed artifact; this skill still owns the
   hypothesis and evidence.
