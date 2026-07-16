@@ -28,9 +28,9 @@ AGENTS.md files.
 - Delegate substantive reading, editing, testing, log analysis, and artifact
   production when isolation materially helps. Keep simple critical path actions
   local when delegation costs more.
-- If no qualified executor is temporarily available, wait for or reclaim a
-  slot. If substantive work still lacks one, request explicit local degradation;
-  never make a silent role downgrade.
+- If no qualified executor is available, wait or request explicit local
+  degradation; never make a silent role downgrade. Keep the detailed fallback
+  in `personal-subagent-boundaries`.
 - Keep context bounded. Prefer targeted inspection, source-side filtering,
   paging, sampling, and evidence anchors over broad scans or full rereads.
 - Use rg and rg --files first; check uncommon tools with command -v. Within one
@@ -81,15 +81,15 @@ AGENTS.md files.
 
 ## Delegation, Goals, And Host Boundaries
 
-- Give each worker a bounded objective, canonical cwd and worktree, revision,
-  inputs, exclusive mutations, allowed actions, verification, stop condition,
-  and report shape.
-- Executors may return evidence and a recommended_outcome. Reviewers and
-  monitors return evidence and uncertainty only. The main process alone issues
-  the authoritative task verdict after intake.
-- Workers stop and hand off at their boundary; they do not authorize or launch
-  another stage. Do not silently replace a user-selected App worker, managed
-  subagent, reviewer, or monitor with another executor kind.
+- Use `personal-subagent-boundaries` for bounded managed workers, including
+  delegation choice, task and role contracts, execution-profile evidence,
+  mutation ownership, worker reports, and intake.
+- Use `personal-multiline-coordination` for persistent App worker lines,
+  worktrees, cross-line resources, integration, and recovery.
+- The main process alone issues the authoritative task verdict after intake.
+  Workers stop at their assigned boundary and do not authorize the next stage.
+- Do not silently replace a user-selected App worker, managed subagent,
+  reviewer, or monitor with another executor kind.
 - Use Goal mode only when the user or system explicitly requests it. Ordinary
   multi-step work uses normal plan tracking; Goal mode is not a scheduler,
   monitor, or result collector.
@@ -98,8 +98,6 @@ AGENTS.md files.
 - For continuation on the current host, require an exact task ID and a bounded
   evidence request; do not create a packet, enumerate broadly, or read another
   host before filtering. Subagents receive a bounded packet from the main.
-- Keep detailed worker, worktree, monitoring, integration, and recovery
-  protocols in their owning coordination skills.
 
 ## Host, Environments, Network, And Resources
 
@@ -139,17 +137,10 @@ AGENTS.md files.
   monitoring.
 - An ordinary status or ETA request is one bounded read-only one-shot check. It
   does not authorize monitoring or create a watcher.
-- Active monitoring requires explicit observation authority and a fresh
-  contract for each exact job or phase. Unless narrowed or revoked, observation
-  authority remains thread-scoped on this host, but it never grants launch,
-  repair, restart, resource expansion, or stage progression.
-- Use exactly one runtime-verified read-only monitor as recurring observer. The
-  main and job executor do not duplicate polling. A monitor reports evidence
-  only and must not stop, repair, restart, mutate output, advance a stage, or
-  decide go/no-go.
-- If a strict monitor or slot is unavailable, report it and ask whether one
-  main-process one-shot check is acceptable. Keep cadence, events, handoff, and
-  recovery details in the monitoring contract.
+- Route active monitoring through `personal-subagent-boundaries`. It requires
+  explicit observation authority and a fresh contract for each exact job or
+  phase. The observer reports evidence only and must not stop, repair, restart,
+  mutate output, advance a stage, or decide go/no-go.
 
 ## Security And Ask-First Boundaries
 
@@ -180,15 +171,12 @@ AGENTS.md files.
 ## Final Gate And Result-Aware Next Action
 
 - After task-owned changes, `personal-risk-verification` is the sole final
-  completion gate.
-- Scale evidence through deterministic structure/static checks, independent
-  semantic scenarios grounded in requirements or real incidents, and selective
-  runtime/product smoke for affected capabilities.
-- Keep configured, configured_unverified, prompt_only, runtime-verified,
-  product-confirmed, not-run, and unknown as distinct state evidence boundaries.
-- After the last change, inspect requirements, final diff or artifact, exact
-  outcomes, omissions, and remaining risk. Report changed, passed, not run, and
-  residual risk without implying an external action occurred.
+  completion gate. Require its fresh `supported` verdict before claiming the
+  work complete, fixed, passing, or ready for Git handoff.
+- That skill owns evidence-layer coverage, state labels, freshness, final-diff
+  review, omissions, remaining risk, and the completion verdict.
+- Report changed, passed, not run, and residual risk without implying an
+  external action occurred.
 - End a completed response with one concise outcome-specific next action of one
   to three sentences when useful. In a terminal state, state there is no next
   action or omit it. If new authority is needed, request the exact approval or

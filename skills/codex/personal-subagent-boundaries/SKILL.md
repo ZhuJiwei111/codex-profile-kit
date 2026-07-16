@@ -35,6 +35,11 @@ workers for discriminating evidence and let the coordinator decide after
 intake. If overlap or a hidden dependency appears, stop the affected worker and
 reassign or serialize the work from a visible state.
 
+When delegation remains required and no qualified executor is temporarily
+available, wait for or reclaim a slot. If substantive work still lacks one,
+request explicit local degradation; never silently make the main process or a
+different role absorb the work.
+
 Use `personal-multiline-coordination` for persistent lines, multiple worktrees,
 or long-lived/stateful worker sets that need dependency and resource gates,
 cross-line integration provenance, recovery decisions, or authoritative line
@@ -254,7 +259,9 @@ effective role, model, reasoning effort, and sandbox. `prompt_only` or
 `configured_unverified` enforcement means strict monitoring is unavailable.
 Do not replace it with recurring checks in the main process. Read [the
 monitoring protocol](references/monitoring.md) before spawning. User-visible
-monitoring reports use Chinese event names; monitoring events remain evidence,
+prose renders these states as `已配置但未验证`, `仅提示约束`, and
+`运行时已验证`; keep the English values only inside machine-readable contracts.
+Monitoring reports use Chinese event names; monitoring events remain evidence,
 never task completion or a go/no-go decision.
 
 ## Collaboration Boundaries

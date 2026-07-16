@@ -104,3 +104,6 @@ the 26-line local skill.
   project explanation, and Git finish work retain their dedicated owners.
 - Keep the completion record conversational and non-persistent unless another
   approved workflow owns a durable handoff.
+- Render evidence-state boundaries in Chinese for user-visible reports while
+  retaining stable English values only at machine-readable or external
+  convention boundaries.

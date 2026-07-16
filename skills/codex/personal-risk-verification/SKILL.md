@@ -63,6 +63,25 @@ remaining_risk:
 Keep the record implicit for one small, obvious change. Do not create a state
 file merely to perform final verification.
 
+## Keep Evidence States Distinct
+
+Use Chinese labels in user-visible reports. Retain the English value only when
+an exact machine-readable schema, command, or external convention consumes it:
+
+| Internal value | User-visible label | Evidence boundary |
+| --- | --- | --- |
+| `configured` | `已配置` | An applicable configuration source contains the declaration; this does not prove enablement or runtime behavior. |
+| `configured_unverified` | `已配置但未验证` | A requested profile or enforcement setting is structurally present, but its effective runtime behavior has not been observed. |
+| `prompt_only` | `仅提示约束` | An instruction requests the behavior without mechanical or runtime enforcement. |
+| `runtime-verified` | `运行时已验证` | Current execution evidence directly confirms the effective behavior. |
+| `product-confirmed` | `产品内已确认` | The owning product UI or native command confirms the state; this is not automatically runtime proof. |
+| `not-run` | `未运行` | A relevant check was deliberately not run; record its reason and consequence. |
+| `unknown` | `未知` | Material evidence is missing, unsupported, unavailable, or ambiguous. |
+
+Do not collapse these boundaries or silently upgrade one into another. In
+particular, configuration evidence, prompt wording, product state, and runtime
+behavior prove different claims.
+
 ## Cover Three Evidence Layers
 
 For every material claim, consider all three layers and record direct evidence,

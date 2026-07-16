@@ -822,6 +822,85 @@ class WholeProfileContractTests(unittest.TestCase):
             r"supervisor or coordinator .{0,80}(?:execute|act)",
         )
 
+    def test_portable_agents_route_owned_protocols_without_losing_fallbacks(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills" / "codex"
+        agents = " ".join(
+            (SYNC.REPO_ROOT / "rules/AGENTS.portable.md")
+            .read_text(encoding="utf-8")
+            .split()
+        ).lower()
+        subagent = " ".join(
+            (skill_root / "personal-subagent-boundaries/SKILL.md")
+            .read_text(encoding="utf-8")
+            .split()
+        ).lower()
+        monitoring = " ".join(
+            (skill_root / "personal-subagent-boundaries/references/monitoring.md")
+            .read_text(encoding="utf-8")
+            .split()
+        ).lower()
+        risk = " ".join(
+            (skill_root / "personal-risk-verification/SKILL.md")
+            .read_text(encoding="utf-8")
+            .split()
+        ).lower()
+
+        for fallback in (
+            "authoritative task verdict",
+            "does not authorize monitoring",
+            "must not stop, repair, restart",
+            "`supported` verdict",
+        ):
+            with self.subTest(global_fallback=fallback):
+                self.assertIn(fallback, agents)
+        for owner in (
+            "personal-subagent-boundaries",
+            "personal-multiline-coordination",
+            "personal-risk-verification",
+        ):
+            with self.subTest(global_route=owner):
+                self.assertIn(owner, agents)
+
+        for moved_detail in (
+            "recommended_outcome",
+            "configured_unverified",
+            "product-confirmed",
+            "exactly one runtime-verified read-only monitor",
+        ):
+            with self.subTest(global_exclusion=moved_detail):
+                self.assertNotIn(moved_detail, agents)
+
+        for delegation_contract in (
+            "recommended_outcome",
+            "wait for or reclaim",
+            "explicit local degradation",
+            "sole recurring read-only observer",
+            "`已配置但未验证`",
+            "`仅提示约束`",
+            "`运行时已验证`",
+        ):
+            with self.subTest(delegation_owner=delegation_contract):
+                self.assertIn(delegation_contract, subagent)
+        self.assertIn("cadence rationale", monitoring)
+        for verification_contract in (
+            "structure_static",
+            "semantic_scenarios",
+            "runtime_product_smoke",
+        ):
+            with self.subTest(verification_owner=verification_contract):
+                self.assertIn(verification_contract, risk)
+        for user_facing_state in (
+            "`已配置`",
+            "`已配置但未验证`",
+            "`仅提示约束`",
+            "`运行时已验证`",
+            "`产品内已确认`",
+            "`未运行`",
+            "`未知`",
+        ):
+            with self.subTest(verification_state=user_facing_state):
+                self.assertIn(user_facing_state, risk)
+
     def test_monitor_cadence_keeps_dynamic_primary_with_numeric_fallback(self) -> None:
         monitoring = (
             SYNC.REPO_ROOT

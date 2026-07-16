@@ -86,6 +86,9 @@ revision retains the useful contract in a progressive-disclosure reference.
   states such as `pass` and `no-go`.
 - Separate main-process control-plane ownership from executor work, reviewer
   evidence, and monitor observation; role count is not an evidence substitute.
+- Keep detailed slot waiting, reclamation, and explicit local-degradation
+  behavior in the delegation owner while the global instruction retains only
+  the compact no-silent-degradation fallback.
 - Use custom `monitor` and `reviewer` profiles without treating the parent
   agent's current model or reasoning effort as a baseline.
 - Keep the portable parent config model- and effort-neutral while making the
@@ -128,6 +131,8 @@ revision retains the useful contract in a progressive-disclosure reference.
 - The supervisor estimates runtime and owns the cadence rationale. Numerical
   ranges are non-binding sanity checks, and user-visible event reports use
   Chinese names while optional machine-readable event types remain stable.
+- User-visible enforcement states use Chinese labels; stable English enum
+  values remain only in machine-readable delegation and monitoring contracts.
 - The local `monitor` profile requests user-selected `gpt-5.6-luna` with high
   reasoning. Parser acceptance is `configured_unverified`, not evidence of the
   effective role, model, effort, or sandbox at spawn time.
