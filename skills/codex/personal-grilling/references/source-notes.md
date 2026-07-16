@@ -1,11 +1,11 @@
 # Source Notes
 
-Checked: 2026-07-13.
+Checked: 2026-07-16.
 
-This skill combines pinned upstream interview discipline, two local historical
-revisions, the accepted behavior of adjacent personal skills, and the user's
-reported working experience. Upstream sources are design evidence, not runtime
-dependencies and not text to copy mechanically.
+This skill combines pinned upstream interview discipline, local history, the
+accepted behavior of adjacent personal skills, and the user's reported working
+experience. Upstream sources are design evidence, not runtime dependencies and
+not text to copy mechanically.
 
 ## Contents
 
@@ -27,7 +27,7 @@ dependencies and not text to copy mechanically.
 | Local pre-refactor `personal-grilling` | profile-kit commit `c5370e8b0dd71577cd7dda93609b019316c2587d` | Personal work | Explicit design-tree walk and required coverage of goal, scope, non-goals, acceptance, decisions, and risks |
 | Local prior refactor | profile-kit commit `6057e9d64a633534f28b7c2e50cc907b4b1a3d4c` | Personal work | Manual-only metadata, one-question pacing, assumptions, source notes, and downstream authorization handoff |
 | Current `personal-brainstorms` and adjacent personal workflows | Active profile checked 2026-07-13 | Personal profile system | Design ownership, evidence boundaries, risk verification, source provenance, context, authorization, and handoff contracts |
-| User working experience | Explicit feedback and sequential decisions on 2026-07-13 | Personal experience, not an external authority | Reported false negatives: the agent often stopped after one easy question and required the user to surface source, compatibility, portability, smoke, rollback, and cross-skill concerns |
+| User working experience | Explicit feedback and sequential decisions on 2026-07-13 and 2026-07-16 | Personal experience, not an external authority | Reported both coverage false negatives and an answerability regression: strict open-only questions lacked examples or reference dimensions, leaving the user unsure how to answer |
 
 The current upstream `grill-me` file is intentionally small. The reusable
 behavior lives in `grilling`; the local skill keeps one Codex-native manual
@@ -48,6 +48,10 @@ entry point instead of reproducing that two-skill wrapper structure.
 - Treat the user's solution as a hypothesis and test smaller alternatives,
   second-order effects, and failure conditions.
 - Accept concise exact choices without inventing a rationale requirement.
+- Preserve neutral theme opening while adding non-exhaustive reference angles
+  and a minimum-effort response shape.
+- Treat explicit uncertainty or a request for reference as a signal to provide
+  a recommendation and concrete alternatives instead of another open question.
 
 ## Deliberately Rejected
 
@@ -85,6 +89,14 @@ order:
 5. prove closure through coverage, consistency, adversarial review, and user
    confirmation.
 
+Live paired use on 2026-07-16 exposed a second regression. The blanket ban on
+examples and answer shapes protected against option anchoring but shifted theme
+decomposition onto the user. The user reported not knowing how to answer an
+abstract AGENTS.md ownership question and explicitly requested reference. The
+locked refinement keeps a neutral first question, distinguishes reference
+angles from solution choices, and switches immediately to a recommendation and
+bounded alternatives when the user signals uncertainty.
+
 ## User-Locked Local Decisions
 
 - Default to coverage-first hard grilling with no session question cap.
@@ -96,8 +108,13 @@ order:
 - Challenge the proposed solution while leaving final material decisions with
   the user.
 - Keep exactly one material decision per turn.
-- Work one material theme at a time and open every new theme with one neutral
-  open-ended question before recommendations or options.
+- Work one material theme at a time and open every new theme with one neutral,
+  guided open-ended question before recommendations or solution options.
+- Add three to five non-exhaustive, non-recommended reference angles and a
+  minimum-effort response shape to every opening question.
+- When the user expresses uncertainty or asks for reference, give a
+  recommendation and no more than three real alternatives instead of repeating
+  an open question.
 - Give every question no timeout; silence and elapsed UI time never resolve,
   defer, or confirm it.
 - Require explicit coverage confirmation even after preauthorization.

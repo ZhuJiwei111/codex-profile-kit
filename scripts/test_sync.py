@@ -1069,6 +1069,35 @@ class WholeProfileContractTests(unittest.TestCase):
                 self.assertIn(phrase, coverage)
         self.assertIn("proportionate ledger", normalized)
 
+    def test_grilling_guides_open_questions_and_recovers_from_uncertainty(self) -> None:
+        skill_root = SYNC.REPO_ROOT / "skills" / "codex" / "personal-grilling"
+        skill = " ".join(
+            (skill_root / "SKILL.md").read_text(encoding="utf-8").split()
+        ).lower()
+        discipline = " ".join(
+            (skill_root / "references/answer-discipline.md")
+            .read_text(encoding="utf-8")
+            .split()
+        ).lower()
+
+        for phrase in (
+            "guided open-ended question",
+            "non-exhaustive reference angles",
+            "minimum-effort response",
+            "uncertainty or asks for reference",
+        ):
+            with self.subTest(skill_phrase=phrase):
+                self.assertIn(phrase, skill)
+        self.assertIn("do not ask another open question by default", discipline)
+        self.assertIn("## worked examples", discipline)
+        for example in (
+            "guided opening without solution anchoring",
+            "uncertainty switches to concrete help",
+            "free-form expertise remains valid",
+        ):
+            with self.subTest(example=example):
+                self.assertIn(example, discipline)
+
     def test_brainstorms_yields_to_grilling_coverage_when_paired(self) -> None:
         brainstorms = (
             SYNC.REPO_ROOT / "skills/codex/personal-brainstorms/SKILL.md"

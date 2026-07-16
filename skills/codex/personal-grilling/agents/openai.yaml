@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Grilling"
-  short_description: "Open each theme before closing every branch"
-  default_prompt: "Use $personal-grilling to open each material theme with one neutral Chinese question, then narrow one decision at a time without timeout and require coverage, consistency, adversarial, risk, and confirmation closure."
+  short_description: "Guide each theme before closing every branch"
+  default_prompt: "Use $personal-grilling to open each material theme with one guided neutral Chinese question and non-exhaustive reference angles, then narrow one decision at a time and require explicit coverage closure."
 policy:
   allow_implicit_invocation: false

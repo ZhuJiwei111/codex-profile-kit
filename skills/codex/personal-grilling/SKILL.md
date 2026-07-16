@@ -1,6 +1,6 @@
 ---
 name: personal-grilling
-description: Manual only. Use $personal-grilling to pressure-test a plan or design one theme at a time, opening each theme with one neutral open question before narrowing decisions, with no timeout and with coverage, consistency, adversarial, risk, and explicit-confirmation closure.
+description: Manual only. Use $personal-grilling to pressure-test a plan or design one theme at a time, opening each theme with one guided neutral question before narrowing decisions, with no timeout and with coverage, consistency, adversarial, risk, and explicit-confirmation closure.
 ---
 
 # Personal Grilling
@@ -17,7 +17,18 @@ not the fewest questions. Be rigorous without becoming hostile or theatrical.
 - Separate facts from decisions. Investigate discoverable facts; put every
   material user-owned decision to the user and wait.
 - Work on one material theme at a time. Open each new theme with exactly one
-  neutral, open-ended question before recommendations or options.
+  neutral, guided open-ended question before recommendations or solution
+  options.
+- Make the opening answerable: state why the answer matters, add three to five
+  explicitly non-exhaustive reference angles, and give a minimum-effort response
+  shape such as choosing one angle, rewriting it, or saying none fits.
+- Keep opening scaffolding neutral. Reference angles may name dimensions,
+  incidents, constraints, failure signals, or answer forms, but must not smuggle
+  in a recommended decision, pretend to be exhaustive, or auto-select an answer.
+- When the user expresses uncertainty or asks for reference, examples, or a
+  recommendation, do not repeat the open-question loop. Give an evidence-backed
+  recommendation and no more than three real alternatives with tradeoffs, then
+  accept a number, “use the recommendation,” a rewrite, or “none fit.”
 - After the opening answer, ask exactly one material decision per user turn. Set
   no session question cap.
 - Questions have no timeout and never auto-resolve. Silence, elapsed time, a UI
@@ -63,10 +74,15 @@ can change a branch or recommendation.
 
 1. Select the unresolved material theme with the highest safety, dependency, or
    rework impact.
-2. If it is unopened, state why it matters and ask one neutral open-ended
-   question. Do not include a recommendation, default, menu, or proposed answer.
+2. If it is unopened, state why it matters and ask one neutral, guided
+   open-ended question. Include non-exhaustive reference angles and a
+   minimum-effort response shape, but no recommendation, preferred default,
+   solution menu, or proposed final answer.
 3. Wait without a timeout. Classify the answer, discover its leaves, and inspect
-   decision-changing facts.
+   decision-changing facts. If the answer expresses uncertainty or asks for
+   reference, use the recovery contract in
+   [answer-discipline.md](references/answer-discipline.md) instead of asking
+   another open question by default.
 4. For each remaining material user-owned leaf, state the minimum lockable
    answer. Only after the open answer may you offer a recommendation or two or
    three real alternatives with material tradeoffs.
@@ -153,6 +169,6 @@ and sources, assumptions and deferrals, risks, and unresolved items.
 
 - [coverage-model.md](references/coverage-model.md): theme and leaf discovery,
   task packs, ordering, and closure passes.
-- [answer-discipline.md](references/answer-discipline.md): open-first and lockable
-  answer rules.
+- [answer-discipline.md](references/answer-discipline.md): guided open-first,
+  uncertainty recovery, examples, and lockable-answer rules.
 - [source-notes.md](references/source-notes.md): provenance and local decisions.
