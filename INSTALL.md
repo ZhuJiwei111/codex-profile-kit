@@ -1,9 +1,17 @@
 # Install Guide
 
-This flow is template-based. Inspect each step before enabling hooks on the
-target machine.
+For routine migration, ask Codex to execute this guide in the repository. Codex
+should preserve unrelated work and stop if Git integration or the apply preview
+needs a decision.
 
-## 1. Clone
+`scripts/sync.py` requires Python 3.11 or newer. In the commands below,
+`python3` is a placeholder for the interpreter resolved by Codex. If the default
+is older, Codex should read `~/.codex/HOST_LOCAL.md` and use its documented
+fallback; the user normally does not need to locate an environment manually.
+
+## 1. Get The Snapshot
+
+For a new clone:
 
 ```bash
 git clone https://github.com/ZhuJiwei111/codex-profile-kit.git
@@ -11,78 +19,48 @@ cd codex-profile-kit
 python3 scripts/sync.py verify
 ```
 
-Verification rejects symbolic links inside managed profile assets so a copied
-skill, hook, template, or custom agent cannot retain an out-of-profile target.
-It also validates personal-skill UI metadata and source-note presence, in-skill
-relative resource links, the aggregate 6,500-character managed-catalog
-description budget, and the allowlist/content lock in
-`THIRD_PARTY_SKILLS.lock.json` for portable third-party Codex skills.
+For an existing clone, have Codex inspect the branch and dirty state, fetch the
+remote, and integrate the selected upstream revision according to the current
+branch policy. The synchronization script does not pull, commit, or push Git
+history.
 
-## 2. Fill Host Facts
+## 2. Keep Host State Local
 
-```bash
-install -m 600 templates/HOST_LOCAL_TEMPLATE.md ~/.codex/HOST_LOCAL.md
-```
+Use `templates/HOST_LOCAL_TEMPLATE.md` only as a starting point for
+`~/.codex/HOST_LOCAL.md`; preserve existing host facts and keep secrets out.
+Treat `templates/config.toml.template` as a manual reference. Do not copy auth,
+connector, MCP session, trust, or other runtime state from the source machine.
 
-Fill `~/.codex/HOST_LOCAL.md` with target-machine facts. Keep secrets out of it.
-
-## 3. Install Portable Rules
-
-Review `rules/AGENTS.portable.md`, then use it as the target machine's
-`~/.codex/AGENTS.md`. On a machine with existing rules, merge only deliberate
-machine-neutral instructions; keep all host facts in `~/.codex/HOST_LOCAL.md`.
-
-`templates/config.toml.template` is a manual reference, not an apply target. It
-deliberately leaves the parent model and reasoning effort session-dependent and
-keeps `agents.max_depth = 1`; merge only settings you intend to own globally.
-
-## 4. Dry-Run Apply
+## 3. Preview, Apply, And Audit
 
 ```bash
 python3 scripts/sync.py apply
-```
-
-The default is dry-run. It reports changed portable assets and manual-review
-areas without writing to active Codex configuration.
-
-## 5. Apply After Review
-
-```bash
 python3 scripts/sync.py apply --confirm
+python3 scripts/sync.py audit
 ```
 
-The script backs up overwritten files under `~/codex-migration-archive/` before
-copying portable skills, allowlisted custom agent profiles, hook scripts,
-controlled global Markdown rules, and rendered `hooks.json`. Explicitly retired
-hook files and renamed legacy skill directories are backed up before they are
-removed. For containment safety, apply rejects symbolic-link path components
-below the explicit target home instead of following them.
+The first command is a dry-run that reports the exact target list for the
+repo/profile candidate at that moment; the CLI does not persist or bind that
+result to `--confirm`. Codex must confirm that the repo/profile candidate
+identity is unchanged and run `--confirm` immediately afterward; confirmation
+recalculates the targets. Confirmed apply creates a timestamped backup under
+`~/codex-migration-archive/`, then transactionally installs the managed payload.
+It backs up and replaces the complete `~/.codex/AGENTS.md`, installs only
+`personal-*` Codex skills, and applies the explicit hook and custom-agent
+inventories. Existing non-personal Codex skills and `~/.agents/skills` remain
+untouched and do not count as drift. The final audit should report zero drift.
 
-## 6. Verify Custom Agent Profiles
+Apply rejects symbolic-link path components below the target home and rolls
+back a failed managed replacement. Review the preview before confirmation;
+path containment does not make an unintended overwrite acceptable.
 
-Review `agents/codex/*.toml` before applying them. On the target host, confirm
-that each configured model exists and supports the selected reasoning effort.
-Also verify the effective child sandbox when read-only enforcement matters:
-live task overrides can supersede a custom file's `sandbox_mode`. Custom agents
-may require a new Codex task before discovery changes are visible.
+## 4. Finish Host-Local Setup
 
-The profile was last fully verified against Codex CLI 0.144.1. For a patch
-update, run the current focused loader and affected-surface smoke checks; do not
-repeat the full audit solely because the patch number changed. Read
-`skills/codex/personal-codex-audit/references/compatibility-policy.md` and
-broaden verification when release notes or observed behavior change hooks,
-custom agents, skill discovery, or another owned contract.
+- Reconcile only the intended settings from `templates/config.toml.template`.
+- Follow `CONNECTORS.md` and re-authenticate on the target machine.
+- Review each applied custom agent's model, reasoning effort, and effective
+  sandbox for this host.
+- Run `/hooks`, inspect changed definitions, and trust only accepted hashes.
 
-## 7. Review Hook Trust
-
-Start Codex and run `/hooks`. Review the source, matcher, command, and current
-hash for every changed definition, then trust only the definitions you accept.
-Do not copy or edit `trusted_hash` entries manually; changed hooks remain
-skipped until reviewed.
-
-## 8. Reconnect Plugins And MCP Servers
-
-Use `CONNECTORS.md` as the checklist. Re-authenticate connectors on the target
-machine instead of copying connector state. Review the public MCP declarations
-in `templates/config.toml.template`, merge only intended servers, and recreate
-any target-host authentication through its normal mechanism.
+Some discovery or hook changes may require a new Codex task before they become
+visible.

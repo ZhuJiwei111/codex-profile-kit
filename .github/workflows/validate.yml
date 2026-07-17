@@ -12,5 +12,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Sync unit tests
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts.test_sync
+      - name: Collector tests
+        run: PYTHONDONTWRITEBYTECODE=1 python3 skills/codex/personal-codex-audit/scripts/test_collect_codex_profile.py
+      - name: Hook tests
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s hooks/scripts -p 'test_*.py'
       - name: Verify profile kit
-        run: python3 scripts/sync.py verify
+        run: PYTHONDONTWRITEBYTECODE=1 python3 scripts/sync.py verify

@@ -1,118 +1,73 @@
 # Profile Source Policy
 
-Use this policy before collecting or summarizing the current host's reusable
-Codex profile.
+Use this policy for a read-only audit and as the active-profile boundary for a
+directional sync.
 
-## Contents
+## Read The Smallest Safe Surface
 
-- Scope and default sources
-- MCP safe projection
-- Memory and symlink boundaries
-- Default exclusions and reporting
+Inspect only what is needed to establish the requested managed state:
 
-## Scope
-
-- Keep the audit on the current execution host. A different home path is not
-  evidence of a different host's authorization.
-- Limit the default inventory to durable profile assets. Tasks, threads,
-  sessions, transcripts, runtime databases, and app-wide history are out of
-  scope.
-- Subagents inherit the same host and source boundary.
-
-## Default Sources
-
-Read only the smallest safe projection needed from these sources when present:
-
-| Source | Allowed projection |
+| Source | Allowed evidence |
 | --- | --- |
-| `~/.codex/AGENTS.md` | Existence, headings, and relevant durable rules |
-| `~/.codex/skills/*/SKILL.md` | Personal/custom skill name, description, path, and safe resource structure |
-| Personal `references/source-notes.md` | Classification, checked date, source identity, adopted/rejected items, deviations, runtime dependency, and explicit provenance gaps |
-| `~/.agents/skills/*/SKILL.md` | User/agent skill name, description, path, and safe resource structure |
-| `agents/openai.yaml` | Presence and UI metadata needed for a requested skill audit |
-| `~/.codex/config.toml` | Allowlisted feature booleans, `skills.config` path/enablement fields, and the safe MCP projection below |
-| `~/.codex/hooks.json` or inline `[hooks]` | Event, matcher presence/length, handler type, and referenced file state; never raw command text |
-| Referenced files under `~/.codex/hooks/` | Existence and a short module-doc or heading summary |
-| `~/.codex/hookify/*.md` | Top-level safe frontmatter only; never nested or raw regex content by default |
-| `~/codex-profile-kit` | Git state, safe dry-run diff, manifest, and exported portable assets when comparison is requested |
-| `THIRD_PARTY_SKILLS.lock.json` | Safe source identity, license label, admission/provenance states, immutable local snapshot identity, content digest, and update-review requirement |
+| `~/.codex/AGENTS.md` | Portable rules content and drift from `rules/AGENTS.portable.md` |
+| `~/.codex/skills/personal-*/` | Regular-file content needed for audit or transfer |
+| Portable hook and agent targets reported by `sync.py` | Exact managed files and drift |
+| `codex-profile-kit` | Repository identity, Git ownership, managed sources, and exact diff |
+| `~/.codex/HOST_LOCAL.md` | Only the minimum host/network fact needed to run the current task; never transfer it |
 
-Read `~/.codex/HOST_LOCAL.md` only when resolving current-host profile paths or
-environment facts is material. Do not export the populated host overlay.
+Use `sync.py audit` as the default drift source. Run
+`scripts/collect_codex_profile.py --home <home>` only for an explicitly useful
+safe inventory that audit does not provide. Its output is inventory evidence,
+not proof of runtime health, trust, or successful activation.
 
-## MCP Projection
+## Treat Repository Membership As The Routine Skill Boundary
 
-For each configured `mcp_servers.<id>` entry, collect only:
+- Include only skill directories named `personal-*` under the canonical
+  `skills/codex/` tree.
+- Preserve repository-only personal skills during outbound export; they remain
+  migration assets even when absent from the current host.
+- Preserve host-only personal skills during inbound apply. Install or update
+  canonical repository targets without treating a host-only personal skill as
+  a deletion target or repository-to-host drift.
+- Do not require or parse `references/source-notes.md`, admission fields, or
+  provenance fields during routine audit, export, or apply.
+- Route first-time admission of a newly created or externally acquired skill
+  to `personal-skill-hygiene` before adding it to the canonical repository.
+- Ignore active non-personal skills. Do not read their implementation for sync,
+  copy them into the repository, apply repository copies over them, count them
+  as drift, or delete them.
 
-- a syntactically safe server id;
-- the declared `enabled` boolean, or `null` when unspecified;
-- transport category: `streamable-http`, `stdio`, or `unknown`;
-- `public_url` only for an explicitly reviewed allowlisted public HTTPS URL
-  without userinfo, query, fragment, control characters, whitespace, or a
-  local/private host;
-- one auth mechanism category: `none`, `env-var-name`, `headers`,
-  `oauth-or-runtime`, or `not-collected`.
+## Keep These Surfaces Out Of Apply
 
-Do not serialize MCP `command`, `args`, environment entries, bearer-token
-variable names or values, header names or values, OAuth material, runtime
-health, login state, or tool results. A declared public URL does not prove
-reachability, authentication, availability, or successful initialization.
+Never copy, replace, delete, print, or summarize secret values or runtime
+state. Exclude:
 
-## Memory Is Explicit Opt-In
+- `~/.codex/HOST_LOCAL.md` and `~/.codex/config.toml`;
+- `auth.json`, sessions, histories, SQLite state, attachments, logs, caches,
+  memories, plugin/app/model state, and approval or trust state;
+- tokens, cookies, passwords, private keys, `.netrc`, authenticated URLs,
+  headers, secret environment values, OAuth state, and connector state; and
+- tasks, threads, transcripts, generated archives, project outputs, datasets,
+  model weights, environments, and package caches.
 
-- The collector may report the safe `[features].memories` state, but it never
-  reads memory content.
-- Do not read `~/.codex/memories/` during an ordinary profile audit.
-- Use memory only when the user explicitly requests a memory-informed audit and
-  the current task's memory controls permit it.
-- Then inspect only the minimum current-host entries needed for reusable Codex
-  workflow preferences. Exclude project outcomes, experiment logs, remote-host
-  state, papers, data transfers, and one-off troubleshooting.
-- Label all retained findings `memory-derived` and possibly stale. Never copy
-  memory content into profile-kit without a separately approved migration
-  design.
+Templates describing excluded surfaces are manual references, not apply
+targets. A profile audit may report that an excluded category exists, but must
+not expose its values or convert it into transfer drift.
 
-## Symlink Boundary
+## Enforce Path And Symlink Containment
 
-- Inventory a symlinked skill entry because Codex may discover it.
-- Read target metadata only when the resolved `SKILL.md` remains under the
-  current home and avoids excluded or sensitive paths.
-- For outside-home, sensitive, or broken targets, report the entry and
-  `metadata_status` without reading target content.
+- Resolve the selected home and repository once; keep every source,
+  destination, temporary file, and backup under its expected root.
+- Reject a managed source or destination that is a symlink, escapes its root,
+  crosses into an excluded path, or changes type between inspection and write.
+- Read ordinary files without following descendant symlinks. Report an unsafe
+  path as a blocker without printing sensitive target details.
+- Recheck the exact write plan immediately before mutation. A changed plan
+  invalidates the dry run.
 
-## Default Exclusions
+## Report The Evidence Boundary
 
-Never read, serialize, or summarize by default:
-
-- Credentials, tokens, cookies, private keys, `.netrc`, authenticated URLs, or
-  secret environment files.
-- `auth.json`, `history.jsonl`, `session_index.jsonl`, SQLite/WAL/SHM files,
-  attachments, logs, caches, plugin caches, or raw transcripts.
-- Hook trust hashes, individual hook approval state, project trust, connector
-  OAuth state, plugin runtime state, or approval history.
-- MCP command lines, arguments, environment entries, bearer-token fields,
-  header material, OAuth state, runtime health, or tool output.
-- Other-host tasks, threads, memories, previews, messages, or session-derived
-  summaries.
-- Unlocked third-party scripts or resources beyond the bounded candidate review
-  needed for a separately authorized single-skill admission decision.
-- Long generated artifacts, archived sessions, or unrelated project files.
-
-If a requested conclusion depends on an excluded source, report the limitation.
-Do not turn permission to audit into permission to inspect credentials or
-high-noise runtime state.
-
-## Reporting Boundary
-
-- Distinguish observed files, parsed configuration, user reports, product UI
-  confirmation, and unknown state.
-- Prefer paths relative to the current home. For outside-home symlink or command
-  targets, report only the category and basename needed to explain the gap.
-- Do not print raw hook commands, raw matcher patterns, full config files, or
-  memory extracts. Do not print raw MCP definitions; use only the safe
-  schema-v3 projection.
-- Separate observations from recommended changes and state the exact authority
-  needed for each write.
-- Treat provenance and admission records as claims to reconcile with current
-  files, not proof that a skill is safe, enabled, behaviorally correct, or
-  current with upstream.
+Separate observed files, command output, user-provided facts, and unknowns.
+State what was excluded and which command established drift. Do not infer
+runtime enablement, trust, authentication, or cross-host equality from file
+presence or a zero-drift audit.

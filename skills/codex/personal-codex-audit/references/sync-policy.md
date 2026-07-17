@@ -1,252 +1,146 @@
 # Profile-Kit Sync Policy
 
-Use this policy for the portable `codex-profile-kit`, not for general Git or
-single-skill lifecycle work.
+Use this policy only for a directional sync between the current host and the
+selected `codex-profile-kit` worktree. Run the commands directly for the user;
+ask only when permission, authentication, visibility, or a conflict decision
+is missing.
 
-## Contents
+## Shared Preflight
 
-- Repository and stage authorization
-- Routine directional sync
-- Preflight and portable asset boundaries
-- Escalation triggers
-- Export and apply
-- Publication handoff
+1. Resolve the repository, current host, direction, branch/upstream, intended
+   remote, and current revision. Before Git network access, use the connection
+   entrypoint documented for this host.
+2. Run `git status --short` and inspect index/worktree ownership. Stop if an
+   intended operation could absorb, overwrite, or publish unrelated work.
+3. Resolve the project or host-documented Python 3.11+ interpreter before a
+   sync command; `sync.py` imports `tomllib`. When `HOST_LOCAL.md` records a
+   fallback environment, use it rather than an older system Python. CI's
+   `setup-python` 3.11 is a compatibility baseline, not local execution
+   evidence. In the examples below, replace `python3` with the resolved
+   interpreter when necessary.
+4. Use `PYTHONDONTWRITEBYTECODE=1 python3 scripts/sync.py ...` from the selected
+   repository. Treat dry-run output as the exact target list for the inputs
+   read by that command, not a persistent binding across commands. Do not add
+   or expect a plan token or state file, and do not recreate transfer logic
+   with ad hoc copies.
+5. Enforce the source, secret, path, and symlink boundaries in
+   [source-policy.md](source-policy.md). Stop if Git ancestry or a managed
+   source changes after review.
 
-## Repository Boundary
+Routine sync manages only the targets reported by the current `sync.py`. The
+only migratable skill directories are canonical `skills/codex/personal-*`
+assets. Do not scan source notes, reconcile admission/provenance or unrelated
+lifecycle state, or add compatibility and repeated validation ceremony to the
+routine sync gates.
 
-- Default repository: `~/codex-profile-kit`.
-- Default remote: `ZhuJiwei111/codex-profile-kit`.
-- Visibility may be public or private. Before publication, confirm the actual
-  visibility and authorization to publish the isolated diff at that visibility.
-- Do not change repository visibility without separate explicit authority.
-- Export source of truth: active current-host `~/.codex` and `~/.agents`
-  portable assets.
-- Apply source of truth: the reviewed profile-kit snapshot and its approved
-  target set.
+## Outbound: Host To Repository
 
-Do not turn the complete Codex home into a Git repository.
+Use an explicit `sync up` or `sync to GitHub` request as authority for audit,
+repository export, final verification, and the publication handoff. It does
+not let this skill stage, commit, push, or publish. Treat a bare `export` as a
+local-only request that ends after candidate review.
 
-## Stage Authorization
+1. Run the read-only audit:
 
-| Stage | State change | Required authority |
-| --- | --- | --- |
-| `sync.py audit` | No durable profile write | Read-only audit request |
-| `sync.py export --dry-run` | No durable profile write | Read-only comparison request |
-| `sync.py export` | Writes profile-kit | Explicit export/local sync intent |
-| `sync.py verify` | No intended profile write | Normal verification after export or before apply |
-| `sync.py apply` | Dry-run only | Read-only apply comparison |
-| `sync.py apply --confirm` | Writes active profile and backup | Explicit apply authority, or bounded inbound-sync intent whose plan remains inside the fast path |
-| Publication handoff | No Git mutation by this workflow | Bounded outbound-sync intent plus `personal-risk-verification: supported` |
+   ```bash
+   PYTHONDONTWRITEBYTECODE=1 python3 scripts/sync.py audit
+   ```
 
-Do not infer a later stage from a bare audit, export, apply, or comparison. An
-explicit directional sync outcome is different: it authorizes its complete
-bounded chain below, so do not ask again at each internal stage.
+2. Export once:
 
-## Directional Intent
+   ```bash
+   PYTHONDONTWRITEBYTECODE=1 python3 scripts/sync.py export
+   ```
 
-- **Sync to GitHub** means audit, export, final local verification, and a
-  bounded handoff to `github:yeet`, which owns the complete branch, commit,
-  push, and draft pull-request flow.
-- **Sync GitHub updates to this host** means fetch, non-conflicting integration,
-  and confirmed apply of existing admitted portable targets with the standard
-  timestamped backup.
+   Preserve canonical repository-only personal skills. Export may add or
+   update active personal skills, but must not delete a canonical migration
+   asset merely because it is absent from this host.
 
-These mappings do not authorize a ready-for-review transition, merge,
-repository or visibility change, another host, conflict resolution with
-ambiguous ownership, credential changes, or newly admitted content. Outbound
-sync authorizes only the default draft pull request owned by `github:yeet`. A
-plan-only, audit-only, export-only, or apply-only request remains limited to the
-named stage.
+3. Inspect `git status --short`, the complete unstaged diff for every changed
+   path, and `git diff --check`. Confirm that the candidate contains only
+   intended portable assets and no secret, excluded, generated-runtime, or
+   unrelated state.
+4. Obtain `personal-risk-verification: supported` after the last candidate
+   change. If the candidate changes afterward, rerun only the invalidated
+   evidence.
+5. For `sync up` or `sync to GitHub`, hand the unchanged candidate to
+   `github:yeet` with repository/worktree, target revision, exact paths,
+   unrelated state, remote/base/visibility intent, and
+   `dependency_install_authorized: false`.
 
-## Preflight
+The audit executor never stages, commits, pushes, opens a pull request, changes
+visibility, or installs a publication dependency. A bare audit, comparison, or
+export ends locally without a publication handoff.
 
-1. Lock direction, repository path, current host, actual repository visibility
-   when publishing, and the applicable intent boundary.
-2. Before Git network access, read the host connection contract routed by the
-   active instructions and use its documented entrypoint. Do not probe direct,
-   proxy, API, archive, or alternate transports first.
-3. Run `git status --short` before a profile-kit write. Preserve existing user
-   changes and stop if the intended command could absorb unrelated work.
-4. Run `python3 scripts/sync.py audit` at the direction-specific point below and
-   inspect the categorized diff.
-5. Reconcile personal source-note presence and the third-party allowlist/content
-   lock. Do not export host-only, unassessed, deferred, rejected, unlocked, or
-   digest-drifted skills.
+## Inbound: Repository To Host
 
-## Routine Fast Path
+Use an explicit inbound-sync request as authority for non-conflicting Git
+integration and confirmed apply of the unchanged managed plan.
 
-### Outbound
+1. Fetch the configured upstream, classify both ancestry directions, and
+   identify the exact incoming revision. Fast-forward when possible. For
+   divergent but related history, use an existing repository policy only when
+   it determines the integration method; otherwise ask the user to choose.
+   Stop on unrelated local ownership, ambiguous or rewritten/unrelated
+   history, merge conflict, unexpected remote/base, or a change requiring a
+   user decision.
+2. Run audit against the integrated revision:
 
-1. Preflight branch/upstream, author identity, worktree/index ownership, remote,
-   visibility, and host network entrypoint. Network, proxy, and connection
-   evidence selects only the transport path; it grants no publication,
-   credential, installation, launch, or verdict authority.
-2. Run `sync.py audit`, then `sync.py export`. Export verifies the staged
-   candidate, so do not run a redundant standalone `verify` while the exported
-   state remains unchanged.
-3. Inspect the exact portable diff and sensitive-path boundary, then obtain a
-   `personal-risk-verification: supported` verdict for the unchanged candidate.
-   The profile executor must not stage, commit, or push it.
-4. Hand the complete publication flow to `github:yeet` with the schema below.
-   That owner starts from the uncommitted candidate and owns branch setup,
-   staging, commit, push, and draft pull-request creation.
+   ```bash
+   PYTHONDONTWRITEBYTECODE=1 python3 scripts/sync.py audit
+   ```
 
-### Inbound
+3. Run one apply dry run:
 
-1. Preflight worktree/index ownership and the host network entrypoint, then
-   fetch and classify ancestry.
-2. Fast-forward or create a non-conflicting merge as authorized. Stop on a
-   merge conflict or ambiguous ownership.
-3. Run `sync.py audit`, then `sync.py apply` once. The apply dry run verifies
-   the repository and reports the exact target set.
-4. When the target set contains only existing admitted portable targets, the
-   inbound-sync intent authorizes `apply --confirm` with its timestamped backup.
-   Run one post-apply audit and require zero drift.
+   ```bash
+   PYTHONDONTWRITEBYTECODE=1 python3 scripts/sync.py apply
+   ```
 
-Use one verification pass per unchanged state. Rerun only the check whose input
-or artifact identity changed; do not stack `audit`, `verify`, export validation,
-and apply validation merely for ceremony.
+   Review every listed destination. Require the complete
+   `rules/AGENTS.portable.md` to target `~/.codex/AGENTS.md`, only
+   `personal-*` skill directories to target the Codex skill root, and no
+   `HOST_LOCAL.md`, `config.toml`, authentication, connection, or runtime-state
+   target. Non-personal skills and host-only personal skill deletions must
+   remain absent from the plan.
 
-Emit a visible checkpoint after preflight that names the locked candidate and
-the next incomplete stage. If a command or worker hits a deterministic blocker,
-report the blocker before another attempt; do not accumulate silent retries or
-serial handoffs around the same unchanged failure.
+4. Immediately before confirm, re-identify the repository revision, profile
+   candidate, and target list. If they still match the reviewed dry run, apply
+   immediately; if any identity changed, return to the dry run. Do not insert
+   unrelated Git ceremony between this check and confirm.
 
-Run Python-based audit, export, and validation commands with
-`PYTHONDONTWRITEBYTECODE=1` so they do not create `__pycache__`. If an ignored
-`__pycache__` or `.pyc` still appears, classify it once as a transient validation
-artifact. It does not reopen semantic review or justify repeating completed
-gates. Any removal remains governed by the active cleanup and temporary-work
-authorization boundary.
+5. If the plan is unchanged and fully contained, apply it:
 
-## Escalation Triggers
+   ```bash
+   PYTHONDONTWRITEBYTECODE=1 python3 scripts/sync.py apply --confirm
+   ```
 
-Leave the routine fast path and pause or invoke the owning workflow when any of
-these appears:
+   When the plan contains changes, require a unique timestamped backup under
+   the target home. The backup must contain every replaced destination,
+   including the previous complete `~/.codex/AGENTS.md` when it changes, before
+   the first corresponding write. An empty plan is a no-op and creates no
+   backup.
 
-- a new, removed, or renamed managed asset, including a skill, agent, hook, or
-  lifecycle successor;
-- changes to `AGENTS.md`, configuration/templates, the third-party lock, sync
-  tooling, generated policy documents, trust-related state, host facts,
-  memories, or excluded/sensitive paths;
-- unrelated or ambiguous worktree state, a pre-populated index of uncertain
-  ownership, a merge conflict, or ambiguous branch ancestry;
-- a repository visibility change, different remote/branch/host, unconfirmed
-  public exposure, or a ready-for-review, merge, or publication expansion beyond
-  the bounded draft-PR handoff;
-- an admission/provenance conflict, changed Codex compatibility contract, a
-  transport anomaly after using the documented host path, or a request to
-  change credentials. Missing publication helpers do not authorize installation.
+6. Record the backup path and immediately run a post-apply audit:
 
-Ordinary content updates to existing admitted portable targets do not require a
-whole-profile collector or a second authorization round merely because they
-span more than one file.
+   ```bash
+   PYTHONDONTWRITEBYTECODE=1 python3 scripts/sync.py audit
+   ```
 
-## Included Portable Assets
+   Require zero repository-to-host drift for managed targets. A host-only
+   personal skill remains outside that directional drift. If apply fails, stop
+   without more mutation and report whether its transactional rollback
+   restored the previous state. If the later audit fails after apply succeeded,
+   preserve the emitted backup and report the failed command, affected targets,
+   and exact backup paths. Restore only those paths after an explicit recovery
+   decision, then audit again.
 
-- `rules/AGENTS.portable.md`.
-- Personal workflow skills and explicitly allowlisted portable skills.
-- `THIRD_PARTY_SKILLS.lock.json`, which binds allowlisted vendor identities to
-  reviewed source/license states and exact portable snapshot digests. It is
-  profile policy and is not copied into the target Codex home.
-- Agent skills under `skills/agents/`.
-- Hook scripts, tests, safe hook documentation, and Hookify rules.
-- Portable templates, connector checklist, manifest, sync tooling, and CI.
-- Explicitly reviewed, public, non-secret MCP declarations in the manual config
-  template; never authenticated runtime state.
-- `HOST_LOCAL_TEMPLATE.md`, never the populated `HOST_LOCAL.md`.
+## Verification And Resumption
 
-## Excluded Assets
-
-Never export, apply from a snapshot, commit, print, or summarize secret values
-or runtime state:
-
-- Auth/session/history files, tokens, cookies, passwords, private keys,
-  `.netrc`, or secret environment files.
-- SQLite state, attachments, logs, pasted files, memories, or rollout summaries.
-- Hook trust hashes, approval history, project trust, connector OAuth state, or
-  plugin/app/model caches.
-- MCP command lines, arguments, environment entries, bearer-token fields,
-  header material, OAuth/login state, runtime health, or tool output.
-- Conda environments, package caches, datasets, model weights, project outputs,
-  or generated tarballs in Git history.
-- Non-personal installed suites unless explicitly allowlisted.
-- Host-only, unassessed, deferred, rejected, unlocked, or locally drifted
-  third-party skills.
-
-## Export
-
-After explicit export authority:
-
-```bash
-python3 scripts/sync.py export
-git status --short
-```
-
-Export verifies its candidate. Review the actual diff and confirm that no
-unrelated path was added. Do not stage, commit, or push from this workflow.
-Bounded outbound-sync intent authorizes only the publication handoff after the
-final supported verdict.
-
-Admission does not authorize export, and export does not grant admission. A
-new portable vendor normally requires `admitted + complete + vendor`. A
-documented pre-contract `legacy-exception` may preserve only its exact locked
-snapshot and must fail before any update until provenance is completed.
-
-## Apply
-
-Run the dry run first:
-
-```bash
-python3 scripts/sync.py apply
-```
-
-Use `apply --confirm` after explicit approval, or directly under bounded
-inbound-sync intent when the dry run lists only existing admitted portable
-targets and the standard backup behavior. Re-check the backup path and run a
-zero-drift audit after the write. `AGENTS.portable.md` and config templates
-remain manual-review inputs, not automatic replacements for host-specific state.
-
-## Publication Handoff
-
-Do not call `sync.py push --confirm` after a completed export—or at any other
-stage. The legacy `sync.py push` parser entry is fail-closed compatibility only:
-with or without `--confirm`, it exits nonzero before export, status inspection,
-staging, commit, or push. It directs the operator to `audit` → `export` →
-`inspect` → `personal-risk-verification` → `github:yeet` and contains no
-executable publication implementation.
-
-After final export and `personal-risk-verification: supported`, produce:
-
-```yaml
-publication_handoff:
-  owner: github:yeet
-  intent: publish_to_github
-  repository:
-  worktree:
-  target_revision:
-  exact_paths: []
-  unrelated_state: []
-  intended_remote:
-  intended_base:
-  confirmed_visibility:
-  host_connection_entrypoint:
-  completion_verdict: supported
-  dependency_install_authorized: false
-```
-
-Publication intent does not authorize dependency installation. If an already
-available ordinary Git path is sufficient for the requested stage, the
-publication owner may use it. If a required helper is missing, it asks the user
-instead of installing. The cached plugin source is external and is not modified
-or promoted to a durable profile owner.
-
-The audit/local-finish route and `github:yeet` publication route are
-outcome-exclusive; choose one from the requested outcome and do not run both.
-Do not install or enable a dependency for publication or `github:yeet` unless
-that exact action is separately authorized.
-
-The handoff is ready only when the candidate is unchanged since verification,
-the exact paths are isolated, remote/base/visibility intent is known, and no
-excluded or sensitive state is present. Otherwise stop after export and report
-the missing evidence or decision.
+- Use one verification pass per unchanged state. Export validation, exact diff
+  review, apply dry run, and post-audit have different purposes; do not repeat
+  them merely for ceremony.
+- On resume, re-identify the repository revision, candidate or dry-run plan,
+  worktree ownership, and first incomplete stage. Reuse still-fresh evidence.
+- Stop before any action outside the selected direction, managed set, current
+  host, or repository. Never infer publication from a successful export or
+  infer permission to overwrite a conflict from an inbound-sync request.

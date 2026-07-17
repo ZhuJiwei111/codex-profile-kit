@@ -1,44 +1,39 @@
 # Migration Manifest
 
-Generated for a clean Codex profile kit.
+This manifest defines the repository's current portable boundary.
 
-## Included
+## Managed Synchronization Payload
 
-- `rules/AGENTS.portable.md`: machine-neutral durable Codex behavior rules.
-- `templates/HOST_LOCAL_TEMPLATE.md`: target-machine overlay template.
-- `templates/REMOTE_CONNECTION_EXAMPLE.md`: reviewed static, manual-only remote
-  connection example; it is never populated from the active host contract.
-- `templates/hooks.json.template`: Codex hook wiring template with placeholders.
-- `templates/config.toml.template`: minimal portable Codex config reference
-  without a fixed parent model or reasoning effort, including reviewed public
-  MCP endpoint declarations with no authentication state.
-- `skills/codex/`: personal workflow skills plus explicitly allowlisted
-  portable Codex skills from `~/.codex/skills`.
-  Verification checks personal-skill UI metadata and source-note presence,
-  relative resource links, and the aggregate 6,500-character managed-catalog
-  description budget.
-- `THIRD_PARTY_SKILLS.lock.json`: reviewed source/license state and exact
-  content digests for allowlisted portable third-party Codex skills.
-- `skills/agents/find-skills/`: portable agent skill discovery helper.
-- `agents/codex/`: allowlisted custom Codex agent profiles from
-  `~/.codex/agents`.
-- `hooks/scripts/`: reviewed hook scripts and tests from `~/.codex/hooks`;
-  export filters retired targets and verifies the pinned snapshot before code
-  execution.
-- `hooks/rules/`: reviewed controlled global Markdown rules from
-  `~/.codex/hookify`, limited to the pinned portable inventory.
-- `CONNECTORS.md`: re-authentication and public MCP review checklist.
-- `INSTALL.md`: target-machine install and smoke-test guide.
+- `rules/AGENTS.portable.md`: the complete machine-neutral
+  `~/.codex/AGENTS.md`; confirmed apply backs up and replaces the whole file.
+- `skills/codex/personal-*`: personal Codex workflow skills only.
+- `agents/codex/`: custom Codex agent profiles in the explicit managed
+  inventory.
+- `hooks/scripts/` and `hooks/rules/`: hook code, tests, and controlled global
+  Markdown rules in the explicit managed inventory.
+- `templates/hooks.json.template`: wiring source for the managed hooks.
 
-## Excluded
+Target-host non-personal Codex skills and `~/.agents/skills` are preserved and
+excluded from audit drift.
 
-- Codex auth files, tokens, connector or MCP OAuth state, authenticated header
-  values, cookies, passwords, and secrets.
-- Session history, archived sessions, logs, attachments, and pasted files.
-- SQLite databases, WAL/SHM files, state databases, and goal/history stores.
-- Codex memories and rollout summaries.
-- Plugin caches, app caches, marketplace temporary clones, and model caches.
-- Project trust lists, hook trusted hashes, approval history, and local runtime
-  state.
-- Conda environments, package caches, datasets, model weights, project outputs,
-  and machine-specific tool installations.
+## Repository References
+
+- `templates/HOST_LOCAL_TEMPLATE.md`: starting point for host-local facts.
+- `templates/REMOTE_CONNECTION_EXAMPLE.md`: static, credential-free connection
+  example; synchronization never populates it from the active host.
+- `templates/config.toml.template`: manual configuration reference without
+  target-host auth or runtime state.
+- `INSTALL.md`: inbound fetch/integrate, dry-run, confirmed apply, and
+  post-apply audit flow.
+- `CONNECTORS.md`: target-host reconnection checklist.
+
+## Host-Local Or Excluded
+
+- `HOST_LOCAL.md`, `config.toml`, connection contracts, auth files, tokens,
+  cookies, passwords, and connector or MCP session state.
+- Session history, logs, attachments, SQLite state, goal/history stores,
+  memories, and rollout summaries.
+- Plugin and app caches, marketplace clones, model caches, project trust,
+  hook trusted hashes, approval history, and other runtime state.
+- Environments, package caches, datasets, model weights, project outputs, and
+  machine-specific tools.

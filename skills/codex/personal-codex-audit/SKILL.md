@@ -1,158 +1,112 @@
 ---
 name: personal-codex-audit
-description: Use for current-host, whole-profile audit, drift comparison, export, apply, or preparation of a bounded sync across AGENTS.md, personal skills, hooks, and codex-profile-kit; GitHub publication is handed to github:yeet.
+description: Use for a read-only audit of the current host's reusable Codex profile, an outbound sync from the host to codex-profile-kit, or an inbound sync from a reviewed codex-profile-kit revision to the host. Manages portable AGENTS.md rules, personal-* Codex skills, and other explicit sync.py targets while excluding non-personal skills, HOST_LOCAL.md/config.toml, credentials, and runtime state; hand GitHub publication to github:yeet.
 ---
 
 # Personal Codex Audit
 
-## Contract
+## Select One Intent
 
-Own current-host, whole-profile inventory, drift analysis, and profile-kit
-transfer decisions.
+| Intent | Outcome | Write boundary |
+| --- | --- | --- |
+| `audit` | Report managed assets, exclusions, and host/repository drift | Read-only |
+| `sync up` / `outbound` | Export a reviewed candidate from this host into `codex-profile-kit` | Repository files only; publication is a separate handoff |
+| `sync down` / `inbound` | Integrate a reviewed repository revision and apply its managed targets to this host | Active profile only after an exact dry run and timestamped backup |
 
-The main process locks direction, authority, host, repository, and transfer
-scope, then owns intake. A bounded profile executor performs substantive audit,
-export, fetch, integration, apply, and verification commands. Reviewers report
-candidate-diff evidence and uncertainty only. The main process alone issues the
-completion verdict or authorizes the next owner.
+Do not infer one intent from another. A bare audit, comparison, export, or dry
+run does not authorize apply or publication. Treat an explicit directional
+sync request as authority for its ordinary local chain, but stop when a
+conflict, credential step, new admission decision, or other scope expansion
+needs the user.
 
-- Keep audits, comparisons, `sync.py audit`, and dry runs read-only.
-- Require matching intent for writes and publication. Explicit directional sync
-  intent authorizes the bounded ordinary chain defined below; a bare audit,
-  comparison, export, or apply request does not authorize later stages.
-- Distinguish files, configuration, enablement, trust, export state, and
-  verification instead of collapsing them into "installed" or "active."
-- Reconcile skill provenance, admission, activation, portability, and export
-  as separate states. Whole-profile aggregation never grants admission to one
-  candidate.
-- Treat MCP declarations as configuration evidence only. Inventory their safe
-  public identity without collecting authentication or runtime state.
-- Preserve unrelated profile and repository changes.
+Run the commands on the user's behalf. Ask the user for an action only when
+their permission, authentication, repository-visibility decision, or conflict
+resolution is actually required.
 
-## Scope Gate
+## Keep The Portable Boundary Exact
 
-| Requested outcome | Primary owner |
-| --- | --- |
-| Audit or compare the whole reusable profile | Deep audit path in `personal-codex-audit` |
-| Routine directional sync to or from `codex-profile-kit` | Fast path in `personal-codex-audit` |
-| Commit, push, and open a GitHub pull request for an outbound candidate | `github:yeet`, after `personal-risk-verification: supported` |
-| Local-only commit without publication | `personal-branch-finish`, after `personal-risk-verification: supported` |
-| Decide one skill, plugin, or hook lifecycle | `personal-skill-hygiene` |
-| Admit one newly created or externally installed skill | `personal-skill-hygiene`, with the owning system author/installer for mechanics |
-| Create or edit one skill | `skill-creator` |
-| Create, migrate, or test one hook or Markdown guard | `personal-codex-hook-rules` |
-| Discover/install a skill or create a plugin | The corresponding system skill |
+- Use the current host and the explicitly selected `codex-profile-kit`
+  worktree. Preserve unrelated profile, worktree, and index state.
+- Migrate only Codex skill directories named `personal-*`. Treat every such
+  skill already present in the canonical repository as a migration asset.
+  Routine audit, export, and apply do not re-run source-note, admission, or
+  provenance parsing.
+- Before a newly created or externally acquired skill first enters the
+  canonical repository, route its admission to `personal-skill-hygiene`. Once
+  admitted there, repository membership is the routine sync boundary.
+- Leave active non-personal skills unmanaged. Do not copy, update, classify as
+  drift, retire, or delete them, whether they live under `~/.codex/skills` or
+  another discovery root.
+- Treat `rules/AGENTS.portable.md` as the complete portable rules file. During
+  confirmed apply, back up the existing `~/.codex/AGENTS.md`, then replace it
+  with that file; do not merge fragments into the old rules.
+- Never apply `~/.codex/HOST_LOCAL.md`, `~/.codex/config.toml`, credentials,
+  auth/session files, connection state, caches, memories, logs, or other
+  runtime state. Templates for those surfaces are references only.
 
-Do not expand single-artifact work into a profile audit. For mixed requests,
-finish the read-only profile finding, then hand each concrete change to its
-owning workflow and authorization gate.
+Read [source policy](references/source-policy.md) before inspecting the active
+profile. Read [sync policy](references/sync-policy.md) for either directional
+sync.
 
-## Path Selection
+## Audit Read-Only
 
-- Use the deep audit path only for an audit request or when a sync escalation
-  trigger is present.
-- For a routine directional sync, read only
-  [references/sync-policy.md](references/sync-policy.md). Do not run the
-  whole-profile collector, compatibility reconciliation, or state-model report
-  unless the fast path escalates.
-- Before Git network access, read the current host connection contract when the
-  active instructions route to one, and use its documented entrypoint. Do not
-  improvise direct, proxy, API, or archive fallbacks first.
+1. Lock the current host, repository, managed surfaces, and requested depth.
+2. Run `scripts/sync.py audit` and inspect its categorized drift. Use
+   `scripts/collect_codex_profile.py` only when the user needs a bounded safe
+   inventory beyond transfer drift.
+3. Report managed differences, excluded surfaces, unknowns, and any later
+   action requiring separate authority. Do not export, apply, fetch, stage, or
+   publish.
 
-## Audit Workflow
+## Sync Outbound
 
-1. Lock the current host and requested profile surfaces. Tasks, threads,
-   sessions, and other-host state are not reusable-profile evidence.
-2. Read [references/source-policy.md](references/source-policy.md). Memory
-   content remains excluded unless the user requests a memory-informed audit.
-3. Reconcile each personal source note and the reviewed third-party lock with
-   the current skill inventory. Report `source_classification`,
-   `provenance_status`, `admission_status`, and `portability_disposition`
-   independently; route a single missing or conflicting decision to
-   `personal-skill-hygiene`.
-4. Run `scripts/collect_codex_profile.py --home "$HOME"`; treat its JSON as a
-   bounded inventory, not proof of runtime behavior.
-5. When Codex changed since the last verified baseline, read
-   [references/compatibility-policy.md](references/compatibility-policy.md)
-   and choose focused or broad revalidation from the affected contract, not
-   version inequality alone.
-6. For drift or transfer readiness, read
-   [references/sync-policy.md](references/sync-policy.md), then run `sync.py
-   audit` or an equivalent dry run before proposing a write.
-7. Apply [references/profile-state-model.md](references/profile-state-model.md)
-   and reconcile counts with the configuration sources actually in scope. Keep
-   `unknown`, `not-collected`, `user-reported`, and `product-confirmed` distinct.
-8. Report scope, inventory, drift, exclusions, unknowns, and recommendations
-   requiring approval. Label any opted-in memory evidence as memory-derived.
+1. Confirm repository and index ownership, branch/upstream, and the intended
+   remote before any write or network action.
+2. Run audit, export once, and inspect the exact resulting diff. Require secret,
+   path, and symlink containment and preserve repository-only personal skills.
+3. Obtain a fresh `personal-risk-verification: supported` verdict for the
+   unchanged candidate.
+4. Treat `sync up` or `sync to GitHub` as an explicit publication outcome and
+   hand the candidate to `github:yeet`. Treat a bare `export` as local only.
+   Do not stage, commit, push, or open a pull request in this skill.
 
-## Routine Directional Sync
+## Sync Inbound
 
-Treat these explicit outcomes as matching authority inside the configured
-repository, branch, current host, and safe envelope. Do not ask again at each
-internal stage that remains inside the exact requested chain:
+1. Fetch through the current host's documented network path, classify Git
+   ancestry, and integrate only without conflicts or ambiguous ownership.
+2. Run audit, then one exact `apply` dry run. Confirm that every planned target
+   is managed and that excluded, non-personal, and host-only personal skill
+   state is untouched.
+3. Treat the dry run as the exact list for the inputs it observed, not a
+   cross-command binding. Immediately before confirm, re-identify the
+   repository revision, profile candidate, and target list. If all three are
+   unchanged, run `apply --confirm` immediately; otherwise return to the dry
+   run. When changes exist, record the timestamped backup path; an empty plan
+   is a no-op and creates no backup. Then run a post-apply audit and require
+   zero repository-to-host drift for managed targets.
+4. If apply fails, stop and report whether its transactional rollback restored
+   the previous state. If a later post-audit fails after successful apply,
+   preserve the emitted backup and report the exact rollback source and
+   affected paths. Do not improvise a broader overwrite.
 
-- **Sync to GitHub** authorizes audit, export, final local verification, and a
-  bounded publication handoff to `github:yeet`. That owner exclusively performs
-  branch setup, staging, commit, push, and draft pull-request creation.
-- **Sync GitHub updates to this host** authorizes fetch, non-conflicting
-  integration, and confirmed apply of existing admitted portable targets with
-  the standard timestamped backup.
+## Stop Conditions
 
-Neither intent authorizes a ready-for-review transition, merge, visibility
-change, another repository or host, conflict resolution with ambiguous
-ownership, new admission, or excluded/sensitive state. Outbound sync authorizes
-only the default draft pull request owned by `github:yeet`.
+Stop before mutation when ownership is unclear, ancestry is ambiguous, a Git
+conflict appears, the dry run changes after review, a path escapes its allowed
+root, a source or destination is an unsafe symlink, a secret-bearing surface
+appears, or the operation would touch an unmanaged asset. Keep routine checks
+to these safety and transfer gates; do not add unrelated lifecycle,
+compatibility, or repeated verification ceremony.
 
-Run the smallest direction-specific chain:
-
-1. Lock direction, repository, branch/upstream, visibility when publishing,
-   current host, clean ownership, and the host network entrypoint.
-2. For outbound sync, run `sync.py audit`, export once, inspect the exact diff,
-   and obtain `personal-risk-verification: supported`. Then hand the unchanged
-   candidate to `github:yeet` with repository, worktree, target revision, exact
-   paths, remote/base/visibility intent, the host connection entrypoint, and
-   `dependency_install_authorized: false`. The audit executor must not stage,
-   commit, or push first.
-3. For inbound sync, fetch, classify ancestry, integrate without conflict, run
-   `sync.py audit` and one apply dry run, then apply the reviewed existing
-   targets with backup and require a zero-drift post-apply audit.
-4. Use one verification pass per unchanged state. Export already verifies its
-   candidate and apply already verifies the repository; do not add a standalone
-   `verify` beside either command unless a later mutation invalidated evidence.
-5. Escalate according to `sync-policy.md`. Stop before a material mutation that
-   falls outside the fast-path authority instead of degrading into a broad
-   audit or repeated network experiments.
-6. When resuming an interrupted chain, confirm the candidate identity and
-   ownership, then reuse still-valid evidence and resume at the first incomplete
-   stage. Do not reopen completed stages or a deep audit merely because work
-   moved to another turn or task.
-
-## Hard Boundaries
-
-- Never read or output credentials, auth/session files, raw transcripts,
-  SQLite state, caches, trust hashes, or approval history.
-- Never serialize MCP commands, arguments, environment entries, bearer-token
-  variable names or values, header names or values, OAuth state, or runtime
-  health. An auth mechanism category is the maximum default projection.
-- Never infer individual hook enablement or trust from files, registrations,
-  feature flags, hashes, or prior reports; direct the user to `/hooks`.
-- Never infer admission from file presence, successful installation,
-  popularity, a curated label, source reputation, an allowlist, or export.
-- A memory feature flag may be inventoried; memory content remains opt-in and
-  outside ordinary export.
-- Do not edit audited profile assets or manage another host without separate,
-  concrete authority.
-- Do not stage, commit, push, publish, change visibility, or contact external
-  services without matching explicit authority. The two directional sync
-  outcomes above are matching authority only for their bounded chains, and
-  outbound publication still remains exclusively executed by `github:yeet`.
+Use one verification pass for each unchanged state. Rerun only the evidence
+invalidated by a later mutation. Never treat local export or verification as
+implicit publication authority.
 
 ## Resources
 
-- `scripts/collect_codex_profile.py` and `scripts/test_collect_codex_profile.py`: emit and test the safe schema-v3 inventory, including redacted MCP declarations.
-- [references/source-policy.md](references/source-policy.md): allowed evidence, memory, symlink, host, and sensitive-source boundaries.
-- [references/sync-policy.md](references/sync-policy.md): audit, export, apply,
-  verification, and publication-handoff gates.
-- [references/profile-state-model.md](references/profile-state-model.md): consistent evidence and state labels.
-- [references/compatibility-policy.md](references/compatibility-policy.md): Codex baseline and contract-triggered revalidation.
-- [references/source-notes.md](references/source-notes.md): official sources, checked versions, and local deviations.
+- `scripts/collect_codex_profile.py`: optional safe current-host inventory for
+  an audit that needs more than transfer drift.
+- `scripts/test_collect_codex_profile.py`: focused collector tests.
+- [source policy](references/source-policy.md): safe sources and exclusions.
+- [sync policy](references/sync-policy.md): exact outbound/inbound execution
+  and recovery gates.
