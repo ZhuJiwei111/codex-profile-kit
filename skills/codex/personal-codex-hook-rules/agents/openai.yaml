@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Codex Hook Rules"
-  short_description: "Author and validate trusted Codex hook guards"
+  short_description: "Author and test native Codex hook guards"
   default_prompt: "Use $personal-codex-hook-rules to create or revise a focused Codex hook guard and validate it with native payloads and trust boundaries."
 policy:
   allow_implicit_invocation: true

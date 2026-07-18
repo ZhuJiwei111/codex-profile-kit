@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Branch Finish"
-  short_description: "Finish verified local Git work without losing ownership"
-  default_prompt: "Use $personal-branch-finish after a supported verdict for local Git readiness, an explicit local-only commit, preservation, or handoff; route any GitHub publication flow intact to $github:yeet."
+  short_description: "Run one explicit verified Git outcome safely"
+  default_prompt: "Use $personal-branch-finish for this explicit handoff, commit, commit-and-push, or push-only outcome with exact task ownership and non-force refs."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

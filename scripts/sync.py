@@ -23,21 +23,34 @@ from typing import Callable, Iterable
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_HOME = Path.home()
 
-CODEX_AGENT_FILES = ("monitor.toml", "reviewer.toml")
-HOOK_RULE_FILES = (
-    "README.md",
-    "block-base-conda-install.md",
-    "block-sensitive-file-edits.md",
-    "block-sensitive-path-command.md",
-)
 HOOK_SCRIPT_FILES = (
     "direct_download_guard.py",
-    "hookify_codex_runner.py",
+    "local_safety_guard.py",
     "test_direct_download_guard.py",
-    "test_hookify_codex_runner.py",
     "test_hooks_configuration.py",
+    "test_local_safety_guard.py",
 )
-MANAGED_ROOTS = ("rules", "templates", "skills", "hooks", "agents")
+MANAGED_ROOTS = ("rules", "templates", "skills", "hooks")
+RETIRED_PERSONAL_SKILLS = frozenset({"personal-review-response"})
+RETIRED_ACTIVE_PATHS = (
+    Path(".codex/skills/personal-review-response"),
+    Path(".codex/agents/monitor.toml"),
+    Path(".codex/agents/reviewer.toml"),
+    Path(".codex/hookify/README.md"),
+    Path(".codex/hookify/block-base-conda-install.md"),
+    Path(".codex/hookify/block-sensitive-file-edits.md"),
+    Path(".codex/hookify/block-sensitive-path-command.md"),
+    Path(".codex/hooks/hookify_codex_runner.py"),
+    Path(".codex/hooks/test_hookify_codex_runner.py"),
+)
+RETIRED_REPO_PATHS = (
+    Path("skills/codex/personal-review-response"),
+    Path("agents/codex/monitor.toml"),
+    Path("agents/codex/reviewer.toml"),
+    Path("hooks/rules"),
+    Path("hooks/scripts/hookify_codex_runner.py"),
+    Path("hooks/scripts/test_hookify_codex_runner.py"),
+)
 PORTABLE_FORBIDDEN_DIRECTORIES = {
     ".cache",
     ".git",
@@ -98,6 +111,7 @@ class ManagedEntry:
     content: bytes | None = None
     mode: int | None = None
     label: str = "managed content"
+    delete: bool = False
 
     def is_directory(self) -> bool:
         return self.source is not None and self.source.is_dir()
@@ -113,7 +127,7 @@ class Drift:
 @dataclass
 class AppliedEntry:
     destination: Path
-    stage: Path
+    stage: Path | None
     hold: Path | None
 
 
@@ -245,9 +259,12 @@ def _tree_signature(path: Path) -> tuple[tuple[str, str, int, str], ...]:
 def _entry_matches(entry: ManagedEntry) -> bool:
     destination = entry.destination
     if not path_lexists(destination):
-        return False
+        return entry.delete
     if destination.is_symlink():
         raise RuntimeError(f"managed destination must not be a symbolic link: {destination}")
+    if entry.delete:
+        validate_regular_path(destination, label="retired managed destination")
+        return False
     if entry.content is not None:
         if not destination.is_file():
             return False
@@ -417,6 +434,24 @@ def validate_personal_skill_openai_yaml(skill_dir: Path, root: Path) -> None:
             raise SystemExit(f"empty openai interface key {key}: {rel(path, root)}")
     if f"${skill_dir.name}" not in values["default_prompt"]:
         raise SystemExit(f"default_prompt does not name ${skill_dir.name}: {rel(path, root)}")
+    policy = re.search(
+        r"^policy:\s*$\n(?:^[ \t]+.*\n)*?^\s{2}allow_implicit_invocation:\s*(true|false)\s*$",
+        text,
+        re.MULTILINE,
+    )
+    if policy is None:
+        raise SystemExit(
+            f"missing boolean allow_implicit_invocation policy: {rel(path, root)}"
+        )
+    allow_implicit = policy.group(1) == "true"
+    skill_frontmatter = parse_frontmatter(
+        (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+    )
+    if skill_frontmatter.get("description", "").casefold().startswith("manual only"):
+        if allow_implicit:
+            raise SystemExit(
+                f"manual-only skill must disable implicit invocation: {rel(path, root)}"
+            )
 
 
 def validate_skills(root: Path) -> None:
@@ -465,14 +500,15 @@ def _validate_exact_inventory(path: Path, expected: Iterable[str], *, label: str
 
 def validate_explicit_inventory(root: Path) -> None:
     _validate_exact_inventory(
-        root / "agents" / "codex", CODEX_AGENT_FILES, label="custom agent"
-    )
-    _validate_exact_inventory(
-        root / "hooks" / "rules", HOOK_RULE_FILES, label="hook rule"
-    )
-    _validate_exact_inventory(
         root / "hooks" / "scripts", HOOK_SCRIPT_FILES, label="hook script"
     )
+
+
+def validate_retired_repo_paths(root: Path) -> None:
+    present = [path for path in RETIRED_REPO_PATHS if path_lexists(root / path)]
+    if present:
+        rendered = ", ".join(path.as_posix() for path in present)
+        raise SystemExit(f"retired profile artifacts must be absent: {rendered}")
 
 
 def _load_json(path: Path) -> object:
@@ -519,6 +555,7 @@ def verify_repo(root: Path = REPO_ROOT) -> None:
     agents = root / "rules" / "AGENTS.portable.md"
     if not agents.is_file() or agents.is_symlink():
         raise SystemExit(f"missing portable AGENTS file: {agents}")
+    validate_retired_repo_paths(root)
     validate_skills(root)
     validate_explicit_inventory(root)
     validate_serialized_files(root)
@@ -532,7 +569,10 @@ def _personal_skill_directories(root: Path) -> list[Path]:
     return sorted(
         item
         for item in skill_root.iterdir()
-        if item.is_dir() and not item.is_symlink() and is_portable_codex_skill(item.name)
+        if item.is_dir()
+        and not item.is_symlink()
+        and is_portable_codex_skill(item.name)
+        and item.name not in RETIRED_PERSONAL_SKILLS
     )
 
 
@@ -543,14 +583,6 @@ def _source_apply_pairs(root: Path, home: Path) -> list[tuple[Path, Path]]:
     pairs.extend(
         (skill, home / ".codex" / "skills" / skill.name)
         for skill in _personal_skill_directories(root)
-    )
-    pairs.extend(
-        (root / "agents" / "codex" / name, home / ".codex" / "agents" / name)
-        for name in CODEX_AGENT_FILES
-    )
-    pairs.extend(
-        (root / "hooks" / "rules" / name, home / ".codex" / "hookify" / name)
-        for name in HOOK_RULE_FILES
     )
     pairs.extend(
         (root / "hooks" / "scripts" / name, home / ".codex" / "hooks" / name)
@@ -587,6 +619,14 @@ def managed_apply_entries(root: Path, home: Path) -> list[ManagedEntry]:
             label="templates/hooks.json.template (rendered)",
         )
     )
+    entries.extend(
+        ManagedEntry(
+            destination=home / relative,
+            label=f"retired profile artifact: {relative.as_posix()}",
+            delete=True,
+        )
+        for relative in RETIRED_ACTIVE_PATHS
+    )
     return entries
 
 
@@ -594,10 +634,15 @@ def validate_entry_plan(base: Path, entries: Iterable[ManagedEntry]) -> None:
     targets: list[Path] = []
     for entry in entries:
         target = safe_scoped_path(entry.destination, base, label="managed destination")
-        if entry.content is None:
+        if entry.delete:
+            if entry.source is not None or entry.content is not None:
+                raise RuntimeError(f"retired entry must not have replacement content: {entry.label}")
+        elif entry.content is None:
             if entry.source is None:
                 raise RuntimeError(f"managed entry lacks a source: {entry.label}")
             validate_regular_path(entry.source, label="managed source")
+        elif entry.source is not None:
+            raise RuntimeError(f"managed entry has both source and content: {entry.label}")
         targets.append(target)
     ordered = sorted(targets, key=lambda path: (len(path.parts), str(path)))
     if len(set(ordered)) != len(ordered):
@@ -645,6 +690,8 @@ def _copy_regular_path(source: Path, destination: Path) -> None:
 
 
 def _stage_entry(entry: ManagedEntry) -> Path:
+    if entry.delete:
+        raise RuntimeError(f"retired entry must not be staged: {entry.label}")
     parent = entry.destination.parent
     stage: Path | None = None
     try:
@@ -761,18 +808,23 @@ def transactional_replace(
     backup_attempted = False
     try:
         for entry in entries:
-            created.extend(_ensure_parent_directories(entry.destination, base))
+            if not entry.delete:
+                created.extend(_ensure_parent_directories(entry.destination, base))
         for entry in entries:
             safe_scoped_path(
                 entry.destination, base, label="staging destination"
             )
+            if entry.delete:
+                continue
             if entry.source is not None:
                 validate_regular_path(entry.source, label="managed source")
             staged.append((entry, _stage_entry(entry)))
         if backup_root is not None:
             backup_attempted = True
             _backup_entries(entries, backup_root, base)
-        for entry, stage in staged:
+        staged_by_destination = {entry.destination: stage for entry, stage in staged}
+        for entry in entries:
+            stage = staged_by_destination.get(entry.destination)
             hold: Path | None = None
             if path_lexists(entry.destination):
                 hold = _unused_adjacent_path(entry.destination, "rollback")
@@ -783,6 +835,9 @@ def transactional_replace(
                 os.replace(entry.destination, hold)
             record = AppliedEntry(entry.destination, stage, hold)
             applied.append(record)
+            if entry.delete:
+                continue
+            assert stage is not None
             safe_scoped_path(stage, base, label="promotion source")
             safe_scoped_path(
                 entry.destination, base, label="promotion destination"
@@ -869,7 +924,10 @@ def inbound_managed_drift(root: Path, home: Path) -> list[Drift]:
     for entry in entries:
         if _entry_matches(entry):
             continue
-        state = "missing" if not path_lexists(entry.destination) else "different"
+        if entry.delete:
+            state = "retired-present"
+        else:
+            state = "missing" if not path_lexists(entry.destination) else "different"
         drift.append(Drift(state, entry.label, entry.destination))
     return drift
 
@@ -885,6 +943,8 @@ def host_only_personal_skills(root: Path, home: Path) -> list[str]:
     additions: list[str] = []
     for item in sorted(skill_root.iterdir()):
         if not is_portable_codex_skill(item.name):
+            continue
+        if item.name in RETIRED_PERSONAL_SKILLS:
             continue
         validate_regular_path(item, label="active personal skill")
         if not item.is_dir():
@@ -945,19 +1005,10 @@ def _replace_candidate_path(source: Path, destination: Path) -> None:
 
 
 def _active_inventory_pairs(home: Path, candidate: Path) -> list[tuple[Path, Path]]:
-    pairs = [
-        (home / ".codex" / "agents" / name, candidate / "agents" / "codex" / name)
-        for name in CODEX_AGENT_FILES
-    ]
-    pairs.extend(
-        (home / ".codex" / "hookify" / name, candidate / "hooks" / "rules" / name)
-        for name in HOOK_RULE_FILES
-    )
-    pairs.extend(
+    return [
         (home / ".codex" / "hooks" / name, candidate / "hooks" / "scripts" / name)
         for name in HOOK_SCRIPT_FILES
-    )
-    return pairs
+    ]
 
 
 def validate_active_personal_source(skill: Path, home: Path) -> None:
@@ -999,6 +1050,8 @@ def _render_export_candidate(root: Path, home: Path, candidate: Path) -> None:
         for skill in sorted(active_skills.iterdir()):
             if not is_portable_codex_skill(skill.name):
                 continue
+            if skill.name in RETIRED_PERSONAL_SKILLS:
+                continue
             validate_active_personal_source(skill, home)
             _replace_candidate_path(
                 skill, candidate / "skills" / "codex" / skill.name
@@ -1017,8 +1070,6 @@ def _render_export_candidate(root: Path, home: Path, candidate: Path) -> None:
 def _export_entries(root: Path, candidate: Path) -> list[ManagedEntry]:
     sources = [candidate / "rules" / "AGENTS.portable.md"]
     sources.extend(_personal_skill_directories(candidate))
-    sources.extend(candidate / "agents" / "codex" / name for name in CODEX_AGENT_FILES)
-    sources.extend(candidate / "hooks" / "rules" / name for name in HOOK_RULE_FILES)
     sources.extend(candidate / "hooks" / "scripts" / name for name in HOOK_SCRIPT_FILES)
     return [
         ManagedEntry(

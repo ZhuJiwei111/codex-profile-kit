@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Codex Audit"
   short_description: "Audit and sync the portable Codex profile"
-  default_prompt: "Use $personal-codex-audit to audit this host's reusable Codex profile or execute a safe inbound or outbound sync with codex-profile-kit."
+  default_prompt: "Use $personal-codex-audit for this exact manual intent: audit, export repo, export and publish to GitHub, or apply a reviewed GitHub revision to the active profile."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

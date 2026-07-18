@@ -1,7 +1,6 @@
 interface:
   display_name: "Personal Prompt Optimizer"
-  short_description: "Repair prompts or compile side-task handoffs"
-  default_prompt: "Use $personal-prompt-optimizer to repair this prompt or compile the current side-task discussion into one executable handoff prompt with explicit evidence limits."
-
+  short_description: "Repair prompts or compile zero-context handoffs"
+  default_prompt: "Use $personal-prompt-optimizer to repair this prompt or compile the visible side discussion into one self-contained prompt for a fresh zero-context Codex task."
 policy:
   allow_implicit_invocation: false

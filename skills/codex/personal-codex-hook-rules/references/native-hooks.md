@@ -57,8 +57,7 @@ canonical values relevant to this profile are:
 For `apply_patch`, matcher aliases may include `Edit` or `Write`, but the payload
 still reports `tool_name: "apply_patch"`.
 
-The local adapter intentionally registers exact matchers `^Bash$` and
-`^apply_patch$`.
+The portable profile registers exact matchers `^Bash$` and `^apply_patch$`.
 
 ## PreToolUse Input
 
@@ -121,8 +120,7 @@ that the installed release implements the required semantics first.
 
 ## Other Native Events
 
-Native Codex supports more events than the local Markdown adapter. For a request
-involving `PermissionRequest`, `PostToolUse`, `Stop`, prompt submission,
+For a request involving `PermissionRequest`, `PostToolUse`, `Stop`, prompt submission,
 compaction, session, or subagent events, read the current official event section
 and matching release schema before writing the handler.
 

@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Test First Changes"
-  short_description: "Valid RED or baseline before implementation"
-  default_prompt: "Use $personal-test-first-changes to establish a valid RED or refactor baseline, make the smallest coherent change, and verify focused GREEN evidence."
+  short_description: "Establish focused behavior evidence before changes"
+  default_prompt: "Use $personal-test-first-changes to establish the smallest valid before-change check, make the scoped change, and compare the same evidence afterward."
 policy:
   allow_implicit_invocation: true

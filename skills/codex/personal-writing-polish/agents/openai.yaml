@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Writing Polish"
-  short_description: "Revise prose without changing claims or evidence"
-  default_prompt: "Use $personal-writing-polish to revise this locked text for the requested voice and artifact without changing claims, evidence, protected terms, or format constraints."
+  short_description: "Polish locked prose without changing meaning"
+  default_prompt: "Use $personal-writing-polish to rewrite this locked text in the requested voice while preserving every claim, evidence boundary, literal, and format constraint."
 policy:
   allow_implicit_invocation: true

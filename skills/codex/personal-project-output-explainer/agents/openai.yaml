@@ -1,7 +1,6 @@
 interface:
   display_name: "Project Output Explainer"
-  short_description: "Explain current-task evidence and next step"
-  default_prompt: "Use $personal-project-output-explainer with no target to explain the current task's causal snapshot and why its next step follows."
-
+  short_description: "Explain named outputs or current-task evidence"
+  default_prompt: "Use $personal-project-output-explainer to explain this named output, or omit the target to explain the current task's existing evidence snapshot."
 policy:
   allow_implicit_invocation: false

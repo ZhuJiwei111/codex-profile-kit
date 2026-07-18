@@ -1,244 +1,138 @@
 ---
 name: personal-multiline-coordination
-description: Coordinate parallel Codex worker lines across visible tasks, isolated Git worktrees, resources, intake, integration, and recovery. Use for explicit multiline/worktree execution or ambiguous worker/worktree ownership; implicit use is read-only only.
+description: Coordinate persistent Codex App tasks, isolated Git worktrees, cross-line intake, and explicitly authorized active-monitoring tasks; use implicitly only for read-only ownership reconciliation when existing tasks or worktrees are ambiguous.
 ---
 
 # Personal Multiline Coordination
 
-## Mission
+Coordinate durable lines that need their own Codex App task, worktree, or
+recurring observation lifecycle. Use `personal-subagent-boundaries` for bounded
+one-shot work.
 
-Act as the coordinator for parallel repository work whose worker, worktree,
-dependency, integration, or resource ownership would otherwise be ambiguous.
+The main process is the control plane. It owns decomposition, authority,
+scheduling, cross-line decisions, intake, and the final synthesis. App tasks
+perform substantive line work or recurring observation and stop at their
+assigned boundary.
 
-Keep a star topology:
+## Establish Authority
 
-- the coordinator owns the global plan, scheduling, intake, and authoritative
-  line decisions;
-- each executor owns one bounded substantive line and one canonical worktree;
-- executors report evidence and may report a `recommended_outcome` of `accept`, `reject`,
-  or `needs-more-evidence`, but do not decide the line's result;
-- reviewers and monitors report evidence and uncertainty only; and
-- cross-line decisions return to the coordinator or user.
+An explicit request for persistent or multiline execution authorizes only the
+named non-destructive App tasks and worktrees. Ask separately before heavy or
+long job launch, active monitoring, Git mutations, cleanup, publication, or an
+external action unless the user already granted that exact action.
 
-The coordinator is the main-process control plane. It may write only compact
-authoritative coordination state such as manifests, intake, decisions, and
-provenance records. Worktree preparation, source edits, tests, integration Git
-mutations, log inspection, and job actions belong to bounded executors.
+When this skill triggers because existing task or worktree ownership is
+ambiguous, inspect read-only state and report it. Do not create, resume, move,
+or archive tasks; create or remove worktrees; or write coordination state
+without explicit execution authority.
 
-This skill does not create a permanent multiline registry. Current truth comes
-from Desktop task state, Git state, and an optional lightweight coordinator
-snapshot.
+Do not silently replace a requested App task with a managed subagent or local
+main-process execution. If the required App surface is unavailable, report the
+capability gap and preserve the intended line.
 
-## Entry And Authority Gate
+## Keep Minimal Line State
 
-Classify the entry before acting.
+Keep line state in the current controller task unless the user explicitly asks
+for a durable project record. Use prose, bullets, or a small table. Record only
+what is needed to reproduce and coordinate the line:
 
-### Explicit execution
+- line ID and exact App task ID;
+- goal and stop condition;
+- canonical `cwd`, and worktree/branch when applicable;
+- read boundary and exclusive write boundary;
+- dependencies, current state, next wake event, and latest evidence.
 
-An explicit request to coordinate or execute multiple worker/worktree lines
-authorizes the non-destructive Desktop worker tasks and Git worktrees named in
-one reviewed launch manifest. It does not authorize commits, integration,
-cleanup, heavy resources, monitoring, publication, or destructive recovery
-unless the manifest grants those actions precisely.
+Do not create a registry, schema snapshot, audit ledger, or project planning
+file merely because work persists across turns. Native App task state, Git
+state, and the controller's compact record are the evidence sources.
 
-### Explicit audit or discussion
+## Launch Persistent Lines
 
-Inspect and reason only. Do not create tasks, worktrees, snapshots, branches,
-or symlinks, and do not operate existing workers.
+1. Inspect the repository root, applicable instructions, branch, worktrees,
+   dirty state, in-progress Git operations, and overlapping user work.
+2. Separate lines by dependencies and complete mutation surfaces. Never run
+   concurrent writers over the same paths, generated outputs, caches, ports,
+   data, or external mutable resource.
+3. Resolve each ready writer's base and canonical worktree. Prefer an explicit
+   path or repository convention; otherwise use an App-native or repo-sibling
+   location outside the repository and `~/.codex`.
+4. Create one user-visible App task per persistent line only within the
+   explicit request. Give it the minimal line contract and an immutable
+   `cwd`/worktree. Do not redirect a live writer to another worktree.
+5. Wait for native task events or bounded controller wakeups. On handoff,
+   inspect the line's reported evidence, current diff/artifact, ownership, and
+   freshness before deciding whether to accept it, request more evidence, or
+   unblock another line.
 
-### Implicit trigger
+Workers may give evidence-supported recommendations, but they do not decide
+their own acceptance or authorize another stage. They do not stage, commit,
+push, integrate, publish, repair another line, or clean resources unless that
+exact mutation was separately authorized and assigned.
 
-When this skill triggers because existing workers or worktrees create risk,
-start with the read-only audit and report the mismatch. Do not write state or
-operate workers until the user confirms execution.
+For integration, the controller first accepts an exact source state and then
+assigns one owner for the exact integration mutation. Preserve source and
+resulting commit identities. Stop on a conflict that needs a new design or
+ownership decision. Final local completion still goes through
+`personal-risk-verification`; a later Git outcome goes through its owning
+workflow.
 
-Run:
+## One-Shot Status Is Not Monitoring
 
-```bash
-python3 "$HOME/.codex/skills/personal-multiline-coordination/scripts/audit_multiline.py" <project-root> --json
-```
+An ordinary status or ETA request authorizes one bounded read-only check by the
+main process against the exact named job and evidence surface. Report observed
+progress, evidence time or artifact identity, and uncertainty, then stop. Do
+not create a task, recur, tail continuously, or infer an ETA that the evidence
+does not support.
 
-Add `--snapshot <file-or-> --check` only when a schema-v2 coordinator snapshot
-already exists or is supplied through stdin.
+## Active Monitoring
 
-## Select The Execution Surface
+Start active monitoring only after the user explicitly authorizes recurring
+observation of one exact job and phase. Observation authority does not include
+job launch, termination, repair, restart, output mutation, resource changes,
+next-stage launch, or go/no-go decisions.
 
-Use a Desktop-visible worker task for a top-level implementation line that
-needs an independent lifecycle, durable user visibility, or an isolated
-worktree.
+Before creation, the main process fixes the exact job identity, evidence
+surfaces, progress and terminal signals, observation limits, expected duration,
+and cadence. Choose a cadence that matches the job. When there is no better
+job-specific basis, use the fallback intervals `20 -> 40 -> 60 -> 60 ...`
+minutes. The main process owns this choice and may change it only from fresh
+evidence or a new user instruction.
 
-Use a managed subagent for bounded, one-shot work such as exploration, review,
-validation, helper work, or ordinary conflict resolution. Follow
-`personal-subagent-boundaries` for its prompt and reporting contract.
+Create one dedicated Codex App task for the observer with model
+`gpt-5.6-luna` and low reasoning effort. Confirm that the requested task,
+model, effort, and start/liveness signal are product-visible. If the App task
+surface cannot request or confirm them, do not start monitoring. Do not fall
+back to a custom agent, managed subagent, another model, or recurring polling
+by the main process without a new explicit user choice.
 
-The coordinator may classify a tiny deterministic integration conflict and
-grant an exact resolution to the integration executor; it does not stage or
-resolve the conflict itself. Route substantive rework that needs its own
-iteration history back to a Desktop-visible worker. Route cross-line design
-conflicts to the user, using `personal-brainstorms` when consequential.
+The observer's read-only restriction is a semantic task boundary. It may read
+only the named process/session, log, status, and output evidence and may wait at
+the assigned cadence. It must never mutate the job or artifacts, send control
+signals, diagnose by changing state, execute a contingency, decide success, or
+advance a phase. Each event reports the observation time, exact evidence
+identity, observed transition, and uncertainty to the controller.
 
-Do not silently substitute a managed subagent when the approved manifest calls
-for a Desktop worker but the required task capability is unavailable. Report
-the capability gap and preserve the line as planned.
+Treat observer liveness as part of the contract. If the observer does not
+start, exits unexpectedly, loses the exact job/evidence binding, cannot read a
+required surface, or misses a required report beyond the declared tolerance,
+fail closed: report monitoring as unavailable or interrupted and wait for the
+user. Do not silently spawn a replacement or make the controller poll.
 
-## Coordination Workflow
+On a terminal job signal, phase change, authorization withdrawal, or observer
+boundary failure, the observer reports its last evidence and stops. The main
+process performs intake and alone decides what the evidence means and whether
+any separately authorized action should follow.
 
-1. Establish the repository root, applicable instructions, current branch,
-   worktree inventory, relevant dirty state, and interrupted Git operations.
-2. Decompose work into top-level lines. Record dependencies, write sets, output
-   paths, resource claims, acceptance criteria, and stop conditions.
-3. Build both a dependency graph and a conflict graph. A conflict exists when
-   active lines overlap in writes, outputs, exclusive resources, or mutable
-   project data.
-4. Present one launch manifest. Include every task/worktree creation plus any
-   separate integration, resource, monitoring, or cleanup grant being sought.
-5. Assign a bounded preparation executor to create worktrees only for currently
-   ready writers, from their resolved base OID. Keep future task/worktree
-   creation authorized but deferred. Bind readers to a fixed revision and
-   avoid unnecessary reader worktrees.
-6. Launch only currently ready and non-conflicting lines. Give each worker its
-   line card and no broader authority.
-7. Wait for events or handoffs. Intake evidence, inspect Git state and outputs,
-   then set the coordinator decision: `pass`, `no-go`,
-   `needs-more-evidence`, or `blocked`.
-8. Schedule newly unblocked lines. Do not use a fixed worker count when the
-   dependency, conflict, or resource graphs imply a different safe level.
-9. Under an exact integration grant, assign one integration executor to create
-   a source checkpoint and integrate it through the dedicated integration
-   worktree. Intake its evidence, then record source and integrated OIDs.
-10. Run the final completion gate through `personal-risk-verification`, then
-    route local Git readiness or a local-only commit to
-    `personal-branch-finish`. Route an authorized GitHub publication flow to
-    `github:yeet`; do not let branch finish commit first.
+## Recovery And Closeout
 
-Read `references/contracts.md` before producing a launch manifest, line card,
-snapshot, worker report, or coordinator intake.
+Reconcile exact App task and Git/worktree evidence before recovery. Preserve
+dirty or ambiguous state. Do not restart a silent worker, abort a Git
+operation, force-remove a worktree, delete a branch, prune globally, archive a
+task, or discard output without exact authority and ownership.
 
-## Workspace Rules
+Return the smallest useful handoff: current lines, accepted evidence,
+unresolved ownership or dependencies, preserved worktrees/jobs, and the event
+or decision needed next.
 
-A writer's canonical `cwd`, branch, and worktree are immutable for that worker
-task. Never redirect an existing writer to another worktree. Restart or hand
-off from a clean, visible state instead.
-
-Resolve worktree placement in this order:
-
-1. explicit user path;
-2. repository instructions or established convention;
-3. Desktop-native placement;
-4. an applicable `HOST_LOCAL.md` override;
-5. repo-sibling fallback:
-   `<repo-parent>/.codex-worktrees/<repo-name>/<coordination-id>/`.
-
-The fallback contains `integration/` and `workers/<line-id>/`. Do not place
-fallback worktrees inside the repository or under `~/.codex`.
-
-Read `references/worktree-integration.md` before creating worktrees, sharing
-project-local data, checkpointing, integrating, or resolving conflicts.
-
-## Event-Driven Supervision
-
-Supervise through worker lifecycle events, completed tool calls, handoffs, and
-bounded waits. Do not periodically poll every worker, tail logs continuously,
-or duplicate a monitor's checks.
-
-The coordinator may perform a bounded read-only intake check when a worker
-reports or appears to stop. It should then decide, request specific missing
-evidence, or wait for the next event.
-
-Worker silence is not evidence of failure. Use recovery reconciliation before
-restarting or replacing a worker.
-
-Read `references/desktop-workers.md` before launching, waiting on, resuming, or
-replacing Desktop-visible workers.
-
-## Integration Boundary
-
-Workers do not commit. They stop with a dirty or clean line worktree plus a
-structured report.
-
-Only one assigned integration executor may, under an explicit local integration
-grant issued by the coordinator:
-
-- inspect the coordinator-accepted exact line diff and confirm it matches the
-  grant;
-- stage only task-owned paths;
-- create the source checkpoint commit on the line branch;
-- integrate it into the dedicated integration branch, normally by
-  cherry-pick;
-- record the source checkpoint OID and resulting integrated OID.
-
-If a cherry-pick or rebase stops for a conflict and the integration executor
-stages any authorized manual resolution, it stops after collecting the exact
-result for coordinator intake. Record the completed integration as
-`method: manual`, not as the command that initiated it. Preserve the source
-checkpoint with a named `preservation_ref`; manual integration cannot
-mechanically prove source-patch equivalence or make that checkpoint disposable.
-
-An internal checkpoint is not final Git readiness and does not authorize a
-user-facing commit, merge, push, PR, or publication.
-
-## Resource And Monitoring Grants
-
-Treat high-traffic downloads, heavy GPU use, long-job launch, active
-monitoring, repair/restart, and next-stage launch as separate resource actions.
-They may be granted per line or stage in the launch manifest; do not infer one
-from another.
-
-A monitoring observer is always read-only. It reports trigger evidence and
-never stops, repairs, restarts, mutates outputs, launches a next stage, changes
-resource scope, or makes a line decision, even when an exact contingency was
-preauthorized. After intake, the supervisor or coordinator may act only by
-making the authoritative decision and issuing the exact grant; the job-owning
-executor alone may execute the separately authorized action.
-
-Read `references/resource-grants.md` before scheduling constrained resources or
-long-running lines.
-
-## Recovery And Cleanup
-
-Reconcile Desktop facts, Git/worktree facts, interrupted operations, and any
-available snapshot before changing state. Default to preservation.
-
-Do not automatically delete a Desktop task permanently, force-remove a
-worktree, prune globally, discard a dirty tree, delete a branch, abort an
-operation, or erase project data.
-
-A conditional cleanup grant may cover named clean, closed, integrated or
-otherwise preserved line worktrees. It never covers source project data behind
-a symlink; cleanup removes only the approved link or worktree.
-
-Read `references/recovery-and-cleanup.md` before recovery, replacement, or
-cleanup.
-
-## Persistence
-
-Keep live coordination state in current task context when practical. Reuse a
-small existing schema-v2 snapshot when reconciliation or handoff benefits from
-a machine-checkable view; cross-session duration alone does not authorize
-creating or updating one.
-
-Cross-session coordination alone does not authorize `.planning` files. Default
-to a reproducible handoff, optionally accompanied by an existing snapshot.
-Route to `personal-planning-with-files-zh` only after an explicit request for
-file-backed planning. Do not create `.codex/multiline`, a shadow registry, or a
-second source of truth.
-
-## Output
-
-Return the smallest useful artifact for the current gate: an audit summary,
-launch manifest, line card, coordinator intake, integration record, recovery or
-cleanup recommendation, or final coordination handoff.
-
-State what remains unverified, what needs new authority, and which event should
-wake the coordinator next.
-
-## Reference Routing
-
-- `references/contracts.md`: state axes and artifact schemas.
-- `references/desktop-workers.md`: visible worker lifecycle and supervision.
-- `references/worktree-integration.md`: layouts, bindings, integration, conflicts.
-- `references/resource-grants.md`: heavy resources, long jobs, and monitoring.
-- `references/recovery-and-cleanup.md`: reconciliation and safe cleanup.
-- `references/routing.md`: adjacent skill ownership and handoffs.
-- `references/source-notes.md`: provenance, environment evidence, adopted
-  ideas, rejected ideas, and validation limits.
+See [source notes](references/source-notes.md) only when maintaining this
+skill's provenance or its locked monitoring preferences.

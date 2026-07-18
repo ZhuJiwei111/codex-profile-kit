@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Subagent Boundaries"
   short_description: "Bounded delegation and worker contracts"
-  default_prompt: "Use $personal-subagent-boundaries to decide whether to delegate, select an execution profile, define exclusive worker boundaries, and intake evidence without granting final authority."
+  default_prompt: "Use $personal-subagent-boundaries to delegate one bounded task with clear inputs, cwd, read/write limits, stop conditions, and evidence for main-process intake."
 policy:
   allow_implicit_invocation: true

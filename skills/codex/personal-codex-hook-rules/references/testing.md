@@ -25,19 +25,19 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
 python3 -m json.tool "$CODEX_HOME/hooks.json" >/dev/null
 ```
 
-The suite should cover rule parsing, exact event classification, native command
-input, warning JSON, deny JSON, block precedence, malformed input, and active
+The suite should cover exact event classification, native command input,
+warning JSON, deny JSON, adjacent-match behavior, malformed input, and active
 configuration wiring.
 
 ## Read-Only Payload Smokes
 
-This warning fixture evaluates the adapter without executing the embedded Bash
+This warning fixture evaluates the handler without executing the embedded Bash
 command:
 
 ```bash
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 printf '%s\n' '{"session_id":"test-session","transcript_path":null,"cwd":"/tmp","hook_event_name":"PreToolUse","model":"test-model","permission_mode":"default","turn_id":"test-turn","tool_name":"Bash","tool_use_id":"test-call","tool_input":{"command":"pip install demo-package"}}' \
-  | python3 "$CODEX_HOME/hooks/hookify_codex_runner.py" --event PreToolUse \
+  | python3 "$CODEX_HOME/hooks/direct_download_guard.py" \
   | python3 -m json.tool
 ```
 
@@ -46,11 +46,10 @@ Use a harmless non-matching command and assert empty stdout:
 ```bash
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 test -z "$(printf '%s\n' '{"session_id":"test-session","transcript_path":null,"cwd":"/tmp","hook_event_name":"PreToolUse","model":"test-model","permission_mode":"default","turn_id":"test-turn","tool_name":"Bash","tool_use_id":"test-call","tool_input":{"command":"printf safe"}}' \
-  | python3 "$CODEX_HOME/hooks/hookify_codex_runner.py" --event PreToolUse)"
+  | python3 "$CODEX_HOME/hooks/local_safety_guard.py")"
 ```
 
-For a block rule, feed a synthetic payload that matches only a test rule in an
-isolated temporary rule directory or use the unit-test harness. Never aim a
+For a block, feed a synthetic payload to the unit-test harness. Never aim a
 destructive command at the real shell merely to test a hook.
 
 ## Output Checks
@@ -75,9 +74,6 @@ changes the hook definition. After tests pass:
 2. Tell the user exactly which definition changed.
 3. Ask the user to inspect and trust it through `/hooks`.
 4. Do not claim the hook is active until that review is complete.
-
-Changing only a dynamically loaded Markdown rule does not change `hooks.json`,
-but still test the rule and report its enabled state.
 
 ## Skill Routing Probes
 

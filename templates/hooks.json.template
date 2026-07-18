@@ -12,7 +12,7 @@
           },
           {
             "type": "command",
-            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py --event PreToolUse",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/local_safety_guard.py",
             "timeout": 10,
             "statusMessage": "Checking global command rules"
           }
@@ -23,7 +23,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py --event PreToolUse",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/local_safety_guard.py",
             "timeout": 10,
             "statusMessage": "Checking global file-edit rules"
           }

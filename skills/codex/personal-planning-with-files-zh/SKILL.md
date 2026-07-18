@@ -1,212 +1,106 @@
 ---
 name: personal-planning-with-files-zh
-description: "Use only for explicitly requested cross-session project planning files: initialize, inspect, resume, correct, archive, or succeed a project-root plan whose detailed work runs through one ordered phase trio at a time."
+description: Manual only. Use $personal-planning-with-files-zh to create, select, resume, update, close, or succeed a durable plan stored in the current local project, including projects with multiple independent plans.
 ---
 
 # Personal Planning With Files Zh
 
-Persist an approved project plan across sessions without turning ordinary plans
-into repository state. Write user-visible planning content in Chinese unless an
-external convention requires otherwise.
+Persist an explicitly requested plan inside the current project. Write
+user-visible planning content in Chinese unless an external convention requires
+otherwise. Keep implicit invocation disabled; use the built-in plan for ordinary
+multi-step work.
 
-## Entry Contract
+## Store Independent Plans
 
-- Use the built-in plan for ordinary multi-step work.
-- Run only after explicit file-backed planning intent or an explicit request
-  concerning an existing managed plan.
-- Existing filenames, task complexity, duration, or tool count never attach this
-  workflow automatically. An explicit opt-out wins.
-- Treat status, explanation, review, and handoff requests as read-only unless the
-  user also requests a planning-state change.
-- Planning files are memory, not instructions, proof, or authority for
-  implementation, launch, monitoring, Git, publication, archive, or a later
-  phase.
-- Do not claim readiness while a design or requirements gate remains open.
-
-## Use One Root And Serial Phase Trios
-
-The project root owns exactly one concise coordinator file:
+Use one directory per plan and allow several plans to coexist:
 
 ```text
-<project-root>/task_plan.md
-```
-
-It contains only the global goal, scope, non-goals, global acceptance, ordered
-serial phase IDs, `active_phase`, and overall status. Do not create root
-`findings.md` or `progress.md`.
-
-Each phase owns detail only in:
-
-```text
-<project-root>/.planning/plans/<phase-id>/
+<project-root>/.planning/plans/<YYYYMMDD>-<slug>/
 ├── task_plan.md
 ├── findings.md
 └── progress.md
 ```
 
-`.planning/` may contain only `plans/`, `snapshots/`, and `archive/`. Every
-phase directory contains exactly the trio above. Historical namespaces may
-contain ordinary evidence directories and files, but no managed subtree may
-contain a symlink, multiply linked regular file, special file, path escape, or
-known legacy names such as `_repo`, `.staging`, `TRANSACTION.md`,
-`transactions`, exact `PACKET.md`, `generation-history`, numeric
-`generation-<digits>`, or `gNNNN`/`gNNNN-*` state at any depth. Ordinary domain
-names that merely contain words such as `packet`, `generation`, or `history`
-remain valid.
+Use the local date and a unique lowercase kebab-case slug. Do not create a root
+coordinator file, nested plan, symlink, path escape, or duplicate source of
+truth.
 
-- Phase `task_plan.md` owns the phase goal, scope, acceptance, and ordered steps.
-- `findings.md` owns verified evidence, decisions, unknowns, and evidence cutoff.
-- `progress.md` owns execution state, commands and checks, blockers, and handoff.
-- Keep phases physically flat and ordered by the root file. Do not create nested,
-  parallel, parent/child, or repo-versus-task plan hierarchies.
-- At most one phase is active. Earlier phases are closed and later phases remain
-  draft.
-- The coordinator in the canonical project worktree is the sole authoritative
-  writer. Executors and workers return bounded handoffs and never update the
-  root or phase trio directly.
+Keep each file narrow:
 
-Read [the plan contract](references/plan-contract.md) before initialization,
-adoption, resume, correction, or structural repair.
+- `task_plan.md`: plan ID, `active` or `closed` status, goal, scope, non-goals,
+  success criteria, one current phase, ordered phases, next action, and an
+  optional predecessor plan ID.
+- `findings.md`: verified facts and sources, decisions, assumptions, unknowns,
+  invalidated evidence, and evidence cutoff.
+- `progress.md`: completed work, current activity, checks and results,
+  blockers, handoff state, and latest update time.
 
-## Approval And Write Boundary
+An active plan has exactly one current phase. Earlier phases are complete and
+later phases are pending. A closed plan has no current phase. Do not create
+parallel current phases or store detailed execution logs in `task_plan.md`.
 
-An explicit request may create an exact `draft`. Only approval of its shown
-content changes the project or first phase to `active`. An already supplied and
-explicitly approved exact plan satisfies this content gate.
+## Select Or Restore Locally
 
-Before every write, show:
+Resolve the canonical root of the current project. Restore only from that
+root's `.planning/plans/` on this machine; do not search other projects, hosts,
+tasks, chats, memories, archives, or global state.
 
-- the canonical absolute project root and every target path;
-- the selected operation and current root/phase status;
-- the exact controlled source paths and `source_hashes` reported by the
-  validator;
-- exact content or state transition;
-- evidence cutoff, unverified items, and rollback or correction path.
+1. Honor an exact plan ID supplied by the user.
+2. Otherwise inspect only enough metadata from local plan directories to find
+   candidates relevant to the current request.
+3. If exactly one candidate is plausible, select it automatically and report
+   its ID, goal, status, and current phase.
+4. If several candidates are plausible, show their IDs and distinguishing goal
+   or phase, recommend the closest match, and ask the user to choose.
+5. If none exists, create one only when the request authorizes a new
+   file-backed plan; otherwise report that no matching plan was found.
 
-Material goal, scope, acceptance, phase-order, or evidence corrections require
-an updated preview. Phase switch, archive, and successor creation each need
-their own explicit approval. Silence and an empty answer are not approval.
+Read `task_plan.md` first, then the selected plan's `findings.md` and
+`progress.md`. Reconcile them with the current project state before relying on
+old evidence. Mark stale or contradicted findings as invalidated rather than
+silently treating them as current facts.
 
-Stop on symlinks, path escape, duplicate truth, ambiguous ownership, another
-writer, an invalid `active_phase`, or source hashes that changed after preview.
-Treat every source path and every `.planning/{plans,snapshots,archive}` path an
-approved operation may write as fail-closed managed state. Bind the external
-preview only to the exact source and target paths plus `source_hashes` the
-validator actually reports. Immediately before writing, rerun the same
-operation and record selector and compare that source-path set and its hashes;
-refresh the preview on any mismatch. The validator, not the user, owns internal
-root re-resolution and path-identity checks.
-Never rewrite `canonical_root` merely because a checkout moved; ask for an exact
-ownership decision and create a corrected plan state only after approval.
+Do not auto-adopt unrelated or legacy planning files.
 
-## Workflow
+## Update Automatically
 
-1. Classify the request as inspect, initialize, resume, update, switch phase,
-   correct, close, archive, successor, or handoff.
-2. Resolve the canonical project root from the explicit task-owned cwd or Git
-   worktree. Use bounded core repository inspection and ask if multiple roots or
-   writers remain plausible.
-3. Read root `task_plan.md` first, then only the active or explicitly selected
-   phase trio. Do not load unrelated phase bodies.
-4. Run the bundled read-only validator with the canonical root, operation, and
-   optional selected phase record. Map read-only inspection, ordinary updates,
-   phase switches, closure, and handoff to `inspect`; use `resume` only for an
-   explicit resume. Initialization, correction, archive preflight, and
-   successor preflight use `init`, `correct`, `archive`, and `successor`
-   respectively.
-5. Show the approval-bound transition and wait when approval is required.
-6. Apply only that transition. For a phase switch, close the old phase, update
-   `active_phase`, and activate the next ordered phase as one approval-bound
-   transition. Do not describe the separate file writes or validator reads as
-   a cross-file atomic snapshot; use the interrupted-edit recovery contract.
-7. Re-run the validator, read back changed files, and verify hashes, status,
-   writer ownership, and absence of duplicate or partial truth.
-8. Report actual mutations, fresh evidence, skipped checks, remaining risk, and
-   the next authorized action.
+An explicit create, resume, or manage request authorizes scoped updates to the
+selected plan's three files. Once selected, update them automatically after a
+material change; do not request approval for each routine planning write.
 
-Validator example:
+- Update `findings.md` when evidence, a decision, an assumption, or an unknown
+  materially changes.
+- Update `progress.md` after meaningful work, validation, a blocker, or a
+  handoff—not after every tool call.
+- Update `task_plan.md` when scope or success criteria are approved, the current
+  phase changes, the next action changes materially, or the plan closes.
 
-```bash
-python3 <skill-dir>/scripts/validate_plan_state.py \
-  --canonical-root /absolute/project/root \
-  --operation resume \
-  --record /absolute/project/root/.planning/plans/<phase-id> \
-  --json
-```
+Read back changed files and keep their claims consistent. Preserve unrelated
+user edits and stop if another writer or an unresolved overlap makes a safe
+update impossible.
 
-The validator is read-only. It validates the whole project even when `--record`
-selects one phase. Exit `0` means the requested state is mechanically valid or
-initializable, `1` means the state violates the contract, and `2` means the
-invocation could not be inspected safely. It does not grant approval, repair
-files, select a plan, prove semantic correctness, or prove that an archive copy
-matches its source. It performs a final sequential identity/hash recheck of the
-controlled evidence set; this is not a cross-file atomic snapshot.
+Planning files are memory, not authority or proof. The surrounding request
+still controls implementation, tests, long jobs, Git, publication, external
+actions, and destructive work. A status-only request remains read-only unless
+it explicitly asks to update planning state.
 
-## States And Phase Switches
+## Advance, Close, Or Continue
 
-Use only `draft -> active -> closed` for the root and every phase. A blocker is
-recorded in phase `progress.md`; it is not another lifecycle state.
+- Advance the current phase only after its completion evidence is recorded.
+  Mark it complete and the next ordered phase current in the same coordinated
+  update, then verify that only one current phase remains.
+- Close a plan when its success criteria are satisfied or the user explicitly
+  ends or defers it. Record the outcome and remaining risk in `progress.md`, set
+  status to `closed`, clear the current phase, and preserve the files in place.
+- Never reopen a closed plan. Continued work requires a new active successor
+  directory with a new `<YYYYMMDD>-<slug>` ID. Record the predecessor ID and
+  carry forward only still-relevant decisions and revalidated evidence.
+- Do not mutate the predecessor while creating or operating the successor.
 
-An active project has exactly one `active_phase`. The ordered phase list defines
-the only valid switch: all earlier phases must be closed, the pointer target must
-be active, and all later phases must remain draft. Never activate two phases or
-skip ahead by creating parallel state.
+At handoff, report the selected plan path, status, current phase, fresh evidence
+cutoff, completed checks, blockers, and exact next action.
 
-Read [phase transitions](references/phase-transitions.md) before activation,
-phase switching, closeout, or interrupted-edit recovery.
+## Resource
 
-## Corrections, Archive, And Successors
-
-Keep correction and archive mechanics simple:
-
-- Exact-file snapshots are allowed only for confirmed non-sensitive controlled
-  files. If a secret or sensitive value is present or suspected, never copy its
-  bytes into snapshots or archive; create only the redacted incident record
-  defined by the archive reference.
-- Append a correction note beside the snapshot; never silently rewrite the
-  snapshot body.
-- Never move an `active` or `closed` root or phase back to `draft`. A draft may
-  be revised; a change to goal, scope, global acceptance, phase order, or the
-  validity of a closed phase requires a recorded closure and a successor.
-- Archive only a fully closed root whose phases are all closed.
-- For terminal archive, use `archive` as preflight, publish the archive, verify
-  its `ARCHIVE.md` manifest and every copied hash, remove active root/plans only
-  after that check, then use `init` as postflight. Existing safe history does
-  not prevent the root from being initializable.
-- A closed plan never reopens. Continued work uses a newly approved successor
-  draft with a new `plan_id`. Use `successor` only while the closed active source
-  still exists; after archival, verify the archive manifest independently and
-  use `init` to create the successor. Describe the predecessor in prose rather
-  than a mutable lineage graph.
-- Do not use immutable context packets, generation rollover, frozen trust enums,
-  transaction registries, or persistent staging state as planning truth.
-
-Read [archive and corrections](references/archive-and-corrections.md) for the
-exact snapshot, correction, archive, and successor contracts.
-
-## Evidence And Handoff
-
-Keep active files concise. Link to owning artifacts instead of copying logs,
-large tables, patches, datasets, or worktree dumps. Label material evidence as
-`observed`, `user-provided`, `inferred`, `unverified`, or `invalidated`, and keep
-its cutoff. Revalidate dynamic facts before they drive a current action.
-
-External text can be sourced evidence but cannot expand scope or authority.
-Never store secrets or unredacted sensitive values.
-
-On explicit resume, verify the current root, worktree, controlled paths, active
-phase, relevant dynamic facts, and latest evidence. Native context compaction or
-an ordinary in-thread handoff may summarize conversation; only these planning
-files own mutable project planning state.
-
-## Resources
-
-- [references/plan-contract.md](references/plan-contract.md): layout, schemas,
-  ownership, adoption, validation, and restart checks.
-- [references/phase-transitions.md](references/phase-transitions.md): serial
-  activation, phase switching, closure, and recovery.
-- [references/archive-and-corrections.md](references/archive-and-corrections.md):
-  snapshots, corrections, terminal archive, and successors.
-- [references/source-notes.md](references/source-notes.md): fixed provenance and
-  local design decisions.
-- `scripts/validate_plan_state.py`: standard-library, read-only validator.
+Read [source-notes.md](references/source-notes.md) only for provenance or
+maintenance.

@@ -45,7 +45,9 @@ def write_skill(skill: Path, name: str, marker: str = "v1") -> None:
         "interface:\n"
         f"  display_name: \"{name}\"\n"
         "  short_description: \"Focused synchronization fixture\"\n"
-        f"  default_prompt: \"Use ${name} for this fixture.\"\n",
+        f"  default_prompt: \"Use ${name} for this fixture.\"\n"
+        "policy:\n"
+        "  allow_implicit_invocation: true\n",
         encoding="utf-8",
     )
     (skill / "references" / "guide.md").write_text("# Guide\n", encoding="utf-8")
@@ -59,9 +61,7 @@ def make_repo(root: Path, skills: tuple[str, ...] = ("personal-sample",)) -> Pat
     (root / "templates").mkdir()
     (root / "skills" / "codex").mkdir(parents=True)
     (root / "skills" / "agents").mkdir()
-    (root / "agents" / "codex").mkdir(parents=True)
-    (root / "hooks" / "rules").mkdir(parents=True)
-    (root / "hooks" / "scripts").mkdir()
+    (root / "hooks" / "scripts").mkdir(parents=True)
     (root / "rules" / "AGENTS.portable.md").write_text(
         "# Portable fixture\n", encoding="utf-8"
     )
@@ -69,17 +69,9 @@ def make_repo(root: Path, skills: tuple[str, ...] = ("personal-sample",)) -> Pat
         'sandbox_mode = "workspace-write"\n', encoding="utf-8"
     )
     (root / "templates" / "hooks.json.template").write_text(
-        '{"command": "{{PYTHON3}} {{HOME}}/.codex/hooks/hookify_codex_runner.py"}\n',
+        '{"command": "{{PYTHON3}} {{HOME}}/.codex/hooks/local_safety_guard.py"}\n',
         encoding="utf-8",
     )
-    for name in SYNC.CODEX_AGENT_FILES:
-        (root / "agents" / "codex" / name).write_text(
-            f'name = "{Path(name).stem}"\n', encoding="utf-8"
-        )
-    for name in SYNC.HOOK_RULE_FILES:
-        (root / "hooks" / "rules" / name).write_text(
-            f"# {name}\n", encoding="utf-8"
-        )
     for name in SYNC.HOOK_SCRIPT_FILES:
         (root / "hooks" / "scripts" / name).write_text(
             f"# {name}\n", encoding="utf-8"
@@ -224,14 +216,18 @@ class VerifyContractTests(unittest.TestCase):
     def test_repo_inventory_is_exact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = make_repo(Path(tmp) / "profile")
-            extra_agent = root / "agents" / "codex" / "extra.toml"
-            extra_agent.write_text('name = "extra"\n', encoding="utf-8")
-            with self.assertRaisesRegex(SystemExit, "inventory mismatch"):
-                SYNC.verify_repo(root)
-            extra_agent.unlink()
             extra_hook = root / "hooks" / "scripts" / "extra.py"
             extra_hook.write_text("# extra\n", encoding="utf-8")
             with self.assertRaisesRegex(SystemExit, "inventory mismatch"):
+                SYNC.verify_repo(root)
+
+    def test_repo_rejects_exact_retired_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_repo(Path(tmp) / "profile")
+            retired = root / "skills" / "codex" / "personal-review-response"
+            write_skill(retired, "personal-review-response")
+
+            with self.assertRaisesRegex(SystemExit, "retired"):
                 SYNC.verify_repo(root)
 
     def test_relative_skill_resources_must_exist_and_stay_inside_skill(self) -> None:
@@ -265,18 +261,126 @@ class VerifyContractTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, "interface key"):
                 SYNC.verify_repo(root)
             write_skill(root / "skills" / "codex" / "personal-sample", "personal-sample")
-            agent = root / "agents" / "codex" / "monitor.toml"
-            agent.write_text('name = "unterminated\n', encoding="utf-8")
+            config = root / "templates" / "config.toml.template"
+            config.write_text('name = "unterminated\n', encoding="utf-8")
             with self.assertRaisesRegex(SystemExit, "invalid TOML"):
                 SYNC.verify_repo(root)
-            agent.write_text('name = "monitor"\n', encoding="utf-8")
+            config.write_text('sandbox_mode = "workspace-write"\n', encoding="utf-8")
             hooks = root / "templates" / "hooks.json.template"
             hooks.write_text("{broken\n", encoding="utf-8")
             with self.assertRaisesRegex(SystemExit, "invalid rendered hooks"):
                 SYNC.verify_repo(root)
 
+    def test_personal_skills_require_explicit_boolean_invocation_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_repo(Path(tmp) / "profile")
+            skill = root / "skills" / "codex" / "personal-sample"
+            yaml = skill / "agents" / "openai.yaml"
+            yaml.write_text(
+                yaml.read_text(encoding="utf-8").split("policy:", 1)[0],
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(SystemExit, "allow_implicit_invocation"):
+                SYNC.verify_repo(root)
+
+            write_skill(skill, "personal-sample")
+            skill_file = skill / "SKILL.md"
+            skill_file.write_text(
+                skill_file.read_text(encoding="utf-8").replace(
+                    "description: Use for", "description: Manual only. Use for"
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(SystemExit, "manual-only"):
+                SYNC.verify_repo(root)
+
 
 class ApplyContractTests(unittest.TestCase):
+    def test_apply_backs_up_and_removes_only_explicit_retired_targets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            root = make_repo(base / "profile")
+            home = base / "home"
+            home.mkdir()
+            retired = [home / relative for relative in SYNC.RETIRED_ACTIVE_PATHS]
+            for target in retired:
+                if target.name == "personal-review-response":
+                    target.mkdir(parents=True)
+                    (target / "SKILL.md").write_text("legacy\n", encoding="utf-8")
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_text("legacy\n", encoding="utf-8")
+            preserved = home / ".codex" / "agents" / "unmanaged.toml"
+            preserved.write_text("owned\n", encoding="utf-8")
+
+            retirement_drift = [
+                item
+                for item in SYNC.inbound_managed_drift(root, home)
+                if item.label.startswith("retired profile artifact:")
+            ]
+            self.assertEqual(len(retirement_drift), len(retired))
+            self.assertEqual({item.state for item in retirement_drift}, {"retired-present"})
+
+            backup, output = capture(SYNC.apply_profile, root, home, confirm=True)
+
+            self.assertIsNotNone(backup)
+            self.assertIn("retired", output)
+            self.assertFalse([target for target in retired if target.exists()])
+            self.assertEqual(preserved.read_text(encoding="utf-8"), "owned\n")
+            for target in retired:
+                archived = backup / target.relative_to(home)
+                self.assertTrue(archived.exists(), archived)
+
+    def test_retired_target_symlink_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            root = make_repo(base / "profile")
+            home = base / "home"
+            target = home / ".codex" / "skills" / "personal-review-response"
+            target.parent.mkdir(parents=True)
+            outside = base / "outside"
+            outside.mkdir()
+            target.symlink_to(outside, target_is_directory=True)
+
+            with self.assertRaisesRegex(RuntimeError, "symbolic-link"):
+                SYNC.apply_profile(root, home, confirm=False)
+
+    def test_retired_deletion_rolls_back_with_other_managed_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            retired = home / ".codex" / "skills" / "personal-review-response"
+            retired.mkdir(parents=True)
+            (retired / "SKILL.md").write_text("legacy\n", encoding="utf-8")
+            agents = home / ".codex" / "AGENTS.md"
+            agents.parent.mkdir(parents=True, exist_ok=True)
+            agents.write_text("old\n", encoding="utf-8")
+            entries = [
+                SYNC.ManagedEntry(
+                    destination=retired,
+                    label="retired test skill",
+                    delete=True,
+                ),
+                SYNC.ManagedEntry(
+                    destination=agents,
+                    content=b"new\n",
+                    label="portable agents",
+                ),
+            ]
+
+            with self.assertRaisesRegex(RuntimeError, "post-check"):
+                SYNC.transactional_replace(
+                    entries,
+                    base=home,
+                    post_check=lambda: (_ for _ in ()).throw(
+                        RuntimeError("post-check failure")
+                    ),
+                )
+
+            self.assertEqual(
+                (retired / "SKILL.md").read_text(encoding="utf-8"), "legacy\n"
+            )
+            self.assertEqual(agents.read_text(encoding="utf-8"), "old\n")
+
     def test_agents_are_fully_replaced_and_backed_up(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
@@ -443,6 +547,7 @@ class ExportAndAuditContractTests(unittest.TestCase):
             for path in unmanaged:
                 path.parent.mkdir(parents=True)
                 path.write_text("owned\n", encoding="utf-8")
+            (home / ".codex" / "agents").mkdir(parents=True, exist_ok=True)
             (home / ".codex" / "agents" / "extra.toml").write_text(
                 'name = "extra"\n', encoding="utf-8"
             )
@@ -520,6 +625,26 @@ class ExportAndAuditContractTests(unittest.TestCase):
             self.assertIn("host-only personal additions: 1", output)
             self.assertIn("personal-host-only", output)
             self.assertNotIn("awesome-rebuttal", output)
+
+    def test_export_never_resurrects_an_explicitly_retired_personal_skill(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            root = make_repo(base / "profile")
+            home = base / "home"
+            home.mkdir()
+            capture(SYNC.apply_profile, root, home, confirm=True)
+            retired = home / ".codex" / "skills" / "personal-review-response"
+            write_skill(retired, "personal-review-response")
+
+            capture(SYNC.export_profile, root, home, dry_run=False)
+
+            self.assertFalse(
+                (root / "skills" / "codex" / "personal-review-response").exists()
+            )
+            self.assertNotIn(
+                "personal-review-response",
+                SYNC.host_only_personal_skills(root, home),
+            )
 
 
 class AcceptedSecurityContractTests(unittest.TestCase):
@@ -868,7 +993,7 @@ class AcceptedSecurityContractTests(unittest.TestCase):
             self.assertEqual(argv[0], "/usr/bin/python3")
             self.assertEqual(
                 argv[1],
-                str(home / ".codex" / "hooks" / "hookify_codex_runner.py"),
+                str(home / ".codex" / "hooks" / "local_safety_guard.py"),
             )
 
 

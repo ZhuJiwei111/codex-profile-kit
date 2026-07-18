@@ -1,24 +1,15 @@
 #!/usr/bin/env python3
-"""Warn when a likely large transfer inherits proxy variables."""
+"""Give stateless, non-blocking route advice for likely large transfers."""
 
 from __future__ import annotations
 
 import json
-import os
 import re
 import shlex
 import sys
 from typing import Any
 
 
-PROXY_VARS = (
-    "HTTPS_PROXY",
-    "HTTP_PROXY",
-    "ALL_PROXY",
-    "https_proxy",
-    "http_proxy",
-    "all_proxy",
-)
 CONTROL_TOKEN_RE = re.compile(r"^[;&|()]+$")
 ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=(.*)$", re.DOTALL)
 LARGE_MARKER_RE = re.compile(
@@ -139,6 +130,8 @@ def transfer_kind(tokens: list[str]) -> str | None:
         return None
     command = tokens[0].rsplit("/", 1)[-1].casefold()
     args = [token.casefold() for token in tokens[1:]]
+    if command == "wget" and "--spider" in args:
+        return None
     if command in {"wget", "aria2c", "axel"}:
         return command
     if command == "curl" and curl_download(tokens):
@@ -160,26 +153,26 @@ def is_large_transfer(tokens: list[str], kind: str) -> bool:
     return LARGE_MARKER_RE.search("\n".join(tokens)) is not None
 
 
-def risky_segments(command: str) -> list[list[str]]:
-    risky: list[list[str]] = []
+def large_transfer_segments(command: str) -> list[list[str]]:
+    transfers: list[list[str]] = []
     for segment in shell_segments(command):
-        command_tokens, unset_vars = unwrap_segment(segment)
+        command_tokens, _ = unwrap_segment(segment)
         kind = transfer_kind(command_tokens)
         if kind is None or not is_large_transfer(command_tokens, kind):
             continue
-        explicitly_direct = all(name in unset_vars for name in PROXY_VARS)
-        if not explicitly_direct:
-            risky.append(command_tokens)
-    return risky
+        transfers.append(command_tokens)
+    return transfers
 
 
 def emit_warning() -> None:
-    unset_flags = " ".join(f"-u {name}" for name in PROXY_VARS)
     context = (
-        "A likely large transfer would inherit active proxy variables. Retry the "
-        f"same transfer as `env {unset_flags} <download-command>` to test direct "
-        "access first. This is heuristic guidance, not enforcement or proof of "
-        "authorization; follow the applicable AGENTS.md network policy."
+        "A likely large transfer is planned. When reasonable, make a small direct "
+        "probe to the same destination first. If direct access then fails with a "
+        "deterministic connection error, consult the current host's HOST_LOCAL "
+        "connection helper. Reuse explicit authority for that exact proxy retry; "
+        "otherwise request user authorization before retrying the identical "
+        "transfer through a proxy. This advice is stateless and "
+        "non-blocking; Codex and the user decide how to proceed."
     )
     print(
         json.dumps(
@@ -196,9 +189,9 @@ def emit_warning() -> None:
 def main() -> int:
     event = load_event()
     command = command_text(event)
-    if not command or not any(os.environ.get(name) for name in PROXY_VARS):
+    if not command:
         return 0
-    if risky_segments(command):
+    if large_transfer_segments(command):
         emit_warning()
     return 0
 

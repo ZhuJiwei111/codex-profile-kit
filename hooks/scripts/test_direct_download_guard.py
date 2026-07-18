@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -10,16 +9,6 @@ import unittest
 
 
 SCRIPT = Path(__file__).with_name("direct_download_guard.py")
-PROXY_VARS = (
-    "HTTPS_PROXY",
-    "HTTP_PROXY",
-    "ALL_PROXY",
-    "https_proxy",
-    "http_proxy",
-    "all_proxy",
-)
-
-
 class DirectDownloadGuardTest(unittest.TestCase):
     def payload(self, command: str, tool_name: str = "Bash") -> dict[str, object]:
         return {
@@ -36,17 +25,12 @@ class DirectDownloadGuardTest(unittest.TestCase):
         }
 
     def invoke(self, command: str, tool_name: str = "Bash") -> subprocess.CompletedProcess[str]:
-        env = os.environ.copy()
-        for name in PROXY_VARS:
-            env[name] = "http://proxy.example.test:8080"
-        env["PYTHONDONTWRITEBYTECODE"] = "1"
         return subprocess.run(
             [sys.executable, str(SCRIPT)],
             input=json.dumps(self.payload(command, tool_name)),
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env=env,
             check=True,
         )
 
@@ -59,18 +43,21 @@ class DirectDownloadGuardTest(unittest.TestCase):
         self.assertTrue(output["additionalContext"])
         return output
 
-    def test_warns_for_large_download_with_inherited_proxy(self) -> None:
+    def test_warns_for_likely_large_download_without_reading_proxy_state(self) -> None:
         result = self.invoke("wget https://example.test/models/model.bin -O models/model.bin")
 
-        self.assert_warned(result)
+        output = self.assert_warned(result)
+        context = str(output["additionalContext"])
+        self.assertIn("small direct probe", context)
+        self.assertIn("HOST_LOCAL", context)
+        self.assertIn("authorization", context)
 
-    def test_direct_env_wrapper_allows_download(self) -> None:
-        unset_flags = " ".join(f"-u {name}" for name in PROXY_VARS)
+    def test_explicit_env_wrapper_does_not_suppress_stateless_advice(self) -> None:
         result = self.invoke(
-            f"env {unset_flags} wget https://example.test/models/model.bin -O models/model.bin"
+            "env -u HTTPS_PROXY wget https://example.test/models/model.bin -O models/model.bin"
         )
 
-        self.assertEqual(result.stdout, "")
+        self.assert_warned(result)
 
     def test_proxy_off_text_is_not_a_portable_direct_path_bypass(self) -> None:
         result = self.invoke(
@@ -79,35 +66,9 @@ class DirectDownloadGuardTest(unittest.TestCase):
 
         self.assert_warned(result)
 
-    def test_unrelated_env_wrapper_does_not_allow_later_download(self) -> None:
-        unset_flags = " ".join(f"-u {name}" for name in PROXY_VARS)
-        result = self.invoke(
-            f"env {unset_flags} true; "
-            "wget https://example.test/models/model.bin -O models/model.bin"
-        )
-
-        self.assert_warned(result)
-
-    def test_unexecuted_unset_does_not_allow_later_download(self) -> None:
-        unset_vars = " ".join(PROXY_VARS)
-        result = self.invoke(
-            f"false && unset {unset_vars}; "
-            "wget https://example.test/models/model.bin -O models/model.bin"
-        )
-
-        self.assert_warned(result)
-
     def test_proxy_off_for_other_command_does_not_allow_later_download(self) -> None:
         result = self.invoke(
             "proxy_off true; wget https://example.test/models/model.bin -O models/model.bin"
-        )
-
-        self.assert_warned(result)
-
-    def test_self_declared_proxy_marker_is_not_authorization(self) -> None:
-        result = self.invoke(
-            "CODEX_APPROVED_PROXY_DOWNLOAD=1 "
-            "wget https://example.test/models/model.bin -O models/model.bin"
         )
 
         self.assert_warned(result)
@@ -132,11 +93,29 @@ class DirectDownloadGuardTest(unittest.TestCase):
 
         self.assertEqual(result.stdout, "")
 
+    def test_wget_spider_probe_is_silent(self) -> None:
+        result = self.invoke("wget --spider https://example.test/models/model.bin")
+
+        self.assertEqual(result.stdout, "")
+
     def test_non_bash_payload_is_ignored(self) -> None:
         patch = "*** Begin Patch\n*** Update File: docs/example.md\n*** End Patch"
         result = self.invoke(patch, tool_name="apply_patch")
 
         self.assertEqual(result.stdout, "")
+
+    def test_invalid_json_is_diagnostic_only(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT)],
+            input="{broken",
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+
+        self.assertEqual(result.stdout, "")
+        self.assertIn("invalid input JSON", result.stderr)
 
 
 if __name__ == "__main__":

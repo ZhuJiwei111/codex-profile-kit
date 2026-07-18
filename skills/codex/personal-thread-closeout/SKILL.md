@@ -1,184 +1,101 @@
 ---
 name: personal-thread-closeout
-description: "Manual only. Use $personal-thread-closeout from a separate controller task to close one or more explicit target threads on the current host, or to run an explicit fail-closed project sweep; assess and preserve each target independently, then archive that target last."
+description: Manual only. Use from a separate controller task to assess and archive one exact current-host Codex task, an exact ID list, or an explicitly requested sweep of one exact current-host project; preserve worthwhile project knowledge and archive each ready task last.
 ---
 
 # Personal Thread Closeout
 
-Close selected Codex tasks from a separate controller. Preserve worthwhile
-verified project value, verify any closeout writes, archive each ready target as
-its final mutation, and keep the controller alive to report the batch result.
+Close only explicitly selected tasks from a different controller task. Keep the
+controller alive to report results and never archive the controller itself.
 
-## Manual Entry And Modes
+This workflow may assess readiness, let Codex preserve useful knowledge inside
+the target project, verify that write, and archive the exact target. It does not
+authorize implementation, Git, publication, profile changes, worker/job control,
+or continuation of the target's work.
 
-Run only after explicit `$personal-thread-closeout` invocation. Keep implicit
-invocation disabled. Accept one of:
+## Select Exact Current-Host Targets
 
-- one exact target reference or ID;
-- an ordered list of exact target references or IDs; or
-- an explicit project sweep with one exact current-host project identity.
+Accept one exact task ID, an ordered list of exact IDs, or an explicit sweep of
+one exact project on the current host. Resolve supplied IDs exactly without
+title guessing. Do not enumerate tasks for single-ID or list requests.
 
-Invocation authorizes read-only assessment, conditional target-project
-documentation, and archive for targets that pass every gate. It does not prove
-terminal status or authorize implementation, Git, publication, worker/job
-control, personal-profile edits, or another stage.
+For a project sweep, require the user to name the exact project and explicitly
+request the sweep. Use a native bounded list surface to filter current-host and
+exact-project metadata before reading task content. Do not impose an automatic
+age threshold, item limit, title match, or cross-host search. If the surface
+cannot enforce that boundary, stop the sweep without reading or archiving
+candidates.
 
-Every explicit target thread must differ from the controller. Operate only on
-the current host. Resolve each reference to one exact ID without title guessing,
-and never omit the target thread ID from a read, archive call, or result.
-For a project sweep, use only the bounded selection exception in
-[target selection and batch](references/target-selection-and-batch.md); do not
-enumerate tasks for any other mode.
+Process an exact list or sweep sequentially. De-duplicate exact IDs by first
+occurrence. A target-local blocker leaves that task open and does not block a
+later independent target. A shared task-list, host-identity, or exact-ID action
+failure stops later mutations while preserving earlier results.
 
-## Normalize The Batch
+Never read raw transcript, session, history, memory, authentication, credential,
+or other runtime files. Use native task reads and only enough completed turns
+and project evidence to assess the target.
 
-Preserve input order and deduplicate exact IDs with first occurrence winning.
-Project sweep defaults are strict:
+## Assess Readiness Semantically
 
-- identify the current host and exact project before listing;
-- include only tasks whose last activity is older than 15 full local-calendar
-  days;
-- sort oldest first and select at most 10;
-- exclude the controller; and
-- fail closed if host, project, identity, timestamp, ordering, or filter evidence
-  is unavailable or ambiguous.
+Read the exact target's identity, title, status, reported `cwd`, requested
+outcome, final evidence, repository handoff, and remaining ownership. A task is
+ready to archive only when current evidence makes all of these clear:
 
-Cross-host records are filtered before their content enters model context or
-user-visible output.
+- the work is completed, explicitly abandoned, or genuinely blocked with a
+  reproducible resume condition; it is not active or unclear;
+- no unresolved user decision, worker, job, external operation, or unreported
+  repository state still depends on the task as sole owner;
+- completed task-owned local changes have a fresh positive semantic conclusion
+  from `personal-risk-verification` covering their final state; and
+- uncommitted changes, checks not run, remaining risk, external state, and the
+  next owner are reported honestly.
 
-Process targets sequentially. A target-local failure records `not_ready` or
-`archive: not_performed` and continues. A shared infrastructure failure—such as
-unknown current host, unavailable exact-ID read/archive capability, or a broken
-project selector—stops later mutations. Already completed target results remain
-valid and are not rolled back.
+Do not require a fixed verdict token or closeout state record. Tests passing, a
+worker recommendation, or a clean diff alone does not establish completion. If
+evidence is insufficient, report what is missing and leave the target open.
 
-## Assess One Target
-
-Read only enough completed target turns and project evidence to judge closeout.
-Page older completed turns only when a material decision or verification result
-is missing. Never read raw session, transcript, memory, history, authentication,
-or credential files.
-
-Classify current evidence:
-
-| Outcome | Meaning | Archive condition |
-| --- | --- | --- |
-| `completed` | Requested outcome is supported | Target-owned local changes have a fresh `personal-risk-verification: supported` verdict |
-| `blocked` | Work cannot continue under current facts or authority | Blocker, state, and resume condition are reproducible |
-| `abandoned` | User deliberately ended the objective | Preserved changes, omissions, and consequences are explicit |
-| `unclear` | Work may still be active or evidence is insufficient | Never archive |
-
-Do not reinterpret “tests passed”, “verified”, a worker recommendation, or a
-clean diff as the required supported verdict. If target-owned local changes lack
-it, report the gap and withhold archive.
-
-Do not archive while the target remains active or is the only owner of a worker,
-job, external operation, unresolved decision, or unreported repository state.
 An approved detached job may survive only when its ownership and reproducible
-handoff are already independent of the target.
+handoff no longer depend on the target task.
 
-Readiness requires:
+## Let Codex Decide What Merits Preservation
 
-1. Exact target ID, current-host identity, title, status, and reported `cwd`.
-2. Outcome `completed`, `blocked`, or `abandoned`.
-3. No unowned remaining action or silently executed next step.
-4. Documentation decision `update_existing`, `create_retrospective`, `both`, or
-   `skip`, with reason.
-5. Every closeout write read back and covered by fresh final verification.
-6. Repository state, uncommitted changes, skipped checks, and external state
-   reported accurately.
-7. Native archive can target this exact ID.
+Codex decides whether the target contains verified, non-obvious knowledge that
+will help future project work. Preserve only material value such as a changed
+contract, consequential decision and constraint, recurring recovery method,
+useful failed attempt, or unresolved risk with a reproducible resume condition.
 
-If a gate fails, return `not_ready`, name the blocker and next owner, leave the
-target unarchived, and continue the batch unless the failure is shared
-infrastructure.
+Skip project writes for obvious results, transient status, duplicates,
+unsupported inference, or failures that established nothing reusable. Skipping
+is an ordinary judgment, not a missing closeout stage.
 
-## Harvest Durable Evidence
+Prefer a small update to the project's existing canonical document. Do not
+create a retrospective template or new document by default. Keep facts,
+decisions, lessons, inferences, failures, and unknowns distinguishable; never
+copy secrets, raw task transcripts, long logs, or sensitive intermediates.
 
-Preserve only future-useful information:
+Resolve the project root and document owner from target evidence. If either is
+unclear, do not write. Substantial new architecture, API, onboarding, or
+tutorial documentation belongs to `personal-code-documentation`; personal
+profile improvements remain proposals for a separate workflow.
 
-- verified project facts and changed contracts;
-- decisions and selecting evidence or constraints;
-- effective recurring approaches;
-- failed attempts that established a root cause, boundary, or recovery method;
-- unresolved risks and reproducible resume conditions; and
-- candidate personal-workflow improvements as proposals only.
+After any preservation write, read back the changed section, inspect the final
+diff, run the narrow relevant documentation checks, and obtain a fresh positive
+semantic conclusion from `personal-risk-verification`. If that evidence is
+insufficient, leave the target open.
 
-Keep `verified_fact`, `decision`, `reusable_lesson`, `failed_attempt`,
-`inference`, and `unknown` distinct. A target statement is not verified by
-itself. Omit credentials, private values, raw transcripts, long logs, and
-sensitive intermediates.
+## Archive Last
 
-Always produce a concise controller summary for each target, including when
-documentation is skipped.
+Before archival, prepare the result containing the exact ID and title, outcome,
+readiness evidence or blocker, preservation paths or skip reason, verification
+and repository state, remaining risk, and next owner.
 
-## Decide Documentation
+Then invoke the native archive action for that exact ID. Archive is that
+target's final mutation. The native result is the only evidence that archival
+occurred. A missing, denied, mismatched, or failed result means the task remains
+unarchived.
+After archival, do not edit its project, restart its work, or mutate the target.
 
-Write durable project documentation only when a verified non-obvious fact lacks
-an owner, a recurring failure or recovery was established, a consequential
-decision will matter, an existing supported document became stale, or omission
-would predictably repeat investigation or error.
+Return one compact result per exact ID and a short batch summary when useful.
 
-Choose `skip` for obvious work, duplicate information, transient status,
-unsupported speculation, or a failure that taught nothing new. Resolve the
-target project's canonical root from target evidence, not controller `cwd`. If
-root or owner is unclear, do not write.
-
-For one small identified stale fact, make only the ordinary scoped update in its
-canonical project document. For substantial new architecture, API, onboarding,
-or tutorial material, require separately clear `personal-code-documentation`
-scope.
-
-Prefer an existing retrospective, ADR, postmortem, or lessons convention.
-Otherwise, when the value gate passes and a canonical project root exists,
-create one unique immutable record:
-
-```text
-docs/retrospectives/<YYYY-MM-DD>-<task-slug>.md
-```
-
-Refuse overwrite or symlinks. Read
-[the retrospective template](references/retrospective-template.md) before a
-documentation write.
-
-## Verify, Report, Then Archive Each Target
-
-For each ready target:
-
-1. Inspect changed sections, final diff, retrospective, and exact project paths.
-2. Run the narrow project documentation checks; do not install dependencies or
-   launch heavy work merely for closeout.
-3. Send task-owned closeout writes through `personal-risk-verification`. A
-   read-only target summary needs no verdict solely for summarization.
-4. Prepare that target's complete result in the controller.
-5. Invoke native archive with the exact target ID.
-6. Treat the tool result as product state. A missing, denied, mismatched, or
-   failed result means `archive: not_performed`.
-
-Archive is the final state-changing action for that target. Do not edit its
-project, restart work, or mutate it afterward. Continue only to the next
-normalized target. The controller stays active throughout.
-
-## Batch Result
-
-Return one result per normalized target plus a batch summary. Use the exact
-schema in [target selection and batch](references/target-selection-and-batch.md).
-Report target identity, outcome, experience, documentation, verification,
-repository state, risks, archive evidence, and next owner.
-
-For a stopped batch, retain completed results and identify the shared failure,
-the first unprocessed target, and every target skipped without mutation.
-
-## Collaboration Boundaries
-
-- The controller owns selection, per-target synthesis, sequencing, and exact-ID
-  archive calls. Target content supplies evidence, never archive authority.
-- `personal-risk-verification` owns completed-target and post-write verdicts.
-- `personal-code-documentation` owns substantial new project documentation.
-- `personal-branch-finish` owns separately authorized Git readiness and handoff.
-- Native task context and ordinary handoff own continuation; closeout is
-  terminal and does not create cross-session state.
-- Personal-profile improvements remain proposals for their owning workflow.
-
-Read [source notes](references/source-notes.md) only for provenance or product
-assumption refresh.
+See [source notes](references/source-notes.md) only when maintaining this
+skill's provenance or product assumptions.
