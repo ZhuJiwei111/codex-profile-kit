@@ -27,7 +27,8 @@ low-risk change.
 2. When multiple approaches are genuinely viable, show two or three with the
    recommendation first and only the material tradeoffs.
 3. Ask one consequential question at a time only when the user must choose.
-   Wait for the answer; silence never selects an option.
+   Never set `autoResolutionMs`, a timer, or an automatic default. Wait for the
+   answer; silence, elapsed time, and UI expiry never select an option.
 4. Present the smallest useful design. For complex work, cover component
    ownership, interfaces and dependencies, data or control flow, failure
    behavior, and verification.

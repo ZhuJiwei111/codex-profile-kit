@@ -28,6 +28,17 @@
             "statusMessage": "Checking global file-edit rules"
           }
         ]
+      },
+      {
+        "matcher": "^request_user_input$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{PYTHON3}} {{HOME}}/.codex/hooks/no_autoresolution_guard.py",
+            "timeout": 10,
+            "statusMessage": "Checking user-choice wait policy"
+          }
+        ]
       }
     ]
   }

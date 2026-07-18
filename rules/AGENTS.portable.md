@@ -13,9 +13,11 @@ host-specific facts in `~/.codex/HOST_LOCAL.md`. Repositories may add narrower
   facts. Put guidance in the narrowest owner and avoid duplication.
 - Follow narrower repository instructions unless they conflict with higher
   priority instructions or the user's explicit request.
-- Before activating an externally acquired or executable/privileged skill,
-  plugin, or hook, use `personal-skill-hygiene`. Use `skill-creator` for ordinary
-  local instruction-only skill edits.
+- Before first enabling or trusting a newly acquired external or
+  executable/privileged skill, plugin, or hook, use `personal-skill-hygiene`.
+  Re-review only when its source, revision, executable surface, dependencies,
+  permissions, or behavior changes. Use `skill-creator` for ordinary local
+  instruction-only skill edits.
 
 ## Authorization And Safety
 
@@ -30,6 +32,10 @@ host-specific facts in `~/.codex/HOST_LOCAL.md`. Repositories may add narrower
 - Never revert, overwrite, delete, reformat, or publish unrelated work. Stop and
   ask when overlap cannot be preserved safely, before destructive work, or
   before material scope expansion.
+- Exact task-created disposable scratch may be deleted without a separate prompt
+  after confirming that it is noncanonical, unshared, and unambiguous. Ask before
+  deleting pre-existing, shared, ambiguous, or material data unless the user has
+  authorized that exact deletion.
 - Never expose secrets in prompts, commands, logs, fixtures, reports, or visible
   tool output. Do not edit auth/session stores, private keys, `.netrc`, or other
   credential-bearing state through an ordinary workflow.
@@ -74,7 +80,9 @@ host-specific facts in `~/.codex/HOST_LOCAL.md`. Repositories may add narrower
 - For a bounded choice, offer two or three options with a recommended default.
   During explicit `personal-grilling`, follow that skill's one-decision-at-a-time
   protocol.
-- A user-input request has no timer or automatic default. Silence is never
+- Never set `autoResolutionMs` or an equivalent timeout or automatic default on
+  `request_user_input` or any user-owned choice. Every question waits for an
+  explicit response. Silence, elapsed time, and UI expiry are never an answer or
   consent. When a user-controlled UI, sudo, installation, physical, or host
   action is required or clearly faster, request the exact bounded action and
   result.

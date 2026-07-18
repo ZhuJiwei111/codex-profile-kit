@@ -26,9 +26,11 @@ DEFAULT_HOME = Path.home()
 HOOK_SCRIPT_FILES = (
     "direct_download_guard.py",
     "local_safety_guard.py",
+    "no_autoresolution_guard.py",
     "test_direct_download_guard.py",
     "test_hooks_configuration.py",
     "test_local_safety_guard.py",
+    "test_no_autoresolution_guard.py",
 )
 MANAGED_ROOTS = ("rules", "templates", "skills", "hooks")
 RETIRED_PERSONAL_SKILLS = frozenset({"personal-review-response"})

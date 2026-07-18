@@ -94,6 +94,37 @@ def backup_directories(home: Path) -> list[Path]:
 
 
 class PersonalOnlyProfileContractTests(unittest.TestCase):
+    def test_user_choice_wait_and_scratch_policy_are_portable(self) -> None:
+        agents = (SYNC.REPO_ROOT / "rules" / "AGENTS.portable.md").read_text(
+            encoding="utf-8"
+        )
+        brainstorm = (
+            SYNC.REPO_ROOT
+            / "skills"
+            / "codex"
+            / "personal-brainstorms"
+            / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        grilling = (
+            SYNC.REPO_ROOT
+            / "skills"
+            / "codex"
+            / "personal-grilling"
+            / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        hook_template = (
+            SYNC.REPO_ROOT / "templates" / "hooks.json.template"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("autoResolutionMs", agents)
+        self.assertIn("task-created disposable scratch", agents)
+        self.assertIn("autoResolutionMs", brainstorm)
+        self.assertIn("autoResolutionMs", grilling)
+        self.assertIn('"matcher": "^request_user_input$"', hook_template)
+        self.assertIn("no_autoresolution_guard.py", hook_template)
+        self.assertIn("no_autoresolution_guard.py", SYNC.HOOK_SCRIPT_FILES)
+        self.assertIn("test_no_autoresolution_guard.py", SYNC.HOOK_SCRIPT_FILES)
+
     def test_portable_codex_skill_selection_is_personal_only(self) -> None:
         observed = {
             name: SYNC.is_portable_codex_skill(name)

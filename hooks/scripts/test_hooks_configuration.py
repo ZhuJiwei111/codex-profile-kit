@@ -9,7 +9,9 @@ import unittest
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ACTIVE_HOOKS_JSON = SCRIPT_DIR.parent / "hooks.json"
-PROFILE_ROOT = SCRIPT_DIR.parents[1]
+PROFILE_ROOT = (
+    SCRIPT_DIR.parent if ACTIVE_HOOKS_JSON.is_file() else SCRIPT_DIR.parents[1]
+)
 PROFILE_TEMPLATE = PROFILE_ROOT / "templates" / "hooks.json.template"
 sys.path.insert(0, str(SCRIPT_DIR))
 
@@ -37,13 +39,17 @@ class HooksConfigurationTest(unittest.TestCase):
 
         self.assertEqual(set(hooks), {"PreToolUse"})
 
-    def test_pre_tool_use_uses_canonical_matchers_and_three_handlers(self) -> None:
+    def test_pre_tool_use_uses_canonical_matchers_and_four_handlers(self) -> None:
         groups = load_hooks()["hooks"]["PreToolUse"]
         by_matcher = {group["matcher"]: group["hooks"] for group in groups}
 
-        self.assertEqual(set(by_matcher), {"^Bash$", "^apply_patch$"})
+        self.assertEqual(
+            set(by_matcher),
+            {"^Bash$", "^apply_patch$", "^request_user_input$"},
+        )
         self.assertEqual(len(by_matcher["^Bash$"]), 2)
         self.assertEqual(len(by_matcher["^apply_patch$"]), 1)
+        self.assertEqual(len(by_matcher["^request_user_input$"]), 1)
         commands = [
             handler["command"]
             for handlers in by_matcher.values()
@@ -51,6 +57,7 @@ class HooksConfigurationTest(unittest.TestCase):
         ]
         self.assertEqual(sum("direct_download_guard.py" in value for value in commands), 1)
         self.assertEqual(sum("local_safety_guard.py" in value for value in commands), 2)
+        self.assertEqual(sum("no_autoresolution_guard.py" in value for value in commands), 1)
         self.assertFalse(any("smart_commit" in value for value in commands))
 
     def test_retired_smart_commit_files_are_absent(self) -> None:
@@ -69,6 +76,9 @@ class HooksConfigurationTest(unittest.TestCase):
             SCRIPT_DIR / "test_hookify_codex_runner.py",
             PROFILE_ROOT / "hooks" / "rules",
         ]
+        retired.extend(
+            SCRIPT_DIR.glob("__pycache__/hookify_codex_runner*.pyc")
+        )
 
         self.assertFalse([path for path in retired if path.exists()])
 

@@ -49,8 +49,9 @@ Investigate discoverable facts instead of asking the user to supply them.
 4. Ask exactly one material decision per user turn. A concise `1`, `yes`, or
    “use the recommendation” locks the presented decision without requiring an
    invented rationale.
-5. Wait without a timer or automatic default. Silence, elapsed time, UI expiry,
-   or tool behavior never answers, defers, pauses, or confirms a question.
+5. Never set `autoResolutionMs`, a timer, or an automatic default. Wait for an
+   explicit answer. Silence, elapsed time, UI expiry, or tool behavior never
+   answers, defers, pauses, or confirms a question.
 6. After the answer, update the ledger, propagate consequences through scope,
    dependencies, risks, and acceptance, and identify the next highest-impact
    unresolved decision.
