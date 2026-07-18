@@ -14,3 +14,9 @@ silent executor or model fallback. The main process chooses cadence; without a
 better basis it uses `20 -> 40 -> 60 -> 60 ...` minutes. Observer read-only
 behavior is a semantic boundary, and observer liveness failure closes the
 monitoring path rather than transferring recurring polling to the controller.
+Active monitoring for every GPU-backed long-running job includes
+underutilization detection in the same observer by default. The locked balanced
+profile uses short bounded telemetry windows at sparse adaptive intervals,
+requires two low-utilization windows plus stale progress before reporting a
+suspected anomaly, and treats expected low-utilization phases and missing
+process/device evidence as uncertainty rather than failure.

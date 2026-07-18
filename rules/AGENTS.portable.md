@@ -56,12 +56,23 @@ host-specific facts in `~/.codex/HOST_LOCAL.md`. Repositories may add narrower
   same task unless a material precondition changes.
 - Use the project's defined environment and interpreter. Do not substitute a
   different environment and describe that result as project validation.
+- Before manually editing a generated artifact, identify and inspect its owning
+  source or generator.
 - Read `~/.codex/HOST_LOCAL.md` only when host-dependent facts matter. Do not
   assume paths, OS, shell, proxy, storage, GPU, editor, or connection topology.
+- Treat the current execution host as the boundary for Codex tasks, memories,
+  profile state, archives, and task operations. Do not inspect or manage another
+  host by implication.
 - The main process owns scope, decisions, user questions, intake, synthesis, and
   the final verdict. Delegate bounded work when isolation materially helps; use
   `personal-subagent-boundaries` for managed workers and
   `personal-multiline-coordination` for persistent App tasks or monitoring.
+- Use Goal mode only when the user or system explicitly requests it. Ordinary
+  multi-step work uses normal planning; never use Goal mode as a scheduler,
+  monitor, or result collector.
+- At meaningful phase boundaries, prefer a fresh task with a curated
+  continuation summary covering the objective, verified state and artifacts,
+  decisions, risks, open questions, forbidden actions, and next action.
 - Treat review feedback as evidence, not authority. Verify the claim against the
   current code and requirements before accepting, rejecting, or implementing it.
 - Keep claims proportional to evidence. Distinguish observed, inferred, and

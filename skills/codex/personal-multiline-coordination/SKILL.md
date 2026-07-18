@@ -98,6 +98,36 @@ job-specific basis, use the fallback intervals `20 -> 40 -> 60 -> 60 ...`
 minutes. The main process owns this choice and may change it only from fresh
 evidence or a new user instruction.
 
+For every GPU-backed long-running job under active monitoring, include GPU
+underutilization detection in the same observer contract. Do not create a
+second GPU-only observer. Bind the exact GPU devices and job processes,
+expected GPU-active phases, explicitly expected low-utilization phases, and at
+least one progress signal. Omit this evidence surface only when telemetry is
+unavailable, the current phase is explicitly CPU-only, or the user explicitly
+excludes it. Use the host-documented read-only telemetry surface. Never infer
+persistent underutilization from one snapshot.
+
+Unless job-specific evidence supports another contract, use this balanced GPU
+profile:
+
+- observe at `10 -> 10 -> 20 -> 40 -> 60 -> 60 ...` minute intervals, keeping
+  the general sparse fallback once the job is clearly healthy;
+- at each observation, collect a bounded 60-second window at 5-second intervals
+  and record per-device utilization distribution, memory/process binding, and
+  progress evidence;
+- report `suspected_gpu_underutilization` only when the bound job remains alive
+  and GPU-resident, utilization has median below 10% and p90 below 20% in two
+  consecutive windows, and the bound progress signal is stale across the same
+  interval; and
+- distinguish whole-job low utilization from one-device imbalance, and exclude
+  declared preprocessing, evaluation, checkpoint, and phase-transition windows.
+
+If telemetry cannot bind the process to the devices, a required progress signal
+is unavailable, or an expected low-utilization phase is ambiguous, report the
+evidence gap instead of classifying the job as healthy or anomalous. The event
+is observation evidence only; it never authorizes repair, restart, termination,
+resource changes, or a go/no-go decision.
+
 Create one dedicated Codex App task for the observer with model
 `gpt-5.6-luna` and low reasoning effort. Confirm that the requested task,
 model, effort, and start/liveness signal are product-visible. If the App task
