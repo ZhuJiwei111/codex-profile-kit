@@ -16,6 +16,12 @@
 confirmed apply 会先备份、再删除以下精确 active-profile 路径；重复执行是 no-op：
 
 - `.codex/skills/personal-review-response`
+- `.codex/skills/personal-context-compression`
+- `.codex/skills/personal-context-optimization`
+- `.codex/skills/personal-context-save-restore`
+- `.codex/skills/personal-docs-sync-light`
+- `.codex/skills/personal-long-job-status`
+- `.codex/skills/personal-repo-intake`
 - `.codex/agents/monitor.toml`
 - `.codex/agents/reviewer.toml`
 - `.codex/hookify/README.md`

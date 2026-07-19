@@ -33,8 +33,24 @@ HOOK_SCRIPT_FILES = (
     "test_no_autoresolution_guard.py",
 )
 MANAGED_ROOTS = ("rules", "templates", "skills", "hooks")
-RETIRED_PERSONAL_SKILLS = frozenset({"personal-review-response"})
+RETIRED_PERSONAL_SKILLS = frozenset(
+    {
+        "personal-context-compression",
+        "personal-context-optimization",
+        "personal-context-save-restore",
+        "personal-docs-sync-light",
+        "personal-long-job-status",
+        "personal-repo-intake",
+        "personal-review-response",
+    }
+)
 RETIRED_ACTIVE_PATHS = (
+    Path(".codex/skills/personal-context-compression"),
+    Path(".codex/skills/personal-context-optimization"),
+    Path(".codex/skills/personal-context-save-restore"),
+    Path(".codex/skills/personal-docs-sync-light"),
+    Path(".codex/skills/personal-long-job-status"),
+    Path(".codex/skills/personal-repo-intake"),
     Path(".codex/skills/personal-review-response"),
     Path(".codex/agents/monitor.toml"),
     Path(".codex/agents/reviewer.toml"),

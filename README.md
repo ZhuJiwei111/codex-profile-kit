@@ -46,10 +46,13 @@ dry-run 只描述当次状态；`--confirm` 会重新计算目标。confirmed ap
 
 ## 退役与保留
 
-本次 profile 明确退役 `personal-review-response`、旧 `monitor.toml` /
-`reviewer.toml` custom agents，以及 Hookify Markdown adapter。confirmed apply 会先
-备份再清理这些精确路径；普通“仓库中不存在”不会被解释为删除其他本机 skill。
-该清理可重复执行，且不会触碰同目录中的未受管文件。
+本次 profile 明确退役 `personal-review-response`，以及已经从仓库删除的
+`personal-context-compression`、`personal-context-optimization`、
+`personal-context-save-restore`、`personal-docs-sync-light`、
+`personal-long-job-status`、`personal-repo-intake`。旧 `monitor.toml` /
+`reviewer.toml` custom agents 和 Hookify Markdown adapter 也已明确退役。
+confirmed apply 会先备份再清理这些精确路径；普通“仓库中不存在”不会被解释为
+删除其他本机 skill。该清理可重复执行，且不会触碰同目录中的未受管文件。
 
 ## 安全说明
 

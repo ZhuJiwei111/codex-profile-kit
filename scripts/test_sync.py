@@ -362,6 +362,37 @@ class VerifyContractTests(unittest.TestCase):
 
 
 class ApplyContractTests(unittest.TestCase):
+    def test_removed_repository_skills_are_explicit_retirements(self) -> None:
+        retired_names = {
+            "personal-context-compression",
+            "personal-context-optimization",
+            "personal-context-save-restore",
+            "personal-docs-sync-light",
+            "personal-long-job-status",
+            "personal-repo-intake",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            root = make_repo(base / "profile")
+            home = base / "home"
+            home.mkdir()
+            for name in retired_names:
+                target = home / ".codex" / "skills" / name
+                target.mkdir(parents=True, exist_ok=True)
+                (target / "SKILL.md").write_text("legacy\n", encoding="utf-8")
+
+            drift = SYNC.inbound_managed_drift(root, home)
+
+            self.assertEqual(
+                {
+                    item.destination.name
+                    for item in drift
+                    if item.state == "retired-present"
+                },
+                retired_names,
+            )
+            self.assertEqual(SYNC.host_only_personal_skills(root, home), [])
+
     def test_apply_backs_up_and_removes_only_explicit_retired_targets(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
