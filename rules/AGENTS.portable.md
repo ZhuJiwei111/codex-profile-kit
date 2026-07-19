@@ -67,6 +67,11 @@ host-specific facts in `~/.codex/HOST_LOCAL.md`. Repositories may add narrower
   the final verdict. Delegate bounded work when isolation materially helps; use
   `personal-subagent-boundaries` for managed workers and
   `personal-multiline-coordination` for persistent App tasks or monitoring.
+- For explicitly authorized long-running work, prefer an in-chat Scheduled task
+  owned by the executor and route the full fallback contract through
+  `personal-multiline-coordination`. A wait timeout is not a monitoring
+  checkpoint or user-visible event, and a parent discussion task does not poll
+  or wait for routine progress.
 - Use Goal mode only when the user or system explicitly requests it. Ordinary
   multi-step work uses normal planning; never use Goal mode as a scheduler,
   monitor, or result collector.

@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-18.
+Checked: 2026-07-19.
 
 ## Sources
 
@@ -16,6 +16,10 @@ Checked: 2026-07-18.
 - User feedback recorded on 2026-07-13 and 2026-07-16: coverage must not be
   sacrificed for brevity, but mandatory abstract open questions make decisions
   harder to answer.
+- User feedback from tasks `019f6f4d-ed8f-7661-a773-9a48e901df56` and
+  `019f7484-3ca3-7dd2-9800-eb31185baafe` on 2026-07-19: verbally locked choices
+  were later compressed or forgotten; stable IDs, exact option binding,
+  explicit supersession, and a persistent recovery ledger restored continuity.
 
 ## Local Preferences
 
@@ -30,6 +34,9 @@ Checked: 2026-07-18.
   user confirmation.
 - Accept concise option choices, require explicit material-risk disposition,
   and keep `personal-brainstorms` as the paired design-synthesis owner.
+- For long-lived, multi-round, cross-session, recovery, or handoff work,
+  maintain one scoped canonical decision record with stable IDs, exact option
+  binding, explicit supersession, dependency propagation, and phase snapshots.
 
 The workflow is locally re-expressed; no upstream executable or substantial
 prose is copied. Semantic completeness remains a bounded, disclosed limitation.

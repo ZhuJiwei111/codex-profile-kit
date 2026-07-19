@@ -19,10 +19,19 @@ Before the first question, state a concise scope envelope:
 - the acceptance boundary; and
 - the action boundary while grilling is active.
 
+For multi-round, cross-session, prior-task recovery, or handoff work, also name
+the canonical decision record. Use an existing project decision location when
+one exists; otherwise use one exact task-owned Markdown path. Maintaining this
+record is workflow bookkeeping and does not authorize implementation. If the
+active action boundary explicitly forbids file writes, maintain a complete
+inline ledger until persistent recording is allowed. Do not create competing
+ledgers.
+
 Treat the proposed solution as a hypothesis. Test whether the problem is real,
 whether a smaller approach works, what it couples to, and how it can fail. Do
-not edit, launch, or implement while the gate is active. Perform only bounded
-read-only investigation that can change a decision.
+not edit product code or project behavior, launch, or implement while the gate
+is active; the canonical decision record is the only workflow-state write.
+Perform only bounded read-only investigation that can change a decision.
 
 ## Build Semantic Coverage
 
@@ -35,6 +44,39 @@ Close each branch with observed evidence, a locked user decision, a safe
 non-material assumption, an explicit deferral, or a justified not-applicable
 finding. Keep the source, consequence, dependencies, and material risk visible.
 Investigate discoverable facts instead of asking the user to supply them.
+
+## Maintain The Canonical Ledger
+
+Create the ledger no later than the first material answer. Give every material
+entry a stable ID and record:
+
+```text
+status = proposed | locked | superseded | deferred | open
+exact decision or unresolved question
+source and evidence cutoff
+scope and owner
+consequences and dependencies
+acceptance impact and risk disposition
+supersedes / superseded_by
+```
+
+Keep observed facts, user decisions, agent recommendations, assumptions, and
+deferrals distinct. Only an explicit user answer can lock or defer a material
+choice. Preserve concise answers such as `1` by binding them to the exact option
+text that was presented.
+
+After every answer, update the ledger before asking the next question. Record
+the delta, compare it with all active locks, propagate its effects, and show the
+user the newly locked or changed entry plus the still-active invariants. If it
+conflicts with a lock, stop and ask whether to revise or supersede that exact
+entry; never silently reinterpret it. Reopening creates an explicit replacement
+chain and revisits only affected dependencies.
+
+Emit or persist a complete snapshot at a theme boundary, before likely context
+compaction, when resuming after “continue,” before the three closure passes, and
+at handoff. Reload that snapshot rather than reconstructing state from recent
+conversation. When persistent, report its path and a revision or digest when
+practical.
 
 ## Run The Multi-Round Decision Loop
 
@@ -52,9 +94,8 @@ Investigate discoverable facts instead of asking the user to supply them.
 5. Never set `autoResolutionMs`, a timer, or an automatic default. Wait for an
    explicit answer. Silence, elapsed time, UI expiry, or tool behavior never
    answers, defers, pauses, or confirms a question.
-6. After the answer, update the ledger, propagate consequences through scope,
-   dependencies, risks, and acceptance, and identify the next highest-impact
-   unresolved decision.
+6. After the answer, follow the canonical-ledger protocol above, then identify
+   the next highest-impact unresolved decision.
 
 Continue across as many rounds as material coverage requires. Do not bundle
 several decisions into a final questionnaire. Reopen only branches affected by
@@ -75,9 +116,10 @@ new evidence or a conflicting later decision.
 After the last apparent decision, run these passes in order:
 
 1. **Coverage:** account for the semantic core, applicable packs, derived
-   branches, dependencies, and material risks.
+   branches, dependencies, material risks, and every active ledger entry.
 2. **Consistency:** check that decisions, evidence, scope, constraints,
-   interfaces, and acceptance agree and that late answers propagated.
+   interfaces, and acceptance agree, that late answers propagated, and that no
+   superseded entry remains active elsewhere.
 3. **Adversarial:** challenge necessity, failure and recovery, abuse and
    security, compatibility and migration, operations and ownership, rollback,
    second-order effects, and whether acceptance can prove the outcome.
@@ -87,8 +129,9 @@ Resume the decision loop if any pass exposes a material gap.
 When all three passes succeed, show a complete but proportionate ledger. Group
 evidence-backed non-material or not-applicable items, but retain every material
 decision, assumption, deferral, risk disposition, unresolved limitation, and
-source boundary. Ask the user to explicitly confirm that coverage is complete,
-then wait without a timeout.
+source boundary. Reconcile each material entry as active, superseded, deferred,
+or open; omission is not closure. Ask the user to explicitly confirm that
+coverage is complete, then wait without a timeout.
 
 ## Stop Or Hand Off
 
@@ -98,8 +141,8 @@ request.
 
 - If the user stops early, return an incomplete ledger and the exact open
   branches.
-- If paired with `personal-brainstorms`, return the confirmed ledger for its
-  sole design synthesis.
+- If paired with `personal-brainstorms`, return the confirmed canonical record,
+  including stable IDs and supersession history, for its sole design synthesis.
 - If run alone, return the confirmed requirements ledger. Do not claim a design
   or implementation plan unless another authorized workflow owns it.
 

@@ -94,6 +94,41 @@ def backup_directories(home: Path) -> list[Path]:
 
 
 class PersonalOnlyProfileContractTests(unittest.TestCase):
+    def test_long_job_monitoring_preferences_are_portable(self) -> None:
+        agents = (SYNC.REPO_ROOT / "rules" / "AGENTS.portable.md").read_text(
+            encoding="utf-8"
+        )
+        skill_root = (
+            SYNC.REPO_ROOT
+            / "skills"
+            / "codex"
+            / "personal-multiline-coordination"
+        )
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        notes = (skill_root / "references" / "source-notes.md").read_text(
+            encoding="utf-8"
+        )
+        agents_contract = " ".join(agents.split())
+        skill_contract = " ".join(skill.split())
+        notes_contract = " ".join(notes.split())
+
+        self.assertIn("in-chat Scheduled task", agents_contract)
+        self.assertIn(
+            "A wait timeout is not a monitoring checkpoint", agents_contract
+        )
+        self.assertIn(
+            "The executor that launches a long-running job owns", skill_contract
+        )
+        self.assertIn(
+            "Only create a dedicated observer for an external", skill_contract
+        )
+        self.assertIn("monitoring_unavailable", skill_contract)
+        self.assertIn("monitoring_interrupted", skill_contract)
+        self.assertIn("pause its schedule", skill_contract)
+        self.assertIn(
+            "supersedes the former dedicated-observer default", notes_contract
+        )
+
     def test_user_choice_wait_and_scratch_policy_are_portable(self) -> None:
         agents = (SYNC.REPO_ROOT / "rules" / "AGENTS.portable.md").read_text(
             encoding="utf-8"

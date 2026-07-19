@@ -1,6 +1,6 @@
 # Source Notes
 
-Checked: 2026-07-18.
+Checked: 2026-07-19.
 
 ## Sources
 
@@ -12,6 +12,10 @@ Checked: 2026-07-18.
   boundaries, simple-task handling, and Chinese user output.
 - Local `personal-grilling`: explicit-only semantic coverage gate and
   confirmation owner.
+- User feedback from tasks `019f6f4d-ed8f-7661-a773-9a48e901df56` and
+  `019f7484-3ca3-7dd2-9800-eb31185baafe` on 2026-07-19: decisions that were
+  verbally locked were later compressed or forgotten; stable IDs, explicit
+  replacement chains, and a persistent recovery ledger prevented recurrence.
 
 ## Local Preferences
 
@@ -24,6 +28,11 @@ Checked: 2026-07-18.
 - Keep brainstorming as the design-synthesis owner and grilling as the
   explicit-only coverage owner.
 - Use the built-in plan by default and create no persistent design artifact
-  unless another explicitly invoked workflow owns it.
+  for a simple task. For long-lived, multi-round, cross-session, recovery, or
+  handoff work, maintain one scoped canonical decision record; this records
+  discussion state and does not grant implementation authority.
+- Preserve stable decision IDs, explicit replacement chains, and exact
+  task-owned semantics across synthesis rather than relying on conversational
+  memory or a lossy final summary.
 
 No upstream script, asset, or substantial prose is copied.
