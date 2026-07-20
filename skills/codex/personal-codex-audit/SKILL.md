@@ -134,5 +134,11 @@ Report the selected intent, exact host/repository/revision, managed paths,
 commands and outcomes, changes actually made, final semantic evidence, checks
 not run, recovery path, and remaining risk.
 
+After every `export repo`, `sync GitHub`, or `from GitHub apply active`, include
+a brief mandatory update summary that names each updated managed asset and what
+changed, for example: "Updated skill `personal-codex-audit`: added an update
+summary requirement." If the synchronization is a no-op, state that no managed
+assets changed.
+
 See [source notes](references/source-notes.md) only when maintaining this
 skill's transfer boundary.
