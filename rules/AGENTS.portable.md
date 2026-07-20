@@ -67,11 +67,14 @@ host-specific facts in `~/.codex/HOST_LOCAL.md`. Repositories may add narrower
   the final verdict. Delegate bounded work when isolation materially helps; use
   `personal-subagent-boundaries` for managed workers and
   `personal-multiline-coordination` for persistent App tasks or monitoring.
-- For explicitly authorized long-running work, prefer an in-chat Scheduled task
-  owned by the executor and route the full fallback contract through
-  `personal-multiline-coordination`. A wait timeout is not a monitoring
-  checkpoint or user-visible event, and a parent discussion task does not poll
-  or wait for routine progress.
+- For explicitly authorized long-running work, prefer a dedicated, product-
+  visible monitoring App task on the execution host, using `gpt-5.6-luna` with
+  low reasoning and sparse long-sleep observation through
+  `personal-multiline-coordination`. Treat executor-owned in-chat automation as
+  a future upgrade only after the remote task surface exposes and verifies it;
+  local-scheduler-to-remote-SSH monitoring requires an explicit user choice. A
+  wait timeout is not a monitoring checkpoint or user-visible event, and a
+  parent discussion task does not poll or wait for routine progress.
 - Use Goal mode only when the user or system explicitly requests it. Ordinary
   multi-step work uses normal planning; never use Goal mode as a scheduler,
   monitor, or result collector.

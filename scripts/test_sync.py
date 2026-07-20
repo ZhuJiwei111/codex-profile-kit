@@ -112,21 +112,31 @@ class PersonalOnlyProfileContractTests(unittest.TestCase):
         skill_contract = " ".join(skill.split())
         notes_contract = " ".join(notes.split())
 
-        self.assertIn("in-chat Scheduled task", agents_contract)
+        self.assertIn("monitoring App task", agents_contract)
+        self.assertIn("gpt-5.6-luna", agents_contract)
         self.assertIn(
             "A wait timeout is not a monitoring checkpoint", agents_contract
         )
         self.assertIn(
-            "The executor that launches a long-running job owns", skill_contract
+            "create a dedicated monitoring App task", skill_contract
         )
-        self.assertIn(
-            "Only create a dedicated observer for an external", skill_contract
-        )
+        self.assertIn("gpt-5.6-luna", skill_contract)
+        self.assertIn("long sleep", skill_contract)
+        self.assertIn("45-60 minutes", skill_contract)
+        self.assertIn("90-120 minutes", skill_contract)
+        self.assertIn("2-4 hours", skill_contract)
+        self.assertIn("future upgrade path", skill_contract)
+        self.assertIn("explicit user choice", skill_contract)
         self.assertIn("monitoring_unavailable", skill_contract)
         self.assertIn("monitoring_interrupted", skill_contract)
-        self.assertIn("pause its schedule", skill_contract)
+        self.assertNotIn("no more than 60 seconds", skill_contract)
         self.assertIn(
-            "supersedes the former dedicated-observer default", notes_contract
+            "monitoring App task is the default", notes_contract
+        )
+        self.assertIn("future upgrade path", notes_contract)
+        self.assertNotIn(
+            "Consecutive internal waits are a silent executor fallback",
+            notes_contract,
         )
 
     def test_user_choice_wait_and_scratch_policy_are_portable(self) -> None:

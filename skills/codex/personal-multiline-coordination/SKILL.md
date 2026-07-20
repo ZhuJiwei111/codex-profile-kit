@@ -11,8 +11,8 @@ one-shot work.
 
 The main process is the control plane. It owns decomposition, authority,
 cross-line decisions, intake, and the final synthesis. App tasks perform
-substantive line work and own the waiting and monitoring for long-running jobs
-they launch. They stop at their assigned boundary.
+substantive line work or dedicated monitoring and stop at their assigned
+boundary.
 
 ## Establish Authority
 
@@ -96,40 +96,47 @@ Before launch, freeze the monitoring contract: owner, exact job and phase
 identity, evidence surfaces, progress and terminal signals, expected duration,
 cadence, observation limits, retry budget, stop condition, and whether the
 parent discussion task participates. Choose a cadence that matches the job.
-When there is no better job-specific basis, use the fallback intervals
-`20 -> 40 -> 60 -> 60 ...` minutes. Change the cadence only from fresh evidence
-or a new user instruction.
+When there is no better job-specific basis, check short jobs every 30-60
+minutes; check multi-hour jobs first after 45-60 minutes and then every 90-120
+minutes when stable; check overnight or multi-day jobs every 2-4 hours when
+stable. Change the cadence only from fresh evidence or a new user instruction.
 
-### Prefer In-Chat Scheduling
+### Use A Monitoring App Task By Default
 
-The executor that launches a long-running job owns its waiting and monitoring.
-When Scheduled-task capability is available, attach an in-chat Scheduled task
-to that executor's existing chat. Do not use a standalone schedule that creates
-a new chat for every run, and do not describe recurrence in an ordinary App-task
-prompt as if that alone will wake the task.
+After the executor launches the detached job and completes its bounded startup
+guard, create a dedicated monitoring App task on the same execution host. Use
+model `gpt-5.6-luna` with low reasoning effort and confirm the task, model,
+effort, host, exact job binding, and start signal are product-visible. Do not
+replace this task with a managed subagent.
 
-Give the scheduled prompt the durable monitoring contract. Each run performs
-one bounded observation against the exact evidence surfaces and reports only
-through the commentary gate below. When a terminal signal or stop condition is
-observed, report the final evidence and pause its schedule while retaining the
-run history. Do not delete or archive the chat automatically.
+Reuse the former monitoring-subagent control flow inside the App task: keep its
+turn active, perform a long sleep until the next sparse cadence checkpoint,
+make one bounded read-only observation, and return to long sleep when no event
+is present. Do not finish after the first observation, use short recurring
+internal waits, or make the controller poll. Report only an agreed milestone,
+`action_needed`, `failed`, `completed`, `preapproved_next_ready`, or a status
+event requested by the user.
 
-If in-chat scheduling is unavailable, an executor monitoring its own job may
-keep the current turn active and perform consecutive internal waits of no more
-than 60 seconds. Keep those waits silent until the commentary gate opens.
+The monitoring task may write only the compact task-owned monitoring records
+named in its contract. It must not stop, restart, repair, mutate outputs, launch
+the next stage, publish, or make a go/no-go decision. The controller owns event
+intake and every consequential action.
 
-Only create a dedicated observer for an external or otherwise unowned job. It
-still requires explicit monitoring authority and a product-visible in-chat
-schedule. Request model `gpt-5.6-luna` with low reasoning effort and confirm the
-task, model, effort, schedule, and start signal are product-visible. If that
-scheduling surface is unavailable, report `monitoring_unavailable`; do not
-create a one-turn observer, substitute a managed subagent or another model, or
-make the parent controller poll.
+If the monitoring App task cannot be created on the execution host, cannot
+remain active across its long sleep, or cannot bind the required evidence
+surface, report `monitoring_unavailable`. If it exits, becomes idle, misses a
+report beyond tolerance, or loses its binding before a terminal signal, report
+`monitoring_interrupted`. Do not silently replace it or make the controller
+poll.
 
-An external observer performs one bounded read-only check per scheduled run. If
-it becomes idle before a terminal signal or loses its schedule, job binding, or
-required evidence surface, report `monitoring_interrupted` and fail closed. Do
-not silently restart it or keep it alive with repeated controller messages.
+### Keep Executor Automation As A Future Upgrade
+
+Executor-owned in-chat heartbeat automation is a future upgrade path. Use it
+only after the remote execution task itself exposes the automation tool and an
+actual same-thread wake has been verified on that host. A local Scheduled task
+that monitors a remote job over SSH is not the default fallback; it requires an
+explicit user choice plus a frozen host identity, non-interactive SSH route,
+exact read-only command allowlist, and remote job contract.
 
 ### Gate User-Visible Updates
 
@@ -148,19 +155,19 @@ instruction, and keep intervening internal waits silent.
 ### Include GPU Evidence
 
 For every GPU-backed long-running job under active monitoring, include GPU
-underutilization detection in the same owner or observer contract. Do not create
-a second GPU-only observer. Bind the exact GPU devices and job processes,
+underutilization detection in the same monitoring-task contract. Do not create
+a second GPU-only task. Bind the exact GPU devices and job processes,
 expected GPU-active phases, explicitly expected low-utilization phases, and at
 least one progress signal. Omit this evidence surface only when telemetry is
 unavailable, the current phase is explicitly CPU-only, or the user explicitly
 excludes it. Use the host-documented read-only telemetry surface. Never infer
 persistent underutilization from one snapshot.
 
-Unless job-specific evidence supports another contract, use this balanced GPU
+Unless job-specific evidence supports another contract, use this sparse GPU
 profile:
 
-- observe at `10 -> 10 -> 20 -> 40 -> 60 -> 60 ...` minute intervals, keeping
-  the general sparse fallback once the job is clearly healthy;
+- use the general 30-60 minute, 45-60 then 90-120 minute, or 2-4 hour cadence
+  according to the expected job duration and observed stability;
 - at each observation, collect a bounded 60-second window at 5-second intervals
   and record per-device utilization distribution, memory/process binding, and
   progress evidence;
@@ -177,21 +184,21 @@ evidence gap instead of classifying the job as healthy or anomalous. The event
 is observation evidence only; it never authorizes repair, restart, termination,
 resource changes, or a go/no-go decision.
 
-The observer's read-only restriction is a semantic task boundary. It may read
-only the named process/session, log, status, and output evidence. It must never
-mutate the job or artifacts, send control signals, diagnose by changing state,
-execute a contingency, decide success, or advance a phase. Each event reports
-the exact evidence identity, observed transition, and uncertainty.
+The monitoring task's read-only restriction is a semantic task boundary. It may
+read only the named process/session, log, status, and output evidence. It must
+never mutate the job or artifacts, send control signals, diagnose by changing
+state, execute a contingency, decide success, or advance a phase. Each event
+reports the exact evidence identity, observed transition, and uncertainty.
 
-Treat scheduling and observer liveness as part of the contract. If a schedule
-does not start, an observer exits unexpectedly, a required surface becomes
-unreadable, or a report is missed beyond the declared tolerance, fail closed
+Treat monitoring-task liveness as part of the contract. If the task does not
+start, exits unexpectedly, becomes idle before a terminal signal, cannot read a
+required surface, or misses a report beyond the declared tolerance, fail closed
 with `monitoring_unavailable` or `monitoring_interrupted` and wait for the user.
-Do not silently spawn a replacement or make the controller poll.
+Do not silently create a replacement or make the controller poll.
 
-On a terminal job signal, phase change, authorization withdrawal, or observer
-boundary failure, the monitoring owner reports its last evidence, pauses any
-schedule, and stops. The main process performs intake only after a native task
+On a terminal job signal, phase change, authorization withdrawal, or monitoring
+boundary failure, the monitoring task reports its last evidence and stops. The
+main process performs intake only after a native task
 event or an explicit user request and alone decides what the evidence means and
 whether any separately authorized action should follow.
 
