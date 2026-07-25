@@ -1,0 +1,22 @@
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+plan_mode_reasoning_effort = "medium"
+personality = "pragmatic"
+service_tier = "default"
+
+[features]
+memories = true
+hooks = true
+apps = true
+
+[memories]
+generate_memories = false
+use_memories = true
+
+[apps._default]
+enabled = false
+approvals_reviewer = "user"
+default_tools_approval_mode = "prompt"
+
+[apps.connector_76869538009648d5b282a4bb21c3d157]
+enabled = true

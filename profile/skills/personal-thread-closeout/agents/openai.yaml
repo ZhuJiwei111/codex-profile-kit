@@ -1,0 +1,6 @@
+interface:
+  display_name: "Personal Thread Closeout"
+  short_description: "Summarize, preserve, and archive the current task"
+  default_prompt: "Use $personal-thread-closeout to close and archive this current task."
+policy:
+  allow_implicit_invocation: false

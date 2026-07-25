@@ -1,0 +1,6 @@
+interface:
+  display_name: "Reconcile Decisions"
+  short_description: "Recover current decisions from named task history"
+  default_prompt: "Use $personal-reconcile-decisions to recover the current decisions from these named task histories."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Personal Prompt Optimizer"
+  short_description: "Repair prompts or compile zero-context handoffs"
+  default_prompt: "Use $personal-prompt-optimizer to turn this input into one lean executable prompt."
+policy:
+  allow_implicit_invocation: false

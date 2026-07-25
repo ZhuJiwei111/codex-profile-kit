@@ -1,6 +1,0 @@
-interface:
-  display_name: "Personal Evidence Debugging"
-  short_description: "Trace unexpected failures to supported causes"
-  default_prompt: "Use $personal-evidence-debugging to reproduce this unexpected failure, identify the first causal break, and test one falsifiable explanation before another fix."
-policy:
-  allow_implicit_invocation: true

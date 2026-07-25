@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Codex Hook Rules"
+  short_description: "Author and test native Codex hook guards"
+  default_prompt: "Use $personal-codex-hook-rules to revise this native Codex hook and verify its payload and trust behavior."

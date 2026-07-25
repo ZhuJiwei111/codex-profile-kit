@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CONDA_ROOT:?}/envs/codex-tools/bin/python\" \"${CODEX_HOME:-$HOME/.codex}/hooks/conda_base_guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking Conda base policy"
+          }
+        ]
+      },
+      {
+        "matcher": "^request_user_input$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CONDA_ROOT:?}/envs/codex-tools/bin/python\" \"${CODEX_HOME:-$HOME/.codex}/hooks/no_autoresolution_guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking user-choice wait policy"
+          }
+        ]
+      }
+    ]
+  }
+}

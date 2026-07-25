@@ -1,6 +1,0 @@
-interface:
-  display_name: "Personal Thread Closeout"
-  short_description: "Close explicit targets or sweep one project"
-  default_prompt: "Use $personal-thread-closeout from this separate controller to close these exact current-host task IDs or this explicitly named project sweep, preserving only project knowledge Codex judges worth keeping."
-policy:
-  allow_implicit_invocation: false

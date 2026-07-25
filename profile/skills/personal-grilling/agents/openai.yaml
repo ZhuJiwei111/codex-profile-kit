@@ -1,0 +1,6 @@
+interface:
+  display_name: "Personal Grilling"
+  short_description: "Resolve one material requirement decision at a time"
+  default_prompt: "Use $personal-grilling to clarify this consequential requirement one material decision at a time."
+policy:
+  allow_implicit_invocation: false

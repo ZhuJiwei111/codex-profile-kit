@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Temporary Work"
+  short_description: "Keep one-off work out of maintained code"
+  default_prompt: "Use $personal-temporary-work to separate this one-time transition from durable behavior."

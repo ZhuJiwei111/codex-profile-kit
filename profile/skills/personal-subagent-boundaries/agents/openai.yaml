@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Subagent Boundaries"
+  short_description: "Bound one-shot subagents and their handoffs"
+  default_prompt: "Use $personal-subagent-boundaries to delegate this one bounded worker task with an exclusive surface and stop condition."

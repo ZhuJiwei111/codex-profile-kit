@@ -1,0 +1,27 @@
+files = [
+  "AGENTS.md",
+  "memories/MEMORY.md",
+  "hooks.json",
+  "hooks/conda_base_guard.py",
+  "hooks/no_autoresolution_guard.py",
+]
+
+trees = [
+  "skills/personal-code-documentation",
+  "skills/personal-code-simplifier",
+  "skills/personal-codex-hook-rules",
+  "skills/personal-discussion",
+  "skills/personal-evidence-debugging",
+  "skills/personal-grilling",
+  "skills/personal-monitor-external-jobs",
+  "skills/personal-multiline-coordination",
+  "skills/personal-planning-with-files-zh",
+  "skills/personal-profile-sync",
+  "skills/personal-project-output-explainer",
+  "skills/personal-prompt-optimizer",
+  "skills/personal-reconcile-decisions",
+  "skills/personal-subagent-boundaries",
+  "skills/personal-temporary-work",
+  "skills/personal-thread-closeout",
+  "skills/personal-triad-discussion",
+]
