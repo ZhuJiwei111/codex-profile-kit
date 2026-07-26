@@ -64,6 +64,69 @@ class ProfileContractTest(unittest.TestCase):
 
         self.assertEqual(set(leaves), set(profile_sync.CONFIG_KEYS))
 
+    def test_long_task_continuity_is_sticky_but_opt_in(self) -> None:
+        planning = (
+            PROFILE
+            / "skills"
+            / "personal-planning-with-files-zh"
+            / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        planning_metadata = (
+            PROFILE
+            / "skills"
+            / "personal-planning-with-files-zh"
+            / "agents"
+            / "openai.yaml"
+        ).read_text(encoding="utf-8")
+        monitor = (
+            PROFILE
+            / "skills"
+            / "personal-monitor-external-jobs"
+            / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        monitor_metadata = (
+            PROFILE
+            / "skills"
+            / "personal-monitor-external-jobs"
+            / "agents"
+            / "openai.yaml"
+        ).read_text(encoding="utf-8")
+        coordination = (
+            PROFILE
+            / "skills"
+            / "personal-multiline-coordination"
+            / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        agents = (PROFILE / "AGENTS.md").read_text(encoding="utf-8")
+        planning_prose = " ".join(planning.split())
+        monitor_prose = " ".join(monitor.split())
+        coordination_prose = " ".join(coordination.split())
+        agents_prose = " ".join(agents.split())
+
+        self.assertIn(
+            "Do not create or select a plan implicitly.", planning_prose
+        )
+        self.assertIn("every substantive continuation turn", planning_prose)
+        self.assertIn(
+            "one consistency pass across all three files", planning_prose
+        )
+        self.assertIn("allow_implicit_invocation: true", planning_metadata)
+
+        self.assertIn(
+            "Monitoring is part of that job's launch contract", monitor_prose
+        )
+        self.assertIn("one successful initial status sample", monitor_prose)
+        self.assertIn("allow_implicit_invocation: true", monitor_metadata)
+        self.assertIn(
+            "returns one successful initial status sample", coordination_prose
+        )
+
+        self.assertIn("recommend `/goal` once", agents_prose)
+        self.assertIn("Keep related phases in the same task.", agents_prose)
+        self.assertIn(
+            "Do not create or select a plan implicitly.", agents_prose
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

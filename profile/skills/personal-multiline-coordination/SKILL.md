@@ -34,9 +34,12 @@ one line is not automatically authority for another. The integration owner
 checks source, revision, scope, and conflicts before accepting a handoff; do not
 vote by task count or let several lines publish competing “final” states.
 
-Use managed subagents for bounded one-shot internal workers. Use the separate
-manual monitoring skill for repeated observation of an external job. A parent
-discussion task does not poll routine progress.
+Use managed subagents for bounded one-shot internal workers. Use
+`personal-monitor-external-jobs` for repeated observation of an external job.
+Creating an App task still requires matching authority, and a monitoring
+handoff is established only after the target acknowledges the exact job and
+returns one successful initial status sample. A parent discussion task does not
+duplicate routine polling.
 
 ## Intake And Stop
 

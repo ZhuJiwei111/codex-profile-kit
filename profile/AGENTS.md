@@ -67,14 +67,30 @@ instructions and explicit user requests take precedence.
   final verdict. When the user or narrower repository instructions explicitly
   request delegation or persistent App coordination, use
   `personal-subagent-boundaries` for bounded one-shot workers and
-  `personal-multiline-coordination` for persistent App tasks or worktrees. Use
-  the manual monitoring skill only when the user explicitly asks to monitor an
-  external job.
-- Use Goal mode only when explicitly requested. A fresh task is appropriate
-  only when the user requests it or a material context or ownership boundary
-  makes continuation unreliable. Preserve continuity with a compact handoff of
-  verified state, active decisions, risks, open questions, forbidden actions,
-  and one next action.
+  `personal-multiline-coordination` for persistent App tasks or worktrees.
+- Creating or selecting a file-backed plan is opt-in. Once
+  `personal-planning-with-files-zh` has selected an active plan, treat that plan
+  as sticky task state across later turns and compaction: invoke the skill
+  implicitly on substantive continuation, read all three files before relying
+  on their state, and maintain them at meaningful boundaries until the plan is
+  complete or superseded. Do not create or select a plan implicitly.
+- For an already-authorized external job expected to outlive its owning turn or
+  need repeated observation, treat monitoring as part of the launch contract.
+  Before claiming that monitoring is established, record the exact job and
+  status source, terminal and stall signals, owning task, and obtain one
+  successful initial sample from the monitor. Keep monitoring read-only and
+  return repair, retry, cancellation, and follow-up decisions to the owner.
+- Use Goal mode only when explicitly requested. When an ordinary task grows
+  into a multi-phase long task with a clear outcome, constraints, and
+  verification, recommend `/goal` once at a meaningful boundary; do not enable
+  it automatically.
+- Keep related phases in the same task. Pause for a handoff or fresh-task
+  decision only when a later phase materially changes the original goal,
+  authority, ownership or write surface, resource boundary, or completion
+  criteria enough that the startup contract is no longer reliable, or when
+  context continuity is materially unreliable. Preserve continuity with a
+  compact handoff of verified state, active decisions, risks, open questions,
+  forbidden actions, and one next action.
 
 ## Language And Completion
 

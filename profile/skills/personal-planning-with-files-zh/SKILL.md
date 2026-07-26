@@ -1,6 +1,6 @@
 ---
 name: personal-planning-with-files-zh
-description: Manual only. Use only when the user explicitly invokes this skill to create or resume bounded repository-local working memory for a real long task across compaction, interruption, handoff, or fresh Codex tasks.
+description: Use when the user explicitly asks to create or select a file-backed long-task plan, or when exactly one already-active repository plan clearly matches the current task and needs implicit continuation, reconciliation, handoff, or closure.
 ---
 
 # Personal Planning With Files Zh
@@ -8,7 +8,16 @@ description: Manual only. Use only when the user explicitly invokes this skill t
 Use three compact current-state files as recoverable working memory. This does
 not replace ordinary task planning, evidence, or project documentation.
 
-## Select One Plan
+## Activate One Plan
+
+Creating the first plan or choosing among plausible plans requires an explicit
+user request or invocation. Do not create or select a plan implicitly.
+
+After a plan is created or selected, it is sticky for that task. The user does
+not need to invoke this skill again. Invoke it implicitly on every substantive
+continuation turn and after compaction when task context or a handoff identifies
+the plan. Resume an existing plan implicitly only when exactly one active plan
+clearly matches; ask when several remain plausible.
 
 Use an isolated directory:
 
@@ -16,18 +25,30 @@ Use an isolated directory:
 <project-root>/.planning/plans/<YYYYMMDD>-<slug>/
 ```
 
-Create or resume exactly one user-selected or clearly matching plan. Ask when
-several remain plausible. Keep one primary writer; concurrent workers return
-evidence to that writer.
+Keep one primary writer; concurrent workers return evidence to that writer.
 
 Maintain only:
 
-- `task_plan.md`: current goal, scope and non-goals, success conditions, current
-  phase, remaining phases, and one next action;
+- `task_plan.md`: active, blocked, complete, or superseded status; current goal,
+  scope and non-goals, success conditions, current phase, remaining phases, and
+  one next action;
 - `findings.md`: only facts, decisions, assumptions, unknowns, and evidence
   anchors that still affect later work;
 - `progress.md`: completed outcomes, most recent relevant checks, current
   blocker or running work, and a directly resumable next action.
+
+An older plan without an explicit status may count as active only when its
+unfinished current phase and next action clearly match the task.
+
+## Continue Every Substantive Turn
+
+At the start of a substantive continuation, read all three files before making
+a state-dependent claim or action. Reconcile them with current Git, code,
+tests, task handoffs, and running-job evidence. The files are memory, not proof.
+Report and repair stale or conflicting state before proceeding.
+
+Simple acknowledgements, isolated factual questions, and unrelated work do not
+require a plan write. A meaningful state change does.
 
 ## Keep Current State
 
@@ -40,15 +61,18 @@ Update only when scope or a decision changes, a phase changes, evidence alters
 the strategy, a blocker appears, or before compaction, handoff, stopping, or
 closure. Keep task progress and durable findings distinct.
 
-## Resume And Stop
+Before a final answer, handoff, compaction, stop, or closure following a
+meaningful change, perform one consistency pass across all three files. Current
+status and phase, running work, blocker, latest relevant check, and the one next
+action must agree. In particular, completed or retired work must not remain
+described as running, and superseded next actions must be folded away.
 
-On resume, read all three files and reconcile them with current Git, code,
-tests, and running-task evidence. The files are memory, not proof. Report stale
-or conflicting state before proceeding.
+## Stop
 
-At closure, fold the final outcome, checks, remaining risk, and any real
-continuation point into the same files. Do not create automatic archives,
-successor plans, hooks, validators, ledgers, Git actions, or a forced
+At closure, mark the plan complete or superseded and fold the final outcome,
+checks, remaining risk, and any real continuation point into the same files.
+That terminal status ends implicit maintenance. Do not create automatic
+archives, successor plans, hooks, validators, ledgers, Git actions, or a forced
 continuation state machine.
 
 This skill does not own grilling decisions, formal documentation, external-job

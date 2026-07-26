@@ -1,6 +1,6 @@
 interface:
   display_name: "Planning With Files Zh"
-  short_description: "Maintain bounded file-backed long-task memory"
-  default_prompt: "Use $personal-planning-with-files-zh to create or resume this long task current-state plan."
+  short_description: "Maintain a sticky file-backed long-task plan"
+  default_prompt: "Use $personal-planning-with-files-zh to create an explicitly requested plan or maintain the one active plan that clearly matches this task."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true
