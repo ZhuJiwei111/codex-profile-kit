@@ -34,6 +34,8 @@ retired_files = [
   "hookify/block-sensitive-file-edits.md",
   "hookify/block-sensitive-path-command.md",
   "hooks/hookify_codex_runner.py",
+  "hooks/direct_download_guard.py",
+  "hooks/local_safety_guard.py",
   "hooks/test_direct_download_guard.py",
   "hooks/test_hookify_codex_runner.py",
   "hooks/test_hooks_configuration.py",

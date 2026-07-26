@@ -45,9 +45,14 @@ class ProfileSyncCliTest(unittest.TestCase):
             (codex_home / "config.toml").write_bytes(
                 (ROOT / "personal.config.toml").read_bytes()
             )
-            retired_hook = codex_home / "hooks" / "test_direct_download_guard.py"
+            retired_hook = codex_home / "hooks" / "direct_download_guard.py"
             retired_hook.parent.mkdir()
-            retired_hook.write_text("legacy hook\n", encoding="utf-8")
+            retired_hook.write_text("legacy download hook\n", encoding="utf-8")
+            retired_safety_hook = codex_home / "hooks" / "local_safety_guard.py"
+            retired_safety_hook.write_text(
+                "legacy safety hook\n",
+                encoding="utf-8",
+            )
             retired_skill = (
                 codex_home / "skills" / "personal-brainstorms" / "SKILL.md"
             )
@@ -69,7 +74,11 @@ class ProfileSyncCliTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(
-            "DELETE hooks/test_direct_download_guard.py",
+            "DELETE hooks/direct_download_guard.py",
+            result.stdout,
+        )
+        self.assertIn(
+            "DELETE hooks/local_safety_guard.py",
             result.stdout,
         )
         self.assertIn(
@@ -128,9 +137,7 @@ class ProfileSyncCliTest(unittest.TestCase):
             )
             retired.parent.mkdir(parents=True)
             retired.write_text("legacy", encoding="utf-8")
-            retired_hook = (
-                codex_home / "hooks" / "test_direct_download_guard.py"
-            )
+            retired_hook = codex_home / "hooks" / "direct_download_guard.py"
             retired_hook.parent.mkdir(parents=True, exist_ok=True)
             retired_hook.write_text("legacy hook", encoding="utf-8")
 
@@ -153,7 +160,7 @@ class ProfileSyncCliTest(unittest.TestCase):
                 "legacy",
             )
             self.assertEqual(
-                (backup / "hooks" / "test_direct_download_guard.py").read_text(
+                (backup / "hooks" / "direct_download_guard.py").read_text(
                     encoding="utf-8"
                 ),
                 "legacy hook",
