@@ -18,7 +18,7 @@ session_index.jsonl
 *.sqlite-wal
 attachments/
 cache/
-memories/
+/memories/
 sessions/
 archived_sessions/
 plugins/cache/

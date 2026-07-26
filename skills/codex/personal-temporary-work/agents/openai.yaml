@@ -1,6 +1,0 @@
-interface:
-  display_name: "Personal Temporary Work"
-  short_description: "Separate durable changes from one-off helpers"
-  default_prompt: "Use $personal-temporary-work to keep this one-off transition out of maintained code and manage only its exact task-created scratch."
-policy:
-  allow_implicit_invocation: true

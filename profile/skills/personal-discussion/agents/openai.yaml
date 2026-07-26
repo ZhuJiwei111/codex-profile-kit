@@ -1,0 +1,6 @@
+interface:
+  display_name: "Personal Discussion"
+  short_description: "Discuss a concern without starting implementation"
+  default_prompt: "Use $personal-discussion to analyze this concern with me before any implementation."
+policy:
+  allow_implicit_invocation: false

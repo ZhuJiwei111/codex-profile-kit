@@ -1,6 +1,0 @@
-interface:
-  display_name: "Personal Code Simplifier"
-  short_description: "Simplify bounded code while preserving behavior"
-  default_prompt: "Use $personal-code-simplifier to simplify this bounded code surface while preserving its observable behavior and protected changes."
-policy:
-  allow_implicit_invocation: true

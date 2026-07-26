@@ -1,6 +1,0 @@
-interface:
-  display_name: "Personal Triad Discussion"
-  short_description: "Relay a durable Codex and GPT Pro deliberation"
-  default_prompt: "Use $personal-triad-discussion to coordinate this decision with an external GPT Pro conversation through self-contained relays and maintain the topic's working and decision notes."
-policy:
-  allow_implicit_invocation: false

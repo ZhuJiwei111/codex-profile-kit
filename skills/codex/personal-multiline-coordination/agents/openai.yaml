@@ -1,6 +1,0 @@
-interface:
-  display_name: "Worker & Worktree Coordination"
-  short_description: "Coordinate persistent App tasks and worktrees"
-  default_prompt: "Use $personal-multiline-coordination to coordinate persistent App tasks, isolated worktrees, and any explicitly authorized active-monitoring task."
-policy:
-  allow_implicit_invocation: true

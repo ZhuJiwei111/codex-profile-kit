@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Evidence Debugging"
+  short_description: "Trace unexpected failures to supported causes"
+  default_prompt: "Use $personal-evidence-debugging to distinguish the cause of this unexpected failure before another fix."

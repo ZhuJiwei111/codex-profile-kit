@@ -1,0 +1,225 @@
+diff --git a/SKILL.md b/SKILL.md
+index c10dbed..5367073 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1,11 +1,17 @@
+ ---
+ name: awesome-rebuttal
+-description: Global-installable, project-level academic rebuttal strategy skill for AI/ML/CV/NLP/Robotics papers. Use when authors need a workspace-local .awesome-rebuttal state folder, paper/code/review/venue-rule intake, JSON memory, snapshots, LaTeX/template handling for one-page rebuttals, reviewer stance analysis, strategy planning, experiment triage, safe author response drafting, or AC summaries under confirmed venue rules.
++description: "Manual only. Use $awesome-rebuttal when the user explicitly requests its project-level academic rebuttal workspace, evidence intake, strategy, experiment triage, versioning, or drafting workflow for an AI/ML/CV/NLP/Robotics paper."
+ ---
+ 
+ # Awesome Rebuttal
+ 
+-Use this skill as a **global-installable, project-level rebuttal workspace assistant**. The installed skill provides reusable procedures and assets; each actual paper/rebuttal workspace gets its own `.awesome-rebuttal/` state folder for memory, snapshots, template state, and logs. Start by understanding the workspace, then collect evidence, persist memory, analyze strategy, and only then draft response text.
++Run this skill only after explicit invocation. An explanation or review request
++remains read-only and does not create workspace state unless the user also asks
++to start the actual workflow. The installed skill provides reusable procedures
++and assets; each active paper/rebuttal workspace gets its own
++`.awesome-rebuttal/` state folder for memory, snapshots, template state, and
++logs. Start by understanding the workspace, then collect evidence, persist
++memory, analyze strategy, and only then draft response text.
+ 
+ ## Operating contract
+ 
+@@ -13,7 +19,9 @@ Use this skill as a **global-installable, project-level rebuttal workspace assis
+ 2. Create or use a project-local `.awesome-rebuttal/` state folder; never store runtime memory in the installed skill folder.
+ 3. If the workspace is empty, organize or recommend `Code/`, `Paper/`, `Reference/`, and `Temp/`.
+ 4. If the workspace already contains files, infer the author's organization and adapt non-destructively.
+-5. Ask how progress should be preserved: `manual_git`, `auto_git`, or `markdown_snapshot_only`.
++5. Ask how progress should be preserved. Offer `auto_git` only when the original
++   request or a later explicit answer has explicitly authorized local commits;
++   otherwise offer only `manual_git` and `markdown_snapshot_only`.
+ 6. Run the intake gate before analysis. Missing required inputs block drafting.
+ 7. Treat venue rules as user-provided or AI-searched + user-confirmed; never rely on stale built-in venue rules.
+ 8. Keep every factual claim grounded in `paper`, `code`, `review`, `venue_rules`, `user`, or explicit `inference`.
+@@ -25,7 +33,11 @@ Use this skill as a **global-installable, project-level rebuttal workspace assis
+ - Interaction language: follow the user's language by default for questions, analysis reports, progress updates, and explanations.
+ - Submission language: final rebuttal artifacts must be written in English unless the user explicitly requests another submission language and the venue permits it.
+ - Memory: record this choice in `project_memory.language_policy` and mirror any venue-specific exception in `venue_rules.language_policy`.
+-- Drafting rule: `11_response_writer.md`, `12_template_designer.md`, and `13_ac_summary_writer.md` may discuss plans in the user's language, but author-response text, reviewer replies, AC summaries, OpenReview comments, and PDF rebuttal prose default to English.
++- Drafting rule: `references/capabilities/11_response_writer.md`,
++  `references/capabilities/12_template_designer.md`, and
++  `references/capabilities/13_ac_summary_writer.md` may discuss plans in the
++  user's language, but author-response text, reviewer replies, AC summaries,
++  OpenReview comments, and PDF rebuttal prose default to English.
+ - Terminology: preserve exact technical terms, metric names, method names, dataset names, and reviewer wording from the paper/reviews; translate only surrounding explanatory prose when needed.
+ - If the user provides Chinese strategy notes, convert them into professional English rebuttal prose rather than literal translation.
+ 
+@@ -43,6 +55,9 @@ Prefer structured choices when possible:
+ - confirmation for inferred workspace maps or AI-found venue rules
+ 
+ Ask only for the smallest missing decision set needed for the next safe step.
++Never set `autoResolutionMs`, a timer, or an automatic default for a
++questionnaire. Wait for an explicit answer; silence, elapsed time, and UI expiry
++do not choose, defer, or authorize an option.
+ 
+ 
+ ## Canonical response modes
+@@ -81,20 +96,62 @@ Follow this order unless the user asks for a narrower capability:
+ 
+ 1. **Workspace bootstrap** — read `references/capabilities/00_workspace_bootstrap.md`; create/use `.awesome-rebuttal/`, detect LaTeX environment, and if decisions are missing use `references/core/user_questionnaire_protocol.md`.
+ 2. **Intake gate** — read `references/capabilities/01_intake_gate.md`; parse user-provided context first, then ask a questionnaire for blockers.
+-3. **Template management** — read `17_rebuttal_template_manager.md` after intake when response format requires a `pdf_one_page` template, `openreview_per_reviewer` Markdown scaffolds, `global_comment` Markdown, or `openreview_markdown_latex` comments.
++3. **Template management** — read
++   `references/capabilities/17_rebuttal_template_manager.md` after intake when
++   response format requires a `pdf_one_page` template,
++   `openreview_per_reviewer` Markdown scaffolds, `global_comment` Markdown, or
++   `openreview_markdown_latex` comments.
+ 4. **Information collection** — read `references/capabilities/02_information_collection.md`.
+-5. **Paper/code memory** — read `03_paper_memory_builder.md` and/or `04_code_memory_builder.md` when paper or code context is present.
+-6. **Review indexing** — read `05_review_normalizer.md`; preserve raw reviews, build raw anchors, issue item index, and common issue index without strategic analysis.
+-7. **Review concern analysis** — read `06_situation_analyzer.md`; interpret indexed concerns semantically without priority ranking.
+-8. **Review-driven experiment planning** — read `10_experiment_triage.md`; generate numbered `EXP-*` experiment candidates from reviewer concerns and persist `experiment_memory.json` before final strategy planning.
+-9. **Priority and situation analysis** — read `07_concern_atomizer.md`; rank concern importance, classify rebuttal posture, build reviewer priority map, link P0/P1 evidence gaps to numbered experiments, and identify AC-facing decision facts.
+-10. **Strategy planning** — read `08_strategy_planner.md`; combine priority analysis, experiment memory, paper/code evidence, venue constraints, and user decisions. Use a questionnaire for strategy/experiment trade-offs before locking the plan.
+-11. **Snapshots/versioning** — read `09_snapshot_maker.md` and `16_rebuttal_versioning.md` at each durable checkpoint.
+-12. **Writing** — read `11_response_writer.md`, `13_ac_summary_writer.md`, and `12_template_designer.md` only after strategy is evidence-backed and user-approved; 12 selects `pdf_one_page`, `openreview_per_reviewer`, `global_comment`, `hybrid`, or `openreview_markdown_latex` layout.
+-13. **Rehearsal** — read `18_rebuttal_rehearsal.md` once a draft exists; simulate reviewer/AC personas reading paper-vs-rebuttal in isolation, then route hardening back to 11/13. Advisory only; it never approves submission.
+-14. **Safety gate** — read `14_safety_rule_checker.md` before any final or paste-ready text/PDF/comment.
+-15. **Discussion rounds** — read `19_discussion_round_handler.md` after the first rebuttal is submitted; ingest reviewer/AC follow-up replies, track score/engagement per round, draft delta-only follow-ups (reusing the 18 answer bank), and route each through 14 before posting.
+-16. **Overleaf sync** — read `15_overleaf_leaflink_sync.md` only when the paper is on Overleaf/cn.overleaf or the user asks about cloud/local synchronization.
++5. **Paper/code memory** — read
++   `references/capabilities/03_paper_memory_builder.md` and/or
++   `references/capabilities/04_code_memory_builder.md` when paper or code
++   context is present.
++6. **Review indexing** — read
++   `references/capabilities/05_review_normalizer.md`; preserve raw reviews,
++   build raw anchors, issue item index, and common issue index without strategic
++   analysis.
++7. **Review concern analysis** — read
++   `references/capabilities/06_situation_analyzer.md`; interpret indexed
++   concerns semantically without priority ranking.
++8. **Review-driven experiment planning** — read
++   `references/capabilities/10_experiment_triage.md`; generate numbered `EXP-*`
++   experiment candidates from reviewer concerns and persist
++   `experiment_memory.json` before final strategy planning.
++9. **Priority and situation analysis** — read
++   `references/capabilities/07_concern_atomizer.md`; rank concern importance,
++   classify rebuttal posture, build reviewer priority map, link P0/P1 evidence
++   gaps to numbered experiments, and identify AC-facing decision facts.
++10. **Strategy planning** — read
++    `references/capabilities/08_strategy_planner.md`; combine priority analysis,
++    experiment memory, paper/code evidence, venue constraints, and user
++    decisions. Use a questionnaire for strategy/experiment trade-offs before
++    locking the plan.
++11. **Snapshots/versioning** — read
++    `references/capabilities/09_snapshot_maker.md` and
++    `references/capabilities/16_rebuttal_versioning.md` at each durable
++    checkpoint.
++12. **Writing** — read `references/capabilities/11_response_writer.md`,
++    `references/capabilities/13_ac_summary_writer.md`, and
++    `references/capabilities/12_template_designer.md` only after strategy is
++    evidence-backed and user-approved; 12 selects `pdf_one_page`,
++    `openreview_per_reviewer`, `global_comment`, `hybrid`, or
++    `openreview_markdown_latex` layout.
++13. **Rehearsal** — read
++    `references/capabilities/18_rebuttal_rehearsal.md` once a draft exists;
++    simulate reviewer/AC personas reading paper-vs-rebuttal in isolation, then
++    route hardening back to 11/13. Advisory only; it never approves submission.
++14. **Safety gate** — read
++    `references/capabilities/14_safety_rule_checker.md` before any final or
++    paste-ready text/PDF/comment.
++15. **Discussion rounds** — read
++    `references/capabilities/19_discussion_round_handler.md` after the first
++    rebuttal is submitted; ingest reviewer/AC follow-up replies, track
++    score/engagement per round, draft delta-only follow-ups (reusing the 18
++    answer bank), and route each through 14 before posting.
++16. **Overleaf sync** — read
++    `references/capabilities/15_overleaf_leaflink_sync.md` only when the paper
++    is on Overleaf/cn.overleaf or the user asks about cloud/local
++    synchronization.
+ 
+ Read only the capability files needed for the current request.
+ 
+@@ -154,7 +211,9 @@ Do not force this layout on an existing organized workspace. Map existing paths
+ Ask the user to choose one:
+ 
+ - `manual_git`: suggest checkpoint boundaries and commit messages; do not commit unless explicitly asked.
+-- `auto_git`: create local milestone commits only; no push, history rewrite, or destructive git operations without explicit instruction.
++- `auto_git`: available only after the user has explicitly authorized local
++  commits; create local milestone commits only, with no push, history rewrite,
++  or destructive Git operations without separate explicit instruction.
+ - `markdown_snapshot_only`: maintain `.awesome-rebuttal/snapshots/snapshot_memory.json` as the canonical reload entry and render `.awesome-rebuttal/snapshots/REBUTTAL_SNAPSHOT.md` or `.awesome-rebuttal/snapshots/PROJECT_SNAPSHOT.md` as the user-readable progress summary.
+ 
+ 
+diff --git a/agents/openai.yaml b/agents/openai.yaml
+index 14e7846..25edf68 100644
+--- a/agents/openai.yaml
++++ b/agents/openai.yaml
+@@ -1,3 +1,6 @@
+-display_name: Awesome Rebuttal
+-short_description: Global-installable project rebuttal strategy, memory, templates, snapshots, and drafting.
+-default_prompt: Use Awesome Rebuttal to create a workspace-local .awesome-rebuttal state folder, collect paper/code/review context, handle rebuttal templates/LaTeX, analyze reviewer concerns, plan experiments, and draft safe author responses under confirmed venue rules.
++interface:
++  display_name: "Awesome Rebuttal"
++  short_description: "Manual academic rebuttal strategy and drafting"
++  default_prompt: "Use $awesome-rebuttal to build an evidence-grounded rebuttal strategy and drafting workspace under confirmed venue rules."
++policy:
++  allow_implicit_invocation: false
+diff --git a/references/capabilities/16_rebuttal_versioning.md b/references/capabilities/16_rebuttal_versioning.md
+index 9e90844..9cae288 100644
+--- a/references/capabilities/16_rebuttal_versioning.md
++++ b/references/capabilities/16_rebuttal_versioning.md
+@@ -46,11 +46,15 @@ Not allowed unless explicitly asked:
+ 
+ ### `auto_git`
+ 
+-Skill may create local milestone commits after safe verification.
++This mode is available only after an explicit user answer authorizes local
++commits. Invocation of the skill, silence, a timeout, or a suggested default is
++not authority. Once authorized, the skill may create local milestone commits
++after safe verification.
+ 
+ Allowed:
+ 
+-- initialize Git only if the workspace is not a repo and the user selected auto Git;
++- initialize Git only if the workspace is not a repo and the user explicitly
++  authorized both auto Git and repository initialization;
+ - create local commits at checkpoint boundaries;
+ - use Lore commit protocol;
+ - include only intended workspace files; never include ignored/private temp dirs.
+@@ -131,7 +135,8 @@ Not-tested: <gaps>
+ 
+ ## Safe Git procedure for `auto_git`
+ 
+-1. Read `.gitignore` and versioning memory.
++1. Confirm recorded explicit authority for local commits, then read `.gitignore`
++   and versioning memory.
+ 2. Run `git status --short --ignored` if useful.
+ 3. Verify no ignored/private paths are staged.
+ 4. Run validation appropriate to the checkpoint.
+@@ -163,6 +168,7 @@ Use `09_snapshot_maker.md` for the full JSON/Markdown contract. At minimum:
+ Proceed when:
+ 
+ - versioning mode is selected;
++- `auto_git` has explicit local-commit authority when that mode is selected;
+ - checkpoint boundary is reached;
+ - validation evidence is available or a gap is recorded;
+ - no destructive Git action is required.
+diff --git a/references/core/user_questionnaire_protocol.md b/references/core/user_questionnaire_protocol.md
+index 41a968b..f29d50a 100644
+--- a/references/core/user_questionnaire_protocol.md
++++ b/references/core/user_questionnaire_protocol.md
+@@ -8,6 +8,11 @@ First extract what the user already provided. Then ask only for the smallest mis
+ 
+ Do not ask for facts that can be discovered from the workspace. Inspect first, then ask the user to confirm decisions or supply unavailable context.
+ 
++Never set `autoResolutionMs`, a timer, or an automatic default. Every
++questionnaire waits for an explicit user answer. Silence, elapsed time, UI
++expiry, or tool behavior never selects, defers, confirms, or authorizes an
++option.
++
+ ## When to use
+ 
+ Use a questionnaire for:
+@@ -78,7 +83,8 @@ Keep one questionnaire focused on one stage. Do not mix workspace organization,
+ ### Progress preservation
+ 
+ - Manual Git — suggest commits only.
+-- Auto Git — local milestone commits allowed.
++- Auto Git — offer only after the user explicitly authorizes local commits;
++  local milestone commits are then allowed within that authority.
+ - Markdown snapshot only — maintain `.awesome-rebuttal/snapshots/REBUTTAL_SNAPSHOT.md` / `.awesome-rebuttal/snapshots/PROJECT_SNAPSHOT.md`.
+ 
+ ## Output after questionnaire

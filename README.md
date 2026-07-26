@@ -1,64 +1,71 @@
 # Codex Profile Kit
 
-这是个人 Codex 配置的机器无关快照，目标是在另一台主机上让 Codex 快速恢复同一套
-个性化工作方式，而不是复制整台机器的运行状态。
+这是个人 Codex 配置的机器无关权威源。永久流向只有：
 
-## 管理边界
-
-仓库只同步：
-
-- `rules/AGENTS.portable.md` → 完整的 `~/.codex/AGENTS.md`
-- `skills/codex/personal-*` → 个人 workflow skills
-- `hooks/scripts/` 与 `templates/hooks.json.template` → 原生 Codex hook 实现、测试和 wiring
-
-仓库明确不管理非 `personal-*` skills（例如 `awesome-rebuttal`）、custom agent
-profiles、`HOST_LOCAL.md`、`config.toml`、认证/连接器状态、session/history、trust
-hash、cache、memories、环境、数据集或模型权重。目标机已有的非 personal skills 和
-其他未受管内容会保留，也不算 drift。
-
-## 四个动作
-
-`scripts/sync.py` 需要 Python 3.11+；通常直接让 Codex 选择项目或
-`HOST_LOCAL.md` 中记录的可用解释器。
-
-```bash
-python3 scripts/sync.py audit
-python3 scripts/sync.py export --dry-run
-python3 scripts/sync.py export
-python3 scripts/sync.py apply
-python3 scripts/sync.py apply --confirm
-python3 scripts/sync.py audit
+```text
+portable Git working tree → current host CODEX_HOME
 ```
 
-- `audit`：只读比较当前仓库与本机 active profile。
-- `export`：把本机当前存在的受管配置保守地 overlay 到本地仓库；不会执行 Git
-  操作，也不会因本机缺失而删除 repo-only personal skill 或 hook script。
-- “同步到 GitHub”：`export` 后验证并审阅精确 diff，再按明确授权提交/推送。
-- “从 GitHub 同步”：先让 Codex 安全更新本地仓库到选定 revision，再运行 apply
-  dry-run、带备份的 confirmed apply 和 post-audit。仅 pull 仓库不等于更新本机
-  Codex 配置。
+active profile 不是反向导出源。
 
-dry-run 只描述当次状态；`--confirm` 会重新计算目标。confirmed apply 在
-`~/codex-migration-archive/` 建立时间戳备份后事务替换受管内容，失败时回滚。
-`templates/hooks.json.template` 始终由仓库维护，export 不会从本机已渲染的
-`~/.codex/hooks.json` 反向生成它。因此，仓库有意保留而本机尚未 apply 的条目会继续
-出现在 inbound audit 中。
+## 管理范围
 
-## 退役与保留
+- `profile/`：按目标相对路径保存 `AGENTS.md`、人工 memory、两个 hooks 和
+  personal skills。
+- `profile-manifest.toml`：只列出受管 file/tree；相邻的外部 skill、plugin
+  cache 和未列出文件不受影响。
+- `personal.config.toml`：只投影脚本内显式允许的配置叶子键。
+- `external-overlays/`：记录经审阅的第三方 skill 本地补丁与精确上游 revision；
+  不由 profile sync 自动安装或部署。
+- `archive/`：保留本次重构前的旧实现，不部署到 active profile。
 
-本次 profile 明确退役 `personal-review-response`，以及已经从仓库删除的
-`personal-context-compression`、`personal-context-optimization`、
-`personal-context-save-restore`、`personal-docs-sync-light`、
-`personal-long-job-status`、`personal-repo-intake`。旧 `monitor.toml` /
-`reviewer.toml` custom agents 和 Hookify Markdown adapter 也已明确退役。
-confirmed apply 会先备份再清理这些精确路径；普通“仓库中不存在”不会被解释为
-删除其他本机 skill。该清理可重复执行，且不会触碰同目录中的未受管文件。
+仓库不管理 `HOST_LOCAL.md`、连接合同、credentials、auth/session/history、
+trust、cache、plugin 安装或认证、MCP、sandbox、TUI、项目配置和其他未列出的
+`config.toml` 键。
 
-## 安全说明
+## 使用
 
-同步会拒绝受管路径中的符号链接、特殊文件和已知敏感/runtime 文件名，并验证
-skill 资源链接和显式 hook inventory；它不替代对最终 Git diff 的秘密检查。
-`hooks.json` 定义变更后，必须由用户在 `/hooks` 中检查并信任新的精确 hash。
+需要 Python 3.11+、当前 Codex CLI，以及 `HOST_LOCAL.md` 中记录的
+`codex-tools` 环境。当前主机通常使用：
 
-详细迁移步骤见 [INSTALL.md](INSTALL.md)，边界清单见
-[MIGRATION_MANIFEST.md](MIGRATION_MANIFEST.md)。
+```bash
+"${CONDA_ROOT:?}/envs/codex-tools/bin/python" scripts/profile_sync.py preview
+"${CONDA_ROOT:?}/envs/codex-tools/bin/python" scripts/profile_sync.py check
+"${CONDA_ROOT:?}/envs/codex-tools/bin/python" scripts/profile_sync.py apply
+```
+
+- `preview`：显示解析后的官方 `$CODEX_HOME` 和精确 add/change/delete，存在
+  drift 仍返回 0。
+- `check`：完全一致才返回 0。
+- `apply`：重新计算 diff；有变更时建立
+  `${CODEX_HOME}.profile-sync-backups/<timestamp>/`，逐 leaf 原子替换，配置最后
+  通过 `config/batchWrite` 写入，随后检查；失败时尽力恢复本批已改目标。调用
+  `apply` 本身就是本机部署授权。
+
+脚本不提供 target override、active→repo export、Git、JSON 输出、备份清理或永久
+退役 registry。备份不会自动删除。
+
+## 修改与 Git
+
+直接修改 portable 源。新变更在部署前：
+
+1. 运行聚焦检查和 `preview`；
+2. 审阅精确 diff；
+3. 精确 stage task-owned paths，并创建 factual local commit；
+4. 从该 commit 执行 `apply` 和 `check`。
+
+只有用户明确要求“提交/同步到 GitHub”时才 non-force push；工具不会自动创建 PR。
+从 GitHub 更新时，先检查本地状态并取得一个明确、无冲突的 portable revision，再
+执行 preview/apply。
+
+## 验证
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 \
+  "${CONDA_ROOT:?}/envs/codex-tools/bin/python" \
+  -m unittest discover -s tests -p 'test_*.py'
+```
+
+Hook definition 改变后，现有 task 仍可能使用启动时加载的旧 definition。先部署新
+definition 和 runner，在 fresh task 中通过 `/hooks` 审阅 trust 并做 dispatch
+检查，再删除仍被旧 task 使用的 runner。Profile sync 不复制或修改 trust state。
