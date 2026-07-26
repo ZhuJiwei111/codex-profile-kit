@@ -25,3 +25,35 @@ trees = [
   "skills/personal-thread-closeout",
   "skills/personal-triad-discussion",
 ]
+
+retired_files = [
+  "agents/monitor.toml",
+  "agents/reviewer.toml",
+  "hookify/README.md",
+  "hookify/block-base-conda-install.md",
+  "hookify/block-sensitive-file-edits.md",
+  "hookify/block-sensitive-path-command.md",
+  "hooks/hookify_codex_runner.py",
+  "hooks/test_direct_download_guard.py",
+  "hooks/test_hookify_codex_runner.py",
+  "hooks/test_hooks_configuration.py",
+  "hooks/test_local_safety_guard.py",
+  "hooks/test_no_autoresolution_guard.py",
+]
+
+retired_trees = [
+  "skills/personal-brainstorms",
+  "skills/personal-branch-finish",
+  "skills/personal-codex-audit",
+  "skills/personal-context-compression",
+  "skills/personal-context-optimization",
+  "skills/personal-context-save-restore",
+  "skills/personal-docs-sync-light",
+  "skills/personal-long-job-status",
+  "skills/personal-repo-intake",
+  "skills/personal-review-response",
+  "skills/personal-risk-verification",
+  "skills/personal-skill-hygiene",
+  "skills/personal-test-first-changes",
+  "skills/personal-writing-polish",
+]

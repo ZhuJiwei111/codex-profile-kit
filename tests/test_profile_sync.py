@@ -36,7 +36,47 @@ class ProfileSyncCliTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(f"CODEX_HOME: {codex_home}", result.stdout)
+        self.assertIn(f"Hook runtime: {sys.executable}", result.stdout)
         self.assertIn("ADD AGENTS.md", result.stdout)
+
+    def test_preview_reports_only_explicit_retirements_as_deletes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            codex_home = Path(directory)
+            (codex_home / "config.toml").write_bytes(
+                (ROOT / "personal.config.toml").read_bytes()
+            )
+            retired_hook = codex_home / "hooks" / "test_direct_download_guard.py"
+            retired_hook.parent.mkdir()
+            retired_hook.write_text("legacy hook\n", encoding="utf-8")
+            retired_skill = (
+                codex_home / "skills" / "personal-brainstorms" / "SKILL.md"
+            )
+            retired_skill.parent.mkdir(parents=True)
+            retired_skill.write_text("legacy skill\n", encoding="utf-8")
+            preserved = codex_home / "skills" / "personal-host-only" / "SKILL.md"
+            preserved.parent.mkdir(parents=True)
+            preserved.write_text("host only\n", encoding="utf-8")
+            env = os.environ.copy()
+            env["CODEX_HOME"] = str(codex_home)
+
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "preview"],
+                cwd=ROOT,
+                env=env,
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "DELETE hooks/test_direct_download_guard.py",
+            result.stdout,
+        )
+        self.assertIn(
+            "DELETE skills/personal-brainstorms/SKILL.md",
+            result.stdout,
+        )
+        self.assertNotIn("personal-host-only", result.stdout)
 
     def test_compare_rejects_symlinked_managed_parent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -83,6 +123,16 @@ class ProfileSyncCliTest(unittest.TestCase):
             unmanaged = codex_home / "skills" / "external-skill" / "SKILL.md"
             unmanaged.parent.mkdir(parents=True)
             unmanaged.write_text("keep", encoding="utf-8")
+            retired = (
+                codex_home / "skills" / "personal-brainstorms" / "SKILL.md"
+            )
+            retired.parent.mkdir(parents=True)
+            retired.write_text("legacy", encoding="utf-8")
+            retired_hook = (
+                codex_home / "hooks" / "test_direct_download_guard.py"
+            )
+            retired_hook.parent.mkdir(parents=True, exist_ok=True)
+            retired_hook.write_text("legacy hook", encoding="utf-8")
 
             with mock.patch.object(profile_sync, "validate_hook_runtime"):
                 backup = profile_sync.apply_profile(profile_sync.compare(codex_home))
@@ -94,11 +144,76 @@ class ProfileSyncCliTest(unittest.TestCase):
             )
             self.assertFalse(extra.exists())
             self.assertEqual(unmanaged.read_text(encoding="utf-8"), "keep")
-            source_mode = (ROOT / "profile" / "hooks" / "conda_base_guard.py").stat().st_mode
-            target_mode = (codex_home / "hooks" / "conda_base_guard.py").stat().st_mode
-            self.assertEqual(bool(source_mode & stat.S_IXUSR), bool(target_mode & stat.S_IXUSR))
+            self.assertFalse(retired.exists())
+            self.assertFalse(retired_hook.exists())
+            self.assertEqual(
+                (backup / "skills" / "personal-brainstorms" / "SKILL.md").read_text(
+                    encoding="utf-8"
+                ),
+                "legacy",
+            )
+            self.assertEqual(
+                (backup / "hooks" / "test_direct_download_guard.py").read_text(
+                    encoding="utf-8"
+                ),
+                "legacy hook",
+            )
+            source_mode = (
+                ROOT / "profile" / "hooks" / "conda_base_guard.py"
+            ).stat().st_mode
+            target_mode = (
+                codex_home / "hooks" / "conda_base_guard.py"
+            ).stat().st_mode
+            self.assertEqual(
+                bool(source_mode & stat.S_IXUSR),
+                bool(target_mode & stat.S_IXUSR),
+            )
             self.assertEqual(profile_sync.compare(codex_home).changes, ())
             self.assertIsNone(profile_sync.apply_profile(profile_sync.compare(codex_home)))
+
+    def test_compare_rejects_symlinked_retired_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            parent = Path(directory)
+            codex_home = parent / "codex-home"
+            external = parent / "external"
+            codex_home.mkdir()
+            external.mkdir()
+            (codex_home / "config.toml").write_bytes(
+                (ROOT / "personal.config.toml").read_bytes()
+            )
+            retired = codex_home / "skills" / "personal-brainstorms"
+            retired.parent.mkdir()
+            retired.symlink_to(external, target_is_directory=True)
+
+            with self.assertRaisesRegex(profile_sync.SyncError, "refusing symlink"):
+                profile_sync.compare(codex_home)
+
+    def test_apply_rolls_back_retirement_after_config_write_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            codex_home = Path(directory) / "codex-home"
+            shutil.copytree(ROOT / "profile", codex_home)
+            config_path = codex_home / "config.toml"
+            config_path.write_text('model = "old"\n', encoding="utf-8")
+            retired = codex_home / "skills" / "personal-brainstorms" / "SKILL.md"
+            retired.parent.mkdir(parents=True)
+            retired.write_text("legacy skill\n", encoding="utf-8")
+
+            with mock.patch.object(
+                profile_sync, "validate_hook_runtime"
+            ), mock.patch.object(
+                profile_sync, "config_user_version", return_value="v1"
+            ), mock.patch.object(
+                profile_sync,
+                "write_config",
+                side_effect=profile_sync.SyncError("injected config failure"),
+            ):
+                with self.assertRaisesRegex(
+                    profile_sync.SyncError,
+                    "changed targets restored",
+                ):
+                    profile_sync.apply_profile(profile_sync.compare(codex_home))
+
+            self.assertEqual(retired.read_text(encoding="utf-8"), "legacy skill\n")
 
     def test_apply_rolls_back_leaves_after_replace_failure(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

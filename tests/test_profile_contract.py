@@ -14,7 +14,7 @@ PROFILE = ROOT / "profile"
 
 class ProfileContractTest(unittest.TestCase):
     def test_manifest_covers_only_real_regular_sources(self) -> None:
-        files, trees = profile_sync.load_manifest()
+        files, trees, retired_files, retired_trees = profile_sync.load_manifest()
         covered: set[Path] = set()
         for relative in files:
             path = PROFILE.joinpath(*relative.parts)
@@ -32,9 +32,11 @@ class ProfileContractTest(unittest.TestCase):
 
         actual = {path for path in PROFILE.rglob("*") if path.is_file()}
         self.assertEqual(actual, covered)
+        for relative in retired_files + retired_trees:
+            self.assertFalse(PROFILE.joinpath(*relative.parts).exists(), relative)
 
     def test_skill_metadata_matches_each_manifest_skill(self) -> None:
-        _, trees = profile_sync.load_manifest()
+        _, trees, _, _ = profile_sync.load_manifest()
         for relative in trees:
             skill = PROFILE.joinpath(*relative.parts)
             name = skill.name

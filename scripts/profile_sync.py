@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path, PurePosixPath
+import shlex
 import shutil
 import stat
 import subprocess
@@ -23,6 +24,8 @@ PROFILE = ROOT / "profile"
 MANIFEST = ROOT / "profile-manifest.toml"
 PORTABLE_CONFIG = ROOT / "personal.config.toml"
 EXEC_BITS = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+HOOKS_JSON = PurePosixPath("hooks.json")
+HOOK_RUNTIME_TOKEN = "{{PROFILE_SYNC_PYTHON}}"
 CONFIG_KEYS = (
     "model",
     "model_reasoning_effort",
@@ -247,22 +250,34 @@ def normalized_entry(value: object) -> PurePosixPath:
     return path
 
 
-def load_manifest() -> tuple[tuple[PurePosixPath, ...], tuple[PurePosixPath, ...]]:
+def load_manifest() -> tuple[
+    tuple[PurePosixPath, ...],
+    tuple[PurePosixPath, ...],
+    tuple[PurePosixPath, ...],
+    tuple[PurePosixPath, ...],
+]:
     raw = load_toml(MANIFEST)
-    if set(raw) != {"files", "trees"}:
-        raise SyncError("manifest must contain only files and trees")
-    if not isinstance(raw["files"], list) or not isinstance(raw["trees"], list):
-        raise SyncError("manifest files and trees must be arrays")
-    files = tuple(normalized_entry(value) for value in raw["files"])
-    trees = tuple(normalized_entry(value) for value in raw["trees"])
-    all_entries = files + trees
+    keys = ("files", "trees", "retired_files", "retired_trees")
+    if set(raw) != set(keys):
+        raise SyncError(
+            "manifest must contain only files, trees, retired_files, and retired_trees"
+        )
+    if any(not isinstance(raw[key], list) for key in keys):
+        raise SyncError("manifest file and tree fields must be arrays")
+    files, trees, retired_files, retired_trees = (
+        tuple(normalized_entry(value) for value in raw[key]) for key in keys
+    )
+    all_entries = files + trees + retired_files + retired_trees
     if len(set(all_entries)) != len(all_entries):
         raise SyncError("manifest entries must be unique")
     for index, left in enumerate(all_entries):
         for right in all_entries[index + 1 :]:
-            if left.parts == right.parts[: len(left.parts)] or right.parts == left.parts[: len(right.parts)]:
+            if (
+                left.parts == right.parts[: len(left.parts)]
+                or right.parts == left.parts[: len(right.parts)]
+            ):
                 raise SyncError(f"overlapping manifest entries: {left} and {right}")
-    return files, trees
+    return files, trees, retired_files, retired_trees
 
 
 def read_leaf(path: Path) -> Leaf | None:
@@ -279,6 +294,63 @@ def read_leaf(path: Path) -> Leaf | None:
     except OSError as exc:
         raise SyncError(f"cannot read {path}: {exc}") from exc
     return Leaf(data, bool(metadata.st_mode & EXEC_BITS))
+
+
+def resolve_hook_runtime() -> Path:
+    runtime = Path(sys.executable)
+    if not runtime.is_absolute():
+        raise SyncError(f"profile sync Python must be absolute: {runtime}")
+    if not runtime.is_file() or not os.access(runtime, os.X_OK):
+        raise SyncError(f"profile sync Python is unavailable: {runtime}")
+    return runtime
+
+
+def render_hooks(runtime: Path) -> Leaf:
+    source_path = PROFILE.joinpath(*HOOKS_JSON.parts)
+    source = read_leaf(source_path)
+    if source is None:
+        raise SyncError(f"portable hooks definition is missing: {source_path}")
+    try:
+        value = json.loads(source.data)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise SyncError(f"invalid portable hooks.json: {exc}") from exc
+    if not isinstance(value, dict):
+        raise SyncError("portable hooks.json must contain a JSON object")
+
+    replacement = shlex.quote(str(runtime))
+    substitutions = 0
+
+    def replace_tokens(item: Any) -> Any:
+        nonlocal substitutions
+        if isinstance(item, dict):
+            return {key: replace_tokens(child) for key, child in item.items()}
+        if isinstance(item, list):
+            return [replace_tokens(child) for child in item]
+        if isinstance(item, str):
+            count = item.count(HOOK_RUNTIME_TOKEN)
+            substitutions += count
+            return item.replace(HOOK_RUNTIME_TOKEN, replacement)
+        return item
+
+    rendered = replace_tokens(value)
+    if substitutions != 2:
+        raise SyncError(
+            "portable hooks.json must contain exactly two profile runtime tokens"
+        )
+    data = (
+        json.dumps(rendered, ensure_ascii=False, indent=2) + "\n"
+    ).encode("utf-8")
+    return Leaf(data, source.executable)
+
+
+def managed_source(relative: PurePosixPath) -> Leaf:
+    if relative == HOOKS_JSON:
+        return render_hooks(resolve_hook_runtime())
+    source_path = PROFILE.joinpath(*relative.parts)
+    source = read_leaf(source_path)
+    if source is None:
+        raise SyncError(f"managed source file is missing: {source_path}")
+    return source
 
 
 def scan_tree(path: Path, *, required: bool) -> dict[PurePosixPath, Leaf]:
@@ -382,14 +454,12 @@ def restore_config_edits(active: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def compare(codex_home: Path) -> State:
-    files, trees = load_manifest()
+    files, trees, retired_files, retired_trees = load_manifest()
     changes: list[Change] = []
     for relative in files:
         source_path = PROFILE.joinpath(*relative.parts)
         validate_parent(source_path.parent, PROFILE)
-        source = read_leaf(source_path)
-        if source is None:
-            raise SyncError(f"managed source file is missing: {source_path}")
+        source = managed_source(relative)
         target_path = codex_home.joinpath(*relative.parts)
         validate_parent(target_path.parent, codex_home)
         target = read_leaf(target_path)
@@ -410,6 +480,22 @@ def compare(codex_home: Path) -> State:
                 continue
             operation = "ADD" if target is None else "DELETE" if source is None else "CHANGE"
             changes.append(Change(operation, str(relative / leaf_path), source, target))
+    for relative in retired_files:
+        target_path = codex_home.joinpath(*relative.parts)
+        validate_parent(target_path.parent, codex_home)
+        target = read_leaf(target_path)
+        if target is not None:
+            changes.append(Change("DELETE", str(relative), None, target))
+    for relative in retired_trees:
+        target_path = codex_home.joinpath(*relative.parts)
+        validate_parent(target_path.parent, codex_home)
+        target_tree = scan_tree(target_path, required=False)
+        for leaf_path, target in sorted(
+            target_tree.items(), key=lambda item: str(item[0])
+        ):
+            changes.append(
+                Change("DELETE", str(relative / leaf_path), None, target)
+            )
 
     expected = portable_config_values()
     active = load_toml(codex_home / "config.toml", missing_ok=True)
@@ -424,6 +510,7 @@ def compare(codex_home: Path) -> State:
 
 def print_changes(state: State) -> None:
     print(f"CODEX_HOME: {state.codex_home}")
+    print(f"Hook runtime: {resolve_hook_runtime()}")
     if not state.changes:
         print("No changes.")
         return
@@ -432,21 +519,7 @@ def print_changes(state: State) -> None:
 
 
 def validate_hook_runtime() -> None:
-    root_value = os.environ.get("CONDA_ROOT")
-    if not root_value:
-        raise SyncError("CONDA_ROOT is required to resolve the codex-tools hook runtime")
-    root = Path(root_value)
-    if not root.is_absolute():
-        raise SyncError("CONDA_ROOT must be an absolute path")
-    interpreter = root / "envs" / "codex-tools" / "bin" / "python"
-    if not interpreter.is_file() or not os.access(interpreter, os.X_OK):
-        raise SyncError(f"codex-tools hook interpreter is unavailable: {interpreter}")
-    try:
-        hooks = json.loads((PROFILE / "hooks.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise SyncError(f"invalid portable hooks.json: {exc}") from exc
-    if not isinstance(hooks, dict):
-        raise SyncError("portable hooks.json must contain a JSON object")
+    render_hooks(resolve_hook_runtime())
     for name in ("conda_base_guard.py", "no_autoresolution_guard.py"):
         path = PROFILE / "hooks" / name
         leaf = read_leaf(path)

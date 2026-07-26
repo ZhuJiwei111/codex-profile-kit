@@ -3,9 +3,12 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 import unittest
+
+from scripts import profile_sync
 
 
 HOOKS = Path(__file__).resolve().parents[1] / "profile" / "hooks"
@@ -52,8 +55,28 @@ class HookBehaviorTest(unittest.TestCase):
             commands["^request_user_input$"],
         )
         for command in commands.values():
-            self.assertIn("${CONDA_ROOT:?}/envs/codex-tools/bin/python", command)
+            self.assertTrue(
+                command.startswith(f"{profile_sync.HOOK_RUNTIME_TOKEN} "),
+                command,
+            )
             self.assertIn("${CODEX_HOME:-$HOME/.codex}/hooks/", command)
+
+    def test_rendered_wiring_uses_the_sync_interpreter(self) -> None:
+        runtime = Path("/opt/profile python/bin/python")
+        rendered = json.loads(
+            profile_sync.render_hooks(runtime).data.decode("utf-8")
+        )
+        groups = rendered["hooks"]["PreToolUse"]
+        commands = [
+            hook["command"]
+            for group in groups
+            for hook in group["hooks"]
+        ]
+
+        self.assertEqual(len(commands), 2)
+        for command in commands:
+            self.assertEqual(shlex.split(command)[0], str(runtime))
+            self.assertNotIn(profile_sync.HOOK_RUNTIME_TOKEN, command)
 
     def test_conda_guard_denies_only_explicit_base_mutation(self) -> None:
         denied_commands = [
