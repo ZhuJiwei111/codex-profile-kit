@@ -1,6 +1,5 @@
 files = [
   "AGENTS.md",
-  "memories/MEMORY.md",
   "hooks.json",
   "hooks/conda_base_guard.py",
   "hooks/no_autoresolution_guard.py",

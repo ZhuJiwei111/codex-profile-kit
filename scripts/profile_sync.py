@@ -28,7 +28,6 @@ HOOKS_JSON = PurePosixPath("hooks.json")
 HOOK_RUNTIME_TOKEN = "{{PROFILE_SYNC_PYTHON}}"
 CONFIG_KEYS = (
     "model",
-    "model_reasoning_effort",
     "plan_mode_reasoning_effort",
     "personality",
     "service_tier",

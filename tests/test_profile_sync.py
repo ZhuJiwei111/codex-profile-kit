@@ -20,9 +20,14 @@ class ProfileSyncCliTest(unittest.TestCase):
     def test_preview_reports_target_and_exact_add(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             codex_home = Path(directory)
-            (codex_home / "config.toml").write_bytes(
-                (ROOT / "personal.config.toml").read_bytes()
+            (codex_home / "config.toml").write_text(
+                'model_reasoning_effort = "max"\n'
+                + (ROOT / "personal.config.toml").read_text(encoding="utf-8"),
+                encoding="utf-8",
             )
+            live_memory = codex_home / "memories" / "MEMORY.md"
+            live_memory.parent.mkdir()
+            live_memory.write_text("host-local memory\n", encoding="utf-8")
             env = os.environ.copy()
             env["CODEX_HOME"] = str(codex_home)
 
@@ -38,6 +43,8 @@ class ProfileSyncCliTest(unittest.TestCase):
         self.assertIn(f"CODEX_HOME: {codex_home}", result.stdout)
         self.assertIn(f"Hook runtime: {sys.executable}", result.stdout)
         self.assertIn("ADD AGENTS.md", result.stdout)
+        self.assertNotIn("memories/MEMORY.md", result.stdout)
+        self.assertNotIn("config.toml:model_reasoning_effort", result.stdout)
 
     def test_preview_reports_only_explicit_retirements_as_deletes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -132,6 +139,9 @@ class ProfileSyncCliTest(unittest.TestCase):
             unmanaged = codex_home / "skills" / "external-skill" / "SKILL.md"
             unmanaged.parent.mkdir(parents=True)
             unmanaged.write_text("keep", encoding="utf-8")
+            live_memory = codex_home / "memories" / "MEMORY.md"
+            live_memory.parent.mkdir()
+            live_memory.write_text("host-local memory\n", encoding="utf-8")
             retired = (
                 codex_home / "skills" / "personal-brainstorms" / "SKILL.md"
             )
@@ -151,6 +161,10 @@ class ProfileSyncCliTest(unittest.TestCase):
             )
             self.assertFalse(extra.exists())
             self.assertEqual(unmanaged.read_text(encoding="utf-8"), "keep")
+            self.assertEqual(
+                live_memory.read_text(encoding="utf-8"),
+                "host-local memory\n",
+            )
             self.assertFalse(retired.exists())
             self.assertFalse(retired_hook.exists())
             self.assertEqual(
@@ -232,9 +246,9 @@ class ProfileSyncCliTest(unittest.TestCase):
                 (ROOT / "personal.config.toml").read_bytes()
             )
             agents = codex_home / "AGENTS.md"
-            memory = codex_home / "memories" / "MEMORY.md"
+            hooks_definition = codex_home / "hooks.json"
             agents.write_bytes(b"before agents\n")
-            memory.write_bytes(b"before memory\n")
+            hooks_definition.write_bytes(b'{"hooks": {}}\n')
             calls = 0
 
             def fail_second(path: Path, leaf: profile_sync.Leaf) -> None:
@@ -254,7 +268,10 @@ class ProfileSyncCliTest(unittest.TestCase):
 
             self.assertGreaterEqual(calls, 3)
             self.assertEqual(agents.read_bytes(), b"before agents\n")
-            self.assertEqual(memory.read_bytes(), b"before memory\n")
+            self.assertEqual(
+                hooks_definition.read_bytes(),
+                b'{"hooks": {}}\n',
+            )
 
     def test_apply_writes_config_last_through_batch_api(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

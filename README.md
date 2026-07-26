@@ -10,8 +10,8 @@ active profile 不是反向导出源。
 
 ## 管理范围
 
-- `profile/`：按目标相对路径保存 `AGENTS.md`、人工 memory、两个 hooks 和
-  personal skills。
+- `profile/`：按目标相对路径保存 `AGENTS.md`、两个 hooks 和 personal
+  skills。
 - `profile-manifest.toml`：列出受管 file/tree 和经过审阅的精确退役
   file/tree；除这些退役项外，相邻的外部 skill、plugin cache 和未列出文件不受
   影响。
@@ -22,9 +22,10 @@ active profile 不是反向导出源。
   不由 profile sync 自动安装或部署。
 - `archive/`：保留本次重构前的旧实现，不部署到 active profile。
 
-仓库不管理 `HOST_LOCAL.md`、连接合同、credentials、auth/session/history、
-trust、cache、plugin 安装或认证、MCP、sandbox、TUI、项目配置和其他未列出的
-`config.toml` 键。
+仓库不管理 live `memories/MEMORY.md`、`model_reasoning_effort`、
+`HOST_LOCAL.md`、连接合同、credentials、auth/session/history、trust、cache、
+plugin 安装或认证、MCP、sandbox、TUI、项目配置和其他未列出的 `config.toml`
+键。前两项是会在同步后继续变化的主机/产品运行时状态；已有值保持原样。
 
 ## 使用
 
