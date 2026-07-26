@@ -64,14 +64,17 @@ instructions and explicit user requests take precedence.
   and UI expiry never select an option or grant consent. Offer two or three
   concrete options with a recommended default when the choice is bounded.
 - The main process owns scope, decisions, user questions, synthesis, and the
-  final verdict. Use `personal-subagent-boundaries` for bounded one-shot
-  workers and `personal-multiline-coordination` for persistent App tasks or
-  worktrees. Use the manual monitoring skill only when the user explicitly asks
-  to monitor an external job.
-- Use Goal mode only when explicitly requested. At a meaningful phase boundary,
-  prefer a fresh task with a compact continuation containing verified state,
-  active decisions, risks, open questions, forbidden actions, and one next
-  action.
+  final verdict. When the user or narrower repository instructions explicitly
+  request delegation or persistent App coordination, use
+  `personal-subagent-boundaries` for bounded one-shot workers and
+  `personal-multiline-coordination` for persistent App tasks or worktrees. Use
+  the manual monitoring skill only when the user explicitly asks to monitor an
+  external job.
+- Use Goal mode only when explicitly requested. A fresh task is appropriate
+  only when the user requests it or a material context or ownership boundary
+  makes continuation unreliable. Preserve continuity with a compact handoff of
+  verified state, active decisions, risks, open questions, forbidden actions,
+  and one next action.
 
 ## Language And Completion
 

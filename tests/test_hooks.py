@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -18,12 +19,15 @@ def invoke(name: str, tool_name: str, tool_input: dict[str, object]) -> str:
         "tool_input": tool_input,
         "tool_use_id": "test-call",
     }
+    env = os.environ.copy()
+    env["CONDA_ROOT"] = "/opt/conda"
     result = subprocess.run(
         [sys.executable, str(HOOKS / name)],
         input=json.dumps(event),
         text=True,
         capture_output=True,
         check=True,
+        env=env,
     )
     return result.stdout
 
@@ -52,22 +56,47 @@ class HookBehaviorTest(unittest.TestCase):
             self.assertIn("${CODEX_HOME:-$HOME/.codex}/hooks/", command)
 
     def test_conda_guard_denies_only_explicit_base_mutation(self) -> None:
-        denied = invoke(
-            "conda_base_guard.py",
-            "Bash",
-            {"command": "conda install demo --name base"},
-        )
-        allowed = invoke(
-            "conda_base_guard.py",
-            "Bash",
-            {"command": "conda install demo --name project-env"},
-        )
+        denied_commands = [
+            "conda install demo --name base",
+            'conda install demo --name "base"',
+            "/opt/conda/bin/conda install demo --name=base",
+            "mamba env create -nbase",
+            "true && conda create demo --prefix /opt/conda/",
+            "true\nconda install demo -p ${CONDA_ROOT}",
+            "true # explanation\nconda install demo --name base",
+        ]
+        allowed_commands = [
+            "conda install demo --name project-env",
+            "true # conda install demo --name base",
+            "echo 'conda install demo --name base'",
+            "conda install base --name project-env",
+            "conda install demo --name base#suffix",
+            "conda list --name base",
+        ]
 
-        self.assertEqual(
-            json.loads(denied)["hookSpecificOutput"]["permissionDecision"],
-            "deny",
-        )
-        self.assertEqual(allowed, "")
+        for command in denied_commands:
+            with self.subTest(command=command):
+                output = invoke(
+                    "conda_base_guard.py",
+                    "Bash",
+                    {"command": command},
+                )
+                self.assertEqual(
+                    json.loads(output)["hookSpecificOutput"][
+                        "permissionDecision"
+                    ],
+                    "deny",
+                )
+        for command in allowed_commands:
+            with self.subTest(command=command):
+                self.assertEqual(
+                    invoke(
+                        "conda_base_guard.py",
+                        "Bash",
+                        {"command": command},
+                    ),
+                    "",
+                )
 
     def test_no_autoresolution_guard_checks_field_presence(self) -> None:
         denied = invoke(

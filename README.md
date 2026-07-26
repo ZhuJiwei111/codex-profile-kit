@@ -15,6 +15,8 @@ active profile 不是反向导出源。
 - `profile-manifest.toml`：只列出受管 file/tree；相邻的外部 skill、plugin
   cache 和未列出文件不受影响。
 - `personal.config.toml`：只投影脚本内显式允许的配置叶子键。
+- `external-overlays/`：记录经审阅的第三方 skill 本地补丁与精确上游 revision；
+  不由 profile sync 自动安装或部署。
 - `archive/`：保留本次重构前的旧实现，不部署到 active profile。
 
 仓库不管理 `HOST_LOCAL.md`、连接合同、credentials、auth/session/history、
