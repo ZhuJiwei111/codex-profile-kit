@@ -113,10 +113,34 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn("allow_implicit_invocation: true", planning_metadata)
 
         self.assertIn(
-            "Monitoring is part of that job's launch contract", monitor_prose
+            "Monitoring belongs to the launch contract", monitor_prose
         )
-        self.assertIn("one successful initial status sample", monitor_prose)
+        for contract in (
+            "Choose topology from verified capabilities, not project identity",
+            "Scheduled evaluator",
+            "Scheduled relay",
+            "Attached live turn",
+            "creation receipt proves only",
+            "Do not embed one project's paths, identifiers, hashes, stages",
+            "Reconcile existing tasks and recurrences before retrying.",
+            "proves its continuation topology",
+            "Define an event key",
+            "Do not copy growing logs, recursively scan broad trees",
+            "An unchanged state or quiet log is not a stall.",
+            "Otherwise report `suspected_stall`",
+            "Mark supervision `lost`",
+        ):
+            self.assertIn(contract, monitor_prose)
+        for project_specific in (
+            "AIVC",
+            "SCI-004",
+            "/subing",
+            "GSE194122",
+        ):
+            self.assertNotIn(project_specific, monitor_prose)
         self.assertIn("allow_implicit_invocation: true", monitor_metadata)
+        self.assertIn("any authorized long-running job", monitor_metadata)
+        self.assertIn("select and prove a continuation topology", monitor_metadata)
         self.assertIn(
             "returns one successful initial status sample", coordination_prose
         )
