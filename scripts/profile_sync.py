@@ -33,7 +33,6 @@ CONFIG_KEYS = (
     "model",
     "plan_mode_reasoning_effort",
     "personality",
-    "service_tier",
     "features.memories",
     "memories.generate_memories",
     "memories.use_memories",
@@ -44,6 +43,7 @@ CONFIG_KEYS = (
     "apps._default.default_tools_approval_mode",
     "apps.connector_76869538009648d5b282a4bb21c3d157.enabled",
 )
+RETIRED_CONFIG_KEYS = ("service_tier",)
 
 
 class SyncError(RuntimeError):
@@ -71,23 +71,64 @@ class State:
     config_values: dict[str, Any]
 
 
+def resolve_codex_executable() -> str:
+    override = os.environ.get("CODEX_PROFILE_CODEX_BIN")
+    if override:
+        candidate = Path(override).expanduser()
+        if not candidate.is_absolute() or not candidate.is_file():
+            raise SyncError(
+                "CODEX_PROFILE_CODEX_BIN must name an existing absolute file"
+            )
+        return str(candidate)
+    if os.name == "nt":
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if local_app_data:
+            candidate = (
+                Path(local_app_data)
+                / "OpenAI"
+                / "Codex"
+                / "bin"
+                / "codex.exe"
+            )
+            if candidate.is_file():
+                return str(candidate)
+    executable = shutil.which("codex")
+    if executable is None:
+        raise SyncError("codex executable is unavailable for config/batchWrite")
+    return executable
+
+
+def app_server_command(executable: str, codex_home: Path | None = None) -> list[str]:
+    # Current Codex versions use stdio by default; the removed --stdio flag is
+    # rejected by the Windows Desktop runtime.
+    command = [executable]
+    if codex_home is not None:
+        active = load_toml(codex_home / "config.toml", missing_ok=True)
+        present, value = value_at(active, "service_tier")
+        if present and value == "default":
+            # Bootstrap the official config API past a legacy value that newer
+            # Codex versions reject. The writer then removes this retired key.
+            command.extend(["-c", 'service_tier="fast"'])
+    command.append("app-server")
+    return command
+
+
 def app_server_request(
     codex_home: Path,
     method: str,
     params: dict[str, Any],
 ) -> dict[str, Any]:
-    executable = shutil.which("codex")
-    if executable is None:
-        raise SyncError("codex executable is unavailable for config/batchWrite")
+    executable = resolve_codex_executable()
     environment = os.environ.copy()
     environment["CODEX_HOME"] = str(codex_home)
     try:
         process = subprocess.Popen(
-            [executable, "app-server", "--stdio"],
+            app_server_command(executable, codex_home),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            encoding="utf-8",
             bufsize=1,
             env=environment,
         )
@@ -554,15 +595,20 @@ def portable_config_values() -> dict[str, Any]:
 
 
 def config_edits(values: dict[str, Any]) -> list[dict[str, Any]]:
-    return [
+    edits = [
         {"keyPath": key, "value": values[key], "mergeStrategy": "replace"}
         for key in CONFIG_KEYS
     ]
+    edits.extend(
+        {"keyPath": key, "value": None, "mergeStrategy": "replace"}
+        for key in RETIRED_CONFIG_KEYS
+    )
+    return edits
 
 
 def restore_config_edits(active: dict[str, Any]) -> list[dict[str, Any]]:
     edits: list[dict[str, Any]] = []
-    for key in CONFIG_KEYS:
+    for key in CONFIG_KEYS + RETIRED_CONFIG_KEYS:
         present, value = value_at(active, key)
         edits.append(
             {
@@ -626,6 +672,10 @@ def compare(codex_home: Path) -> State:
             changes.append(
                 Change("ADD" if not present else "CHANGE", f"config.toml:{key}", None, None)
             )
+    for key in RETIRED_CONFIG_KEYS:
+        present, _ = value_at(active, key)
+        if present:
+            changes.append(Change("DELETE", f"config.toml:{key}", None, None))
     return State(codex_home, tuple(changes), expected)
 
 
@@ -776,6 +826,10 @@ def managed_config_matches(path: Path, expected: dict[str, Any]) -> bool:
         present, value = value_at(active, key)
         expected_present, expected_value = value_at(expected, key)
         if present != expected_present or (present and value != expected_value):
+            return False
+    for key in RETIRED_CONFIG_KEYS:
+        present, _ = value_at(active, key)
+        if present:
             return False
     return True
 

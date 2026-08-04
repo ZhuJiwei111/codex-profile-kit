@@ -16,7 +16,79 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "profile_sync.py"
 
 
+def symlink_or_skip(
+    test_case: unittest.TestCase,
+    link: Path,
+    target: Path,
+    *,
+    target_is_directory: bool = False,
+) -> None:
+    try:
+        link.symlink_to(target, target_is_directory=target_is_directory)
+    except OSError as exc:
+        if os.name == "nt" and getattr(exc, "winerror", None) == 1314:
+            test_case.skipTest("Windows symbolic-link privilege is unavailable")
+        raise
+
+
 class ProfileSyncCliTest(unittest.TestCase):
+    def test_app_server_command_uses_default_stdio_transport(self) -> None:
+        self.assertEqual(
+            profile_sync.app_server_command("codex"),
+            ["codex", "app-server"],
+        )
+
+    def test_app_server_command_bootstraps_legacy_default_service_tier(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            codex_home = Path(directory)
+            (codex_home / "config.toml").write_text(
+                'service_tier = "default"\n',
+                encoding="utf-8",
+            )
+
+            command = profile_sync.app_server_command("codex", codex_home)
+
+        self.assertEqual(
+            command,
+            ["codex", "-c", 'service_tier="fast"', "app-server"],
+        )
+
+    def test_preview_retires_legacy_default_service_tier(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            codex_home = Path(directory)
+            (codex_home / "config.toml").write_text(
+                'service_tier = "default"\n'
+                + (ROOT / "personal.config.toml").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+
+            state = profile_sync.compare(codex_home)
+
+        self.assertIn(
+            "config.toml:service_tier",
+            [change.path for change in state.changes if change.operation == "DELETE"],
+        )
+
+    def test_resolve_codex_executable_prefers_windows_local_app(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            local_app_data = Path(directory)
+            expected = local_app_data / "OpenAI" / "Codex" / "bin" / "codex.exe"
+            expected.parent.mkdir(parents=True)
+            expected.write_bytes(b"placeholder")
+
+            with mock.patch.object(profile_sync.os, "name", "nt"), mock.patch.dict(
+                profile_sync.os.environ,
+                {"LOCALAPPDATA": str(local_app_data)},
+                clear=True,
+            ), mock.patch.object(
+                profile_sync.shutil,
+                "which",
+                return_value=r"C:\Program Files\WindowsApps\OpenAI.Codex\codex.exe",
+            ):
+                resolved = profile_sync.resolve_codex_executable()
+
+        self.assertEqual(resolved, str(expected))
+
     def test_preview_reports_target_and_exact_add(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             codex_home = Path(directory)
@@ -108,7 +180,12 @@ class ProfileSyncCliTest(unittest.TestCase):
             (codex_home / "config.toml").write_bytes(
                 (ROOT / "personal.config.toml").read_bytes()
             )
-            (codex_home / "skills").symlink_to(external, target_is_directory=True)
+            symlink_or_skip(
+                self,
+                codex_home / "skills",
+                external,
+                target_is_directory=True,
+            )
 
             with self.assertRaisesRegex(profile_sync.SyncError, "managed parent"):
                 profile_sync.compare(codex_home)
@@ -255,7 +332,12 @@ class ProfileSyncCliTest(unittest.TestCase):
             )
             retired = codex_home / "skills" / "personal-brainstorms"
             retired.parent.mkdir()
-            retired.symlink_to(external, target_is_directory=True)
+            symlink_or_skip(
+                self,
+                retired,
+                external,
+                target_is_directory=True,
+            )
 
             with self.assertRaisesRegex(profile_sync.SyncError, "refusing symlink"):
                 profile_sync.compare(codex_home)
@@ -370,7 +452,7 @@ class ProfileSyncCliTest(unittest.TestCase):
             self.assertEqual(written_path, config_path)
             self.assertEqual(
                 {edit["keyPath"] for edit in edits},
-                set(profile_sync.CONFIG_KEYS),
+                set(profile_sync.CONFIG_KEYS + profile_sync.RETIRED_CONFIG_KEYS),
             )
             self.assertEqual(
                 profile_sync.load_toml(config_path)["unmanaged"],
