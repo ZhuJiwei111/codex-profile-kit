@@ -37,9 +37,11 @@ vote by task count or let several lines publish competing “final” states.
 Use managed subagents for bounded one-shot internal workers. Use
 `personal-monitor-external-jobs` for repeated observation of an external job.
 Creating an App task still requires matching authority, and a monitoring
-handoff is established only after the target acknowledges the exact job and
-returns one successful initial status sample. A parent discussion task does not
-duplicate routine polling.
+handoff follows `personal-monitor-external-jobs`: a stable schedule ID establishes
+`registered_unverified`, while a pre-authorized live fallback's stable thread ID
+establishes `live_registered`. Neither state claims a successful sample or a
+verified execution path. Once the stable ID is returned, the owner stops active
+polling. A parent discussion task does not duplicate routine polling.
 
 ## Intake And Stop
 

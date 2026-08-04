@@ -18,11 +18,20 @@ Estimate the remaining observation time before choosing a mechanism.
 - If the expected remainder is longer than 10 minutes or unknown, register an
   isolated monitor. The owner task must not stay attached for routine polling.
 
-Before creating a long monitor, finish all safe read-only preflight and present
-one question card without auto-resolution. Ask the user to approve one
-standalone Scheduled registration at the proposed cadence and pre-authorize one
-live-task fallback if registration fails. Silence or UI expiry grants neither
-choice.
+An explicit request to monitor authorizes one standalone Scheduled registration
+for the exact observation contract. Finish all safe read-only preflight first.
+Ask the owner only for required contract fields that cannot be discovered
+read-only. When a question is needed, use one question card without
+auto-resolution that also states the proposed cadence and separately requests
+pre-authorization for one live-task fallback plus the narrowly scoped pause
+authority described below. Silence or UI expiry supplies no missing fact and
+grants no fallback or pause authority.
+
+The only facts the owner may need to supply are the exact task identity, status
+source, terminal evidence, stall evidence, expected remaining duration, and
+cadence when those facts cannot be established read-only. Discover target host,
+cwd, runtime, and owner task identity from available product and repository
+state whenever possible.
 
 Record the smallest complete observation contract:
 
@@ -40,9 +49,11 @@ portable default.
 
 ## Resolve The Local Controller And SSH Alias
 
-Run long Scheduled monitoring from the local controller. Read and maintain that
-controller's own `~/.codex/HOST_LOCAL.md`; do not write local-controller facts
-into a remote host's overlay or the portable profile.
+Run long Scheduled monitoring from the local controller. Treat that
+controller's own `~/.codex/HOST_LOCAL.md` as read-only input. Monitoring
+authority never permits creating, editing, or refreshing it. Report missing or
+stale required facts and request separate configuration authority; do not write
+local-controller facts into a remote host's overlay or the portable profile.
 
 Inventory only remote hosts saved or discovered by Codex. For each relevant
 host, record a non-secret snapshot containing:
@@ -85,20 +96,24 @@ the expected target and cadence. Report this state as
 `registered_unverified`. Do not wait for the first scheduled run, trigger a
 proof invocation, or claim that the execution path has been proven.
 
-The owner task may wait for the local setup task to return only this creation
-result. Once it receives the stable ID, it stops monitoring work and can handle
-other turns or remain idle. It must not run shell sleeps, retain a long-lived
-polling command, or duplicate routine samples.
+Once the owner receives the stable ID and registration state, it stops active
+polling and can handle other turns or remain idle. It must not run shell sleeps,
+retain a long-lived polling command, or duplicate routine samples.
 
 If registration fails or remains ambiguous, reconcile by the exact observation
-contract, pause any matching partial recurrence, and create one isolated live
-task on the exact target host. A stable thread ID is sufficient to report
-`live_registered`; do not wait for its first sample. The dedicated live task
-inherits the same read-only contract, cadence, and dynamic low-cost model policy
-and monitors through terminal state, blocker, identity loss, or a user-owned
-decision. It may use efficient foreground waits, but must not busy-poll. If
-neither monitor can be registered, report the exact blocker without creating
-duplicates.
+contract. Only when the owner explicitly pre-authorized both actions may the
+registration attempt pause a partial recurrence and create one isolated live
+task on the exact target host. Pause authority applies only to a partial
+recurrence that exactly matches the current observation contract and was
+created by this registration attempt or discovered as ambiguous during it. It
+never applies to historical, merely similar, or unrelated recurrences. A stable
+thread ID is sufficient to report `live_registered`; do not wait for its first
+sample. The dedicated live task inherits the same read-only contract, cadence,
+and dynamic low-cost model policy and monitors through terminal state, blocker,
+identity loss, or a user-owned decision. It may use efficient foreground waits,
+but must not busy-poll. Without the required pre-authorization, or if neither
+monitor can be registered, report the exact blocker without creating duplicates
+or pausing anything.
 
 ## Handle Scheduled Runs
 

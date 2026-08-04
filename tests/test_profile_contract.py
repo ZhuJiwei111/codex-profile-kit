@@ -63,6 +63,15 @@ class ProfileContractTest(unittest.TestCase):
             leaves = profile_sync.flatten(tomllib.load(handle))
 
         self.assertEqual(set(leaves), set(profile_sync.CONFIG_KEYS))
+        self.assertTrue(leaves["features.memories"])
+        self.assertFalse(leaves["memories.generate_memories"])
+        self.assertTrue(leaves["memories.use_memories"])
+        self.assertFalse(leaves["apps._default.enabled"])
+        self.assertTrue(
+            leaves[
+                "apps.connector_76869538009648d5b282a4bb21c3d157.enabled"
+            ]
+        )
 
     def test_long_task_continuity_is_sticky_but_opt_in(self) -> None:
         planning = (
@@ -114,19 +123,39 @@ class ProfileContractTest(unittest.TestCase):
 
         for contract in (
             "10 minutes or less",
+            "explicit request to monitor authorizes one standalone Scheduled registration",
             "standalone Scheduled task",
+            "required contract fields that cannot be discovered read-only",
+            "exact task identity, status source, terminal evidence, stall evidence",
+            "expected remaining duration, and cadence",
             "question card without auto-resolution",
+            "proposed cadence",
+            "pre-authorization for one live-task fallback",
             "`~/.codex/HOST_LOCAL.md`",
+            "as read-only input",
+            "never permits creating, editing, or refreshing it",
+            "request separate configuration authority",
             "`ssh <alias>`",
             "`ssh -G <alias>`",
             "`BatchMode=yes`",
+            "immutable job, run, scheduler identity, or PID plus start time",
+            "exact status sources",
+            "terminal success/failure evidence",
+            "stall evidence",
+            "expected remaining-time bucket and proposed sample cadence",
             "stable schedule ID",
             "`registered_unverified`",
             "Do not wait for the first scheduled run",
+            "stops active polling",
             "one bounded fresh sample and exits",
             "creation timeouts and interrupted calls are ambiguous",
-            "pause any matching partial recurrence",
+            "explicitly pre-authorized both actions",
+            "exactly matches the current observation contract",
+            "created by this registration attempt or discovered as ambiguous during it",
+            "never applies to historical, merely similar, or unrelated recurrences",
             "create one isolated live task on the exact target host",
+            "`live_registered`",
+            "do not wait for its first sample",
             "does not authorize automatic live-task fallback",
             "pause the exact recurrence before reporting",
             "exit without messaging the owner",
@@ -142,6 +171,8 @@ class ProfileContractTest(unittest.TestCase):
             "controller ledger",
             "next wake",
             "proof run",
+            "heartbeat",
+            "current-chat",
         ):
             self.assertNotIn(retired_topology, monitor_prose)
         for project_specific in (
@@ -156,9 +187,22 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn("allow_implicit_invocation: true", monitor_metadata)
         self.assertIn("without blocking the owner", monitor_metadata)
         self.assertIn("register low-cost read-only monitoring", monitor_metadata)
-        self.assertIn(
-            "returns one successful initial status sample", coordination_prose
-        )
+
+        for shared_contract in (
+            "`registered_unverified`",
+            "`live_registered`",
+            "stable schedule ID",
+            "stops active polling",
+        ):
+            self.assertIn(shared_contract, coordination_prose)
+            self.assertIn(shared_contract, agents_prose)
+        for obsolete_release_rule in (
+            "returns one successful initial status sample",
+            "obtain one successful initial sample",
+        ):
+            self.assertNotIn(obsolete_release_rule, coordination_prose)
+            self.assertNotIn(obsolete_release_rule, agents_prose)
+            self.assertNotIn(obsolete_release_rule, monitor_prose)
 
         self.assertIn("recommend `/goal` once", agents_prose)
         self.assertIn("Keep related phases in the same task.", agents_prose)
