@@ -36,12 +36,14 @@ vote by task count or let several lines publish competing “final” states.
 
 Use managed subagents for bounded one-shot internal workers. Use
 `personal-monitor-external-jobs` for repeated observation of an external job.
-Creating an App task still requires matching authority, and a monitoring
-handoff follows `personal-monitor-external-jobs`: a stable schedule ID establishes
-`registered_unverified`, while a pre-authorized live fallback's stable thread ID
-establishes `live_registered`. Neither state claims a successful sample or a
-verified execution path. Once the stable ID is returned, the owner stops active
-polling. A parent discussion task does not duplicate routine polling.
+Creating an App task still requires matching authority. A monitoring handoff
+follows `personal-monitor-external-jobs`: use the fixed Luna controller, resolve
+its canonical thread ID, and never record a creation-time client ID as the task
+identity. A stable schedule ID plus exact enabled-target/cadence readback
+establishes `registered_unverified`; the owner then stops active polling. A
+live fallback additionally needs a fresh sample and retained continuation. A
+task that becomes idle while the job is still running is not supervision.
+A parent discussion task does not duplicate routine polling.
 
 ## Intake And Stop
 

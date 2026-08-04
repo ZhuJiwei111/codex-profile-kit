@@ -76,14 +76,16 @@ instructions and explicit user requests take precedence.
   complete or superseded. Do not create or select a plan implicitly.
 - For an already-authorized external job expected to outlive its owning turn or
   need repeated observation, treat monitoring as part of the launch contract.
-  An explicit monitoring request authorizes one standalone Scheduled
-  registration; ask only for necessary observation-contract facts that cannot
-  be discovered read-only. A stable schedule ID establishes
-  `registered_unverified`; a separately pre-authorized live fallback's stable
-  thread ID establishes `live_registered`. Neither state proves a successful
-  sample or execution path. Once the stable ID is returned, the owner stops
-  active polling. Keep monitoring read-only and return repair, retry,
-  cancellation, and follow-up decisions to the owner.
+  An explicit monitoring request authorizes one Scheduled registration on the
+  fixed local monitoring controller configured as `gpt-5.6-luna` with medium
+  reasoning. Ask only for necessary facts that cannot be discovered read-only.
+  A stable schedule ID plus exact enabled-target/cadence readback establishes
+  `registered_unverified`; the owner then stops active polling. Resolve every
+  monitor to a canonical thread ID rather than a creation-time client ID. A
+  live fallback needs a fresh sample and retained continuation; a task that is
+  idle while the job is still running is not supervision. Keep monitoring
+  read-only and return repair, retry, cancellation, and follow-up decisions to
+  the owner.
 - Use Goal mode only when explicitly requested. When an ordinary task grows
   into a multi-phase long task with a clear outcome, constraints, and
   verification, recommend `/goal` once at a meaningful boundary; do not enable

@@ -1,6 +1,6 @@
 ---
 name: personal-monitor-external-jobs
-description: Use when the user explicitly asks to monitor, establish monitoring, or audit monitoring for an exact authorized external job or pipeline; keep short simple observation in the owner task, and register low-cost read-only Scheduled or live monitoring for work that will outlive the owner turn.
+description: Monitor or audit one exact authorized external job or pipeline; keep short observation in the owner task, and use one fixed local gpt-5.6-luna controller plus read-only Scheduled monitoring for longer work.
 ---
 
 # Personal Monitor External Jobs
@@ -11,27 +11,17 @@ reconfigure, clean up, or submit follow-up work.
 
 ## Choose The Short Or Long Path
 
-Estimate the remaining observation time before choosing a mechanism.
-
 - If the expected remainder is 10 minutes or less and each check is simple, the
   owner task may monitor directly.
-- If the expected remainder is longer than 10 minutes or unknown, register an
-  isolated monitor. The owner task must not stay attached for routine polling.
+- If the remainder is longer or unknown, use the fixed local monitoring
+  controller and one Scheduled registration. The owner must not routine-poll.
 
-An explicit request to monitor authorizes one standalone Scheduled registration
-for the exact observation contract. Finish all safe read-only preflight first.
-Ask the owner only for required contract fields that cannot be discovered
-read-only. When a question is needed, use one question card without
-auto-resolution that also states the proposed cadence and separately requests
-pre-authorization for one live-task fallback plus the narrowly scoped pause
-authority described below. Silence or UI expiry supplies no missing fact and
-grants no fallback or pause authority.
-
-The only facts the owner may need to supply are the exact task identity, status
-source, terminal evidence, stall evidence, expected remaining duration, and
-cadence when those facts cannot be established read-only. Discover target host,
-cwd, runtime, and owner task identity from available product and repository
-state whenever possible.
+An explicit request to monitor authorizes one Scheduled registration for the
+exact observation contract. Finish safe read-only preflight first. Ask only for
+required contract fields that cannot be discovered read-only. When a choice is
+required, use one question card without auto-resolution that states the
+proposed cadence and separately requests pre-authorization for one live-task
+fallback plus narrow pause authority. Silence grants neither.
 
 Record the smallest complete observation contract:
 
@@ -43,107 +33,98 @@ Record the smallest complete observation contract:
 - expected remaining-time bucket and proposed sample cadence; and
 - the exact recurrence or live task created for this contract.
 
-Use only values verified for the current job. Never embed a concrete host,
-port, project path, job ID, stage name, threshold, or artifact layout as a
-portable default.
+The only facts the owner may need to supply are the exact task identity, status
+source, terminal evidence, stall evidence, expected remaining duration, and
+cadence. Use only values verified for the current job. Never embed a concrete
+host, port, project path, job ID, stage name, threshold, or artifact layout as
+a portable default.
+
+## Fix Controller Identity And Model
+
+Reuse one fixed local monitoring controller for long jobs. Configure that task
+as `gpt-5.6-luna` with `medium` reasoning. A heartbeat automation attached to
+the controller inherits those settings; if the product exposes model fields on
+a standalone schedule, set the same values explicitly. Do not silently select
+another model or effort when Luna is unavailable; report the blocker.
+
+Resolve every App task to a readable canonical thread ID before recording it.
+A `clientThreadId` is not a canonical task ID. Reconcile creation receipts
+through task listing/read APIs, and never put an unresolved creation ID into a
+project plan or monitoring contract.
 
 ## Resolve The Local Controller And SSH Alias
 
-Run long Scheduled monitoring from the local controller. Treat that
-controller's own `~/.codex/HOST_LOCAL.md` as read-only input. Monitoring
+Treat the controller's `~/.codex/HOST_LOCAL.md` as read-only input. Monitoring
 authority never permits creating, editing, or refreshing it. Report missing or
-stale required facts and request separate configuration authority; do not write
-local-controller facts into a remote host's overlay or the portable profile.
+stale required facts and request separate configuration authority.
 
-Inventory only remote hosts saved or discovered by Codex. For each relevant
-host, record a non-secret snapshot containing:
+Map the target host ID or project label to one SSH alias. Record only filtered
+hostname, port, user, non-secret route facts, relevant project roots, and the
+timestamp/result of a bounded unattended `BatchMode=yes` probe. Use filtered
+`ssh -G <alias>` for audit evidence, but make actual connections with
+`ssh <alias>`. Never expose credentials, keys, tokens, sockets, or a
+secret-bearing proxy command.
 
-- Codex host ID or project label mapped to one SSH alias;
-- effective hostname, port, and user from filtered `ssh -G <alias>` output;
-- a non-secret proxy alias or route description when applicable;
-- relevant saved project roots; and
-- the result and timestamp of a bounded unattended probe using
-  `BatchMode=yes`.
+## Register Or Update One Schedule
 
-Never record or expose credentials, private-key contents, tokens, auth-agent or
-socket state, or a secret-bearing proxy command. Treat the resolved hostname
-and port as audit metadata only. Start monitoring connections with
-`ssh <alias>` and append only the exact read-only remote command, so the user's
-SSH configuration remains authoritative. Re-resolve the alias and repeat a
-bounded read-only probe whenever monitoring is registered.
+Inspect callable scheduling and task tools. Reconcile exact matching
+recurrences before every create retry; creation timeouts and interrupted calls
+are ambiguous, not proof of absence. Reuse one exact paused schedule only after
+replacing its old owner, run identity, sources, terminal rules, and cadence with
+the current observation contract.
 
-If the local controller cannot reach the exact target directly, treat
-Scheduled registration as failed and use the authorized live-task fallback.
-Do not invent an intermediate host or durable forwarding process.
+Prefer one heartbeat automation attached to the fixed controller. Each
+invocation performs one bounded fresh sample and exits: no sleep, loop, watcher,
+growing-log copy, broad recursive scan, new task, or job control. Sample the
+target directly through `ssh <alias>`; the controller must not relay routine
+samples through a remote App task.
 
-## Register One Monitor
-
-Inspect the callable scheduling and task-management capabilities before using
-them. Reconcile exact matching recurrences and tasks before every create retry;
-creation timeouts and interrupted calls are ambiguous, not proof of absence.
-
-Prefer one standalone Scheduled task. Configure each scheduled invocation so
-that it performs one bounded fresh sample and exits. It must not sleep, loop,
-start a watcher, copy a growing log, recursively scan broad trees, or control
-the external job. Choose the cheapest cadence consistent with the evidence
-rate. Dynamically select the lowest-cost available model known to support the
-required tools, with low reasoning; if capability or cost is not exposed, keep
-the destination default rather than guessing.
+Keep hash algorithms and domains typed. A raw-file hash and a canonical content
+self-hash are different evidence and must never be compared as if they were the
+same identity field.
 
 Scheduled registration succeeds when the product returns a stable schedule ID
-and, when inspection is supported, the same schedule reads back as enabled with
-the expected target and cadence. Report this state as
-`registered_unverified`. Do not wait for the first scheduled run, trigger a
-proof invocation, or claim that the execution path has been proven.
+and the same schedule reads back enabled with the exact controller target and
+cadence. Report `registered_unverified`; Do not wait for the first scheduled
+run or trigger a proof invocation. Once this readback succeeds, the owner stops
+active polling and does not duplicate routine samples.
 
-Once the owner receives the stable ID and registration state, it stops active
-polling and can handle other turns or remain idle. It must not run shell sleeps,
-retain a long-lived polling command, or duplicate routine samples.
+## Bound A Live Fallback
 
-If registration fails or remains ambiguous, reconcile by the exact observation
-contract. Only when the owner explicitly pre-authorized both actions may the
-registration attempt pause a partial recurrence and create one isolated live
-task on the exact target host. Pause authority applies only to a partial
-recurrence that exactly matches the current observation contract and was
-created by this registration attempt or discovered as ambiguous during it. It
-never applies to historical, merely similar, or unrelated recurrences. A stable
-thread ID is sufficient to report `live_registered`; do not wait for its first
-sample. The dedicated live task inherits the same read-only contract, cadence,
-and dynamic low-cost model policy and monitors through terminal state, blocker,
-identity loss, or a user-owned decision. It may use efficient foreground waits,
-but must not busy-poll. Without the required pre-authorization, or if neither
-monitor can be registered, report the exact blocker without creating duplicates
-or pausing anything.
+If registration fails or remains ambiguous, reconcile the exact contract.
+Only when the owner explicitly pre-authorized both actions may the attempt pause
+a partial recurrence and create one isolated live task on the exact target host.
+Pause authority applies only to a recurrence that exactly matches the current
+observation contract and was created by this registration attempt or discovered
+as ambiguous during it; it never applies to historical, merely similar, or
+unrelated recurrences.
 
-## Handle Scheduled Runs
+Configure the fallback task as `gpt-5.6-luna` with `medium` reasoning and
+resolve its canonical thread ID. A stable task ID alone is not enough. Require
+one fresh initial sample plus a live continuation that can perform the next
+bounded wait without another user turn or schedule. If the task becomes idle or
+returns a final answer while the job is still running, monitoring is not
+established. Never record a promise to sample later as supervision.
 
-On each scheduled run, bind the fresh sample to the recorded job identity and
-read only bounded authoritative status. An unchanged state or quiet log is not
-a stall; require the agreed stall window plus corroborating process, CPU/I/O,
-child-activity, or artifact evidence. Validate exact terminal evidence before
-reporting success or failure.
+Without the required authority or continuation, report the blocker. A
+run-time failure after successful registration does not authorize automatic
+live-task fallback.
 
-- If the job is still normally running, exit without messaging the owner.
+## Handle Runs And Stop
+
+Bind every sample to the exact job identity and read only bounded authoritative
+status. Quiet logs or unchanged state alone are not a stall; require the agreed
+window plus corroborating process, CPU/I/O, child activity, or artifact
+evidence.
+
+- If the job is normally running, exit without messaging the owner.
 - On terminal success/failure, sampling failure, blocker, identity loss, or
-  status-source loss, pause the exact recurrence before reporting.
-- After successful registration, a run-time failure does not authorize
-  automatic live-task fallback. Return recovery, resume, or fallback decisions
-  to the user.
+  source loss, pause the exact recurrence before reporting.
+- Queue one event to the owner task with observation time, canonical monitor
+  ID, job identity, bounded evidence, pause result, and required decision.
+  Never interrupt a running owner turn.
 
-Queue one event to the owner task with observation time, monitor ID, job
-identity, bounded evidence, pause result, and the required decision. Never
-interrupt a running owner turn; enqueue the event after that turn. If delivery
-is unavailable, leave the result visible in the Scheduled or live-task surface.
-A scheduler failure that prevents the run from starting cannot self-report, so
-the product's Scheduled view remains the fallback evidence source.
-
-## Stop Without Archiving
-
-At a validated terminal or attention condition, leave the exact recurrence
-paused rather than deleting it. Do not archive the recurrence, Scheduled run,
-local setup task, or live task, and do not ask an automatic archive question.
-Archive only after a later explicit user request.
-
-Local Scheduled tasks require the local computer to remain on, the Codex
-desktop app to remain running, and required local projects to remain available.
-The owner task may be idle; operating-system sleep suspends observation.
+If delivery fails, leave the event visible in the Scheduled or live-task
+surface. Do not archive or delete the recurrence, Scheduled run, controller, or
+fallback task. Archive only on a later explicit request. The local computer and
+Codex app must remain running; operating-system sleep suspends observation.

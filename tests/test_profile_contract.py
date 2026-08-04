@@ -123,8 +123,11 @@ class ProfileContractTest(unittest.TestCase):
 
         for contract in (
             "10 minutes or less",
-            "explicit request to monitor authorizes one standalone Scheduled registration",
-            "standalone Scheduled task",
+            "explicit request to monitor authorizes one Scheduled registration",
+            "fixed local monitoring controller",
+            "`gpt-5.6-luna`",
+            "`medium` reasoning",
+            "one heartbeat automation",
             "required contract fields that cannot be discovered read-only",
             "exact task identity, status source, terminal evidence, stall evidence",
             "expected remaining duration, and cadence",
@@ -143,19 +146,26 @@ class ProfileContractTest(unittest.TestCase):
             "terminal success/failure evidence",
             "stall evidence",
             "expected remaining-time bucket and proposed sample cadence",
+            "canonical thread ID",
+            "`clientThreadId` is not a canonical task ID",
             "stable schedule ID",
             "`registered_unverified`",
             "Do not wait for the first scheduled run",
             "stops active polling",
             "one bounded fresh sample and exits",
+            "directly through `ssh <alias>`",
+            "must not relay routine samples through a remote App task",
+            "raw-file hash",
+            "canonical content self-hash",
             "creation timeouts and interrupted calls are ambiguous",
             "explicitly pre-authorized both actions",
             "exactly matches the current observation contract",
             "created by this registration attempt or discovered as ambiguous during it",
             "never applies to historical, merely similar, or unrelated recurrences",
             "create one isolated live task on the exact target host",
-            "`live_registered`",
-            "do not wait for its first sample",
+            "stable task ID alone is not enough",
+            "live continuation",
+            "idle or returns a final answer while the job is still running",
             "does not authorize automatic live-task fallback",
             "pause the exact recurrence before reporting",
             "exit without messaging the owner",
@@ -171,8 +181,10 @@ class ProfileContractTest(unittest.TestCase):
             "controller ledger",
             "next wake",
             "proof run",
-            "heartbeat",
             "current-chat",
+            "Dynamically select the lowest-cost",
+            "with low reasoning",
+            "stable thread ID establishes `live_registered`",
         ):
             self.assertNotIn(retired_topology, monitor_prose)
         for project_specific in (
@@ -185,14 +197,15 @@ class ProfileContractTest(unittest.TestCase):
         ):
             self.assertNotIn(project_specific, monitor_prose)
         self.assertIn("allow_implicit_invocation: true", monitor_metadata)
-        self.assertIn("without blocking the owner", monitor_metadata)
-        self.assertIn("register low-cost read-only monitoring", monitor_metadata)
+        self.assertIn("Luna-based read-only monitor", monitor_metadata)
+        self.assertIn("fixed gpt-5.6-luna monitoring controller", monitor_metadata)
 
         for shared_contract in (
             "`registered_unverified`",
-            "`live_registered`",
             "stable schedule ID",
             "stops active polling",
+            "canonical thread ID",
+            "idle while the job is still running",
         ):
             self.assertIn(shared_contract, coordination_prose)
             self.assertIn(shared_contract, agents_prose)
