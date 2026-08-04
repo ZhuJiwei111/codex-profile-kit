@@ -45,38 +45,64 @@ class HookBehaviorTest(unittest.TestCase):
         self.assertEqual(set(by_matcher), {"^Bash$", "^request_user_input$"})
         self.assertEqual(len(by_matcher["^Bash$"]), 1)
         self.assertEqual(len(by_matcher["^request_user_input$"]), 1)
-        commands = {
-            matcher: handlers[0]["command"]
-            for matcher, handlers in by_matcher.items()
+        handlers = {
+            matcher: matcher_handlers[0]
+            for matcher, matcher_handlers in by_matcher.items()
         }
-        self.assertIn("conda_base_guard.py", commands["^Bash$"])
-        self.assertIn(
-            "no_autoresolution_guard.py",
-            commands["^request_user_input$"],
+        commands = {
+            matcher: handler["command"]
+            for matcher, handler in handlers.items()
+        }
+        windows_commands = {
+            matcher: handler["commandWindows"]
+            for matcher, handler in handlers.items()
+        }
+        self.assertEqual(
+            commands["^Bash$"],
+            "{{PROFILE_SYNC_COMMAND:hooks/conda_base_guard.py}}",
         )
-        for command in commands.values():
-            self.assertTrue(
-                command.startswith(f"{profile_sync.HOOK_RUNTIME_TOKEN} "),
-                command,
-            )
-            self.assertIn("${CODEX_HOME:-$HOME/.codex}/hooks/", command)
+        self.assertEqual(
+            windows_commands["^Bash$"],
+            "{{PROFILE_SYNC_COMMAND_WINDOWS:hooks/conda_base_guard.py}}",
+        )
+        self.assertEqual(
+            commands["^request_user_input$"],
+            "{{PROFILE_SYNC_COMMAND:hooks/no_autoresolution_guard.py}}",
+        )
+        self.assertEqual(
+            windows_commands["^request_user_input$"],
+            "{{PROFILE_SYNC_COMMAND_WINDOWS:hooks/no_autoresolution_guard.py}}",
+        )
 
-    def test_rendered_wiring_uses_the_sync_interpreter(self) -> None:
+    def test_rendered_wiring_uses_absolute_runtime_and_script_paths(self) -> None:
         runtime = Path("/opt/profile python/bin/python")
+        codex_home = Path("/Users/example/Codex Home/.codex")
         rendered = json.loads(
-            profile_sync.render_hooks(runtime).data.decode("utf-8")
+            profile_sync.render_hooks(runtime, codex_home).data.decode("utf-8")
         )
         groups = rendered["hooks"]["PreToolUse"]
-        commands = [
-            hook["command"]
+        handlers = [
+            hook
             for group in groups
             for hook in group["hooks"]
         ]
 
-        self.assertEqual(len(commands), 2)
-        for command in commands:
-            self.assertEqual(shlex.split(command)[0], str(runtime))
-            self.assertNotIn(profile_sync.HOOK_RUNTIME_TOKEN, command)
+        self.assertEqual(len(handlers), 2)
+        for handler in handlers:
+            script_name = Path(shlex.split(handler["command"])[1]).name
+            expected_arguments = [
+                str(runtime),
+                str(codex_home / "hooks" / script_name),
+            ]
+            self.assertEqual(shlex.split(handler["command"]), expected_arguments)
+            self.assertEqual(
+                handler["commandWindows"],
+                subprocess.list2cmdline(expected_arguments),
+            )
+            self.assertNotIn("{{PROFILE_SYNC_COMMAND", handler["command"])
+            self.assertNotIn(
+                "{{PROFILE_SYNC_COMMAND", handler["commandWindows"]
+            )
 
     def test_conda_guard_denies_only_explicit_base_mutation(self) -> None:
         denied_commands = [

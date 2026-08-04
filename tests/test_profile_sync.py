@@ -40,7 +40,11 @@ class ProfileSyncCliTest(unittest.TestCase):
             )
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn(f"CODEX_HOME: {codex_home}", result.stdout)
+        self.assertIn(f"CODEX_HOME: {codex_home.resolve()}", result.stdout)
+        self.assertRegex(
+            result.stdout,
+            r"Source revision: [0-9a-f]{40}(?: \(dirty\))?",
+        )
         self.assertIn(f"Hook runtime: {sys.executable}", result.stdout)
         self.assertIn("ADD AGENTS.md", result.stdout)
         self.assertNotIn("memories/MEMORY.md", result.stdout)
@@ -185,12 +189,59 @@ class ProfileSyncCliTest(unittest.TestCase):
             target_mode = (
                 codex_home / "hooks" / "conda_base_guard.py"
             ).stat().st_mode
-            self.assertEqual(
-                bool(source_mode & stat.S_IXUSR),
-                bool(target_mode & stat.S_IXUSR),
-            )
+            if os.name != "nt":
+                self.assertEqual(
+                    bool(source_mode & stat.S_IXUSR),
+                    bool(target_mode & stat.S_IXUSR),
+                )
             self.assertEqual(profile_sync.compare(codex_home).changes, ())
-            self.assertIsNone(profile_sync.apply_profile(profile_sync.compare(codex_home)))
+            self.assertIsNone(
+                profile_sync.apply_profile(profile_sync.compare(codex_home))
+            )
+
+    def test_git_source_revision_requires_a_clean_committed_head(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def git(*arguments: str) -> None:
+                subprocess.run(
+                    ["git", "-C", str(root), *arguments],
+                    check=True,
+                    text=True,
+                    capture_output=True,
+                )
+
+            git("init")
+            git("config", "user.name", "Profile Sync Test")
+            git("config", "user.email", "profile-sync@example.invalid")
+            tracked = root / "tracked.txt"
+            tracked.write_text("committed\n", encoding="utf-8")
+            git("add", "tracked.txt")
+            git("commit", "-m", "Initial test commit")
+
+            revision, dirty = profile_sync.git_source_revision(
+                root, require_clean=True
+            )
+            self.assertRegex(revision, r"^[0-9a-f]{40}$")
+            self.assertFalse(dirty)
+
+            tracked.write_text("dirty\n", encoding="utf-8")
+            with self.assertRaisesRegex(profile_sync.SyncError, "clean Git worktree"):
+                profile_sync.git_source_revision(root, require_clean=True)
+            self.assertTrue(
+                profile_sync.git_source_revision(root, require_clean=False)[1]
+            )
+
+    def test_deployment_lock_rejects_a_concurrent_apply(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            codex_home = Path(directory) / "codex-home"
+            codex_home.mkdir()
+            with profile_sync.deployment_lock(codex_home):
+                with self.assertRaisesRegex(
+                    profile_sync.SyncError, "another profile deployment"
+                ):
+                    with profile_sync.deployment_lock(codex_home):
+                        self.fail("nested deployment lock unexpectedly succeeded")
 
     def test_compare_rejects_symlinked_retired_tree(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

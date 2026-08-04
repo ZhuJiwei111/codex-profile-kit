@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
@@ -25,7 +26,9 @@ MANIFEST = ROOT / "profile-manifest.toml"
 PORTABLE_CONFIG = ROOT / "personal.config.toml"
 EXEC_BITS = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 HOOKS_JSON = PurePosixPath("hooks.json")
-HOOK_RUNTIME_TOKEN = "{{PROFILE_SYNC_PYTHON}}"
+HOOK_COMMAND_PREFIX = "{{PROFILE_SYNC_COMMAND:"
+HOOK_COMMAND_WINDOWS_PREFIX = "{{PROFILE_SYNC_COMMAND_WINDOWS:"
+HOOK_TOKEN_SUFFIX = "}}"
 CONFIG_KEYS = (
     "model",
     "plan_mode_reasoning_effort",
@@ -225,6 +228,103 @@ def resolve_codex_home() -> Path:
     return resolved
 
 
+def git_source_revision(
+    root: Path = ROOT, *, require_clean: bool
+) -> tuple[str, bool]:
+    def run(*arguments: str) -> str:
+        try:
+            result = subprocess.run(
+                ["git", "-C", str(root), *arguments],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        except OSError as exc:
+            raise SyncError(f"git is unavailable: {exc}") from exc
+        if result.returncode != 0:
+            detail = result.stderr.strip() or result.stdout.strip()
+            raise SyncError(f"git {' '.join(arguments)} failed: {detail}")
+        return result.stdout.strip()
+
+    top_level = Path(run("rev-parse", "--show-toplevel")).resolve(strict=True)
+    if top_level != root.resolve(strict=True):
+        raise SyncError(f"profile source is not the Git worktree root: {root}")
+    revision = run("rev-parse", "--verify", "HEAD")
+    if len(revision) != 40 or any(
+        character not in "0123456789abcdef" for character in revision
+    ):
+        raise SyncError(f"Git HEAD is not a full commit ID: {revision!r}")
+    dirty = bool(run("status", "--porcelain=v1", "--untracked-files=all"))
+    if require_clean and dirty:
+        raise SyncError(
+            "apply requires a clean Git worktree with every source change committed"
+        )
+    return revision, dirty
+
+
+def lock_path_for(codex_home: Path) -> Path:
+    return Path(f"{codex_home}.profile-sync.lock")
+
+
+@contextmanager
+def deployment_lock(codex_home: Path):
+    lock_path = lock_path_for(codex_home)
+    try:
+        if lock_path.is_symlink():
+            raise SyncError(f"deployment lock must not be a symlink: {lock_path}")
+        flags = os.O_RDWR | os.O_CREAT
+        flags |= getattr(os, "O_NOFOLLOW", 0)
+        flags |= getattr(os, "O_BINARY", 0)
+        descriptor = os.open(lock_path, flags, 0o600)
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            os.close(descriptor)
+            raise SyncError(f"deployment lock is not a regular file: {lock_path}")
+    except OSError as exc:
+        raise SyncError(f"cannot open deployment lock {lock_path}: {exc}") from exc
+
+    locked = False
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            if os.fstat(descriptor).st_size == 0:
+                os.write(descriptor, b"\0")
+                os.fsync(descriptor)
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            try:
+                msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+            except OSError as exc:
+                raise SyncError(
+                    f"another profile deployment holds {lock_path}"
+                ) from exc
+        else:
+            import fcntl
+
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except (BlockingIOError, OSError) as exc:
+                raise SyncError(
+                    f"another profile deployment holds {lock_path}"
+                ) from exc
+            os.fchmod(descriptor, 0o600)
+        locked = True
+        yield lock_path
+    finally:
+        try:
+            if locked:
+                if os.name == "nt":
+                    import msvcrt
+
+                    os.lseek(descriptor, 0, os.SEEK_SET)
+                    msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+
+                    fcntl.flock(descriptor, fcntl.LOCK_UN)
+        finally:
+            os.close(descriptor)
+
+
 def load_toml(path: Path, *, missing_ok: bool = False) -> dict[str, Any]:
     if path.is_symlink():
         raise SyncError(f"refusing symlink: {path}")
@@ -292,7 +392,8 @@ def read_leaf(path: Path) -> Leaf | None:
         data = path.read_bytes()
     except OSError as exc:
         raise SyncError(f"cannot read {path}: {exc}") from exc
-    return Leaf(data, bool(metadata.st_mode & EXEC_BITS))
+    executable = os.name != "nt" and bool(metadata.st_mode & EXEC_BITS)
+    return Leaf(data, executable)
 
 
 def resolve_hook_runtime() -> Path:
@@ -304,7 +405,7 @@ def resolve_hook_runtime() -> Path:
     return runtime
 
 
-def render_hooks(runtime: Path) -> Leaf:
+def render_hooks(runtime: Path, codex_home: Path) -> Leaf:
     source_path = PROFILE.joinpath(*HOOKS_JSON.parts)
     source = read_leaf(source_path)
     if source is None:
@@ -316,25 +417,46 @@ def render_hooks(runtime: Path) -> Leaf:
     if not isinstance(value, dict):
         raise SyncError("portable hooks.json must contain a JSON object")
 
-    replacement = shlex.quote(str(runtime))
-    substitutions = 0
+    substitutions = {"posix": 0, "windows": 0}
+
+    def render_token(item: str, prefix: str, *, windows: bool) -> str | None:
+        if not item.startswith(prefix) or not item.endswith(HOOK_TOKEN_SUFFIX):
+            return None
+        relative = normalized_entry(item[len(prefix) : -len(HOOK_TOKEN_SUFFIX)])
+        source_path = PROFILE.joinpath(*relative.parts)
+        if read_leaf(source_path) is None:
+            raise SyncError(f"portable hook command target is missing: {source_path}")
+        target_path = codex_home.joinpath(*relative.parts)
+        substitutions["windows" if windows else "posix"] += 1
+        arguments = [str(runtime), str(target_path)]
+        return (
+            subprocess.list2cmdline(arguments) if windows else shlex.join(arguments)
+        )
 
     def replace_tokens(item: Any) -> Any:
-        nonlocal substitutions
         if isinstance(item, dict):
             return {key: replace_tokens(child) for key, child in item.items()}
         if isinstance(item, list):
             return [replace_tokens(child) for child in item]
         if isinstance(item, str):
-            count = item.count(HOOK_RUNTIME_TOKEN)
-            substitutions += count
-            return item.replace(HOOK_RUNTIME_TOKEN, replacement)
+            rendered_windows = render_token(
+                item, HOOK_COMMAND_WINDOWS_PREFIX, windows=True
+            )
+            if rendered_windows is not None:
+                return rendered_windows
+            rendered_posix = render_token(item, HOOK_COMMAND_PREFIX, windows=False)
+            if rendered_posix is not None:
+                return rendered_posix
+            if "{{PROFILE_SYNC_COMMAND" in item:
+                raise SyncError(
+                    "portable hook command tokens must occupy the whole value"
+                )
         return item
 
     rendered = replace_tokens(value)
-    if substitutions != 2:
+    if substitutions != {"posix": 2, "windows": 2}:
         raise SyncError(
-            "portable hooks.json must contain exactly two profile runtime tokens"
+            "portable hooks.json must contain exactly two POSIX and two Windows command tokens"
         )
     data = (
         json.dumps(rendered, ensure_ascii=False, indent=2) + "\n"
@@ -342,9 +464,9 @@ def render_hooks(runtime: Path) -> Leaf:
     return Leaf(data, source.executable)
 
 
-def managed_source(relative: PurePosixPath) -> Leaf:
+def managed_source(relative: PurePosixPath, codex_home: Path) -> Leaf:
     if relative == HOOKS_JSON:
-        return render_hooks(resolve_hook_runtime())
+        return render_hooks(resolve_hook_runtime(), codex_home)
     source_path = PROFILE.joinpath(*relative.parts)
     source = read_leaf(source_path)
     if source is None:
@@ -458,7 +580,7 @@ def compare(codex_home: Path) -> State:
     for relative in files:
         source_path = PROFILE.joinpath(*relative.parts)
         validate_parent(source_path.parent, PROFILE)
-        source = managed_source(relative)
+        source = managed_source(relative, codex_home)
         target_path = codex_home.joinpath(*relative.parts)
         validate_parent(target_path.parent, codex_home)
         target = read_leaf(target_path)
@@ -507,8 +629,9 @@ def compare(codex_home: Path) -> State:
     return State(codex_home, tuple(changes), expected)
 
 
-def print_changes(state: State) -> None:
+def print_changes(state: State, revision: str, *, dirty: bool) -> None:
     print(f"CODEX_HOME: {state.codex_home}")
+    print(f"Source revision: {revision}{' (dirty)' if dirty else ''}")
     print(f"Hook runtime: {resolve_hook_runtime()}")
     if not state.changes:
         print("No changes.")
@@ -517,8 +640,8 @@ def print_changes(state: State) -> None:
         print(f"{change.operation} {change.path}")
 
 
-def validate_hook_runtime() -> None:
-    render_hooks(resolve_hook_runtime())
+def validate_hook_runtime(codex_home: Path) -> None:
+    render_hooks(resolve_hook_runtime(), codex_home)
     for name in ("conda_base_guard.py", "no_autoresolution_guard.py"):
         path = PROFILE / "hooks" / name
         leaf = read_leaf(path)
@@ -571,7 +694,8 @@ def atomic_replace(path: Path, leaf: Leaf) -> None:
             handle.write(leaf.data)
             handle.flush()
             os.fsync(handle.fileno())
-            os.fchmod(handle.fileno(), 0o755 if leaf.executable else 0o644)
+            if os.name != "nt":
+                os.fchmod(handle.fileno(), 0o755 if leaf.executable else 0o644)
         os.replace(temporary, path)
         fsync_directory(path.parent)
     except Exception:
@@ -600,17 +724,19 @@ def prune_empty(paths: set[Path], codex_home: Path) -> None:
 
 def write_backup_leaf(path: Path, leaf: Leaf, backup: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    current = path.parent
-    while True:
-        os.chmod(current, 0o700)
-        if current == backup:
-            break
-        current = current.parent
+    if os.name != "nt":
+        current = path.parent
+        while True:
+            os.chmod(current, 0o700)
+            if current == backup:
+                break
+            current = current.parent
     with path.open("xb") as handle:
         handle.write(leaf.data)
         handle.flush()
         os.fsync(handle.fileno())
-        os.fchmod(handle.fileno(), 0o700 if leaf.executable else 0o600)
+        if os.name != "nt":
+            os.fchmod(handle.fileno(), 0o700 if leaf.executable else 0o600)
 
 
 def create_backup(
@@ -625,7 +751,8 @@ def create_backup(
         backup_root.mkdir(mode=0o700, parents=False, exist_ok=True)
         if not backup_root.is_dir():
             raise SyncError(f"backup root is not a directory: {backup_root}")
-        os.chmod(backup_root, 0o700)
+        if os.name != "nt":
+            os.chmod(backup_root, 0o700)
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
         backup = backup_root / timestamp
         backup.mkdir(mode=0o700)
@@ -680,12 +807,12 @@ def rollback_files(
     return errors
 
 
-def apply_profile(state: State) -> Path | None:
+def _apply_profile_locked(state: State) -> Path | None:
     if not state.changes:
         return None
     if compare(state.codex_home) != state:
         raise SyncError("source or target changed after the diff was computed")
-    validate_hook_runtime()
+    validate_hook_runtime(state.codex_home)
 
     file_changes = [
         change for change in state.changes if not change.path.startswith("config.toml:")
@@ -764,18 +891,36 @@ def apply_profile(state: State) -> Path | None:
         raise SyncError(message) from exc
 
 
+def apply_profile(
+    state: State, *, expected_revision: str | None = None
+) -> Path | None:
+    with deployment_lock(state.codex_home):
+        if expected_revision is not None:
+            current_revision, _ = git_source_revision(ROOT, require_clean=True)
+            if current_revision != expected_revision:
+                raise SyncError(
+                    "profile source revision changed after apply preflight: "
+                    f"expected {expected_revision}, found {current_revision}"
+                )
+        return _apply_profile_locked(state)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("preview", "apply", "check"))
     args = parser.parse_args()
     try:
-        state = compare(resolve_codex_home())
-        print_changes(state)
+        codex_home = resolve_codex_home()
+        revision, dirty = git_source_revision(
+            ROOT, require_clean=args.command == "apply"
+        )
+        state = compare(codex_home)
+        print_changes(state, revision, dirty=dirty)
         if args.command == "preview":
             return 0
         if args.command == "check":
             return 0 if not state.changes else 1
-        backup = apply_profile(state)
+        backup = apply_profile(state, expected_revision=revision)
         if backup is not None:
             print(f"Backup: {backup}")
         print("Post-check: clean")

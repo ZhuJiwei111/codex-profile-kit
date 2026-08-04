@@ -76,10 +76,14 @@ instructions and explicit user requests take precedence.
   complete or superseded. Do not create or select a plan implicitly.
 - For an already-authorized external job expected to outlive its owning turn or
   need repeated observation, treat monitoring as part of the launch contract.
-  Before claiming that monitoring is established, record the exact job and
-  status source, terminal and stall signals, owning task, and obtain one
-  successful initial sample from the monitor. Keep monitoring read-only and
-  return repair, retry, cancellation, and follow-up decisions to the owner.
+  An explicit monitoring request authorizes one standalone Scheduled
+  registration; ask only for necessary observation-contract facts that cannot
+  be discovered read-only. A stable schedule ID establishes
+  `registered_unverified`; a separately pre-authorized live fallback's stable
+  thread ID establishes `live_registered`. Neither state proves a successful
+  sample or execution path. Once the stable ID is returned, the owner stops
+  active polling. Keep monitoring read-only and return repair, retry,
+  cancellation, and follow-up decisions to the owner.
 - Use Goal mode only when explicitly requested. When an ordinary task grows
   into a multi-phase long task with a clear outcome, constraints, and
   verification, recommend `/goal` once at a meaningful boundary; do not enable

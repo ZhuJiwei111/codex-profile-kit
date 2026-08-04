@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PROFILE_SYNC_PYTHON}} \"${CODEX_HOME:-$HOME/.codex}/hooks/conda_base_guard.py\"",
+            "command": "{{PROFILE_SYNC_COMMAND:hooks/conda_base_guard.py}}",
+            "commandWindows": "{{PROFILE_SYNC_COMMAND_WINDOWS:hooks/conda_base_guard.py}}",
             "timeout": 10,
             "statusMessage": "Checking Conda base policy"
           }
@@ -17,7 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PROFILE_SYNC_PYTHON}} \"${CODEX_HOME:-$HOME/.codex}/hooks/no_autoresolution_guard.py\"",
+            "command": "{{PROFILE_SYNC_COMMAND:hooks/no_autoresolution_guard.py}}",
+            "commandWindows": "{{PROFILE_SYNC_COMMAND_WINDOWS:hooks/no_autoresolution_guard.py}}",
             "timeout": 10,
             "statusMessage": "Checking user-choice wait policy"
           }
