@@ -112,35 +112,50 @@ class ProfileContractTest(unittest.TestCase):
         )
         self.assertIn("allow_implicit_invocation: true", planning_metadata)
 
-        self.assertIn(
-            "Monitoring belongs to the launch contract", monitor_prose
-        )
         for contract in (
-            "Choose topology from verified capabilities, not project identity",
-            "Scheduled evaluator",
-            "Scheduled relay",
-            "Attached live turn",
-            "creation receipt proves only",
-            "Do not embed one project's paths, identifiers, hashes, stages",
-            "Reconcile existing tasks and recurrences before retrying.",
-            "proves its continuation topology",
-            "Define an event key",
-            "Do not copy growing logs, recursively scan broad trees",
-            "An unchanged state or quiet log is not a stall.",
-            "Otherwise report `suspected_stall`",
-            "Mark supervision `lost`",
+            "10 minutes or less",
+            "standalone Scheduled task",
+            "question card without auto-resolution",
+            "`~/.codex/HOST_LOCAL.md`",
+            "`ssh <alias>`",
+            "`ssh -G <alias>`",
+            "`BatchMode=yes`",
+            "stable schedule ID",
+            "`registered_unverified`",
+            "Do not wait for the first scheduled run",
+            "one bounded fresh sample and exits",
+            "creation timeouts and interrupted calls are ambiguous",
+            "pause any matching partial recurrence",
+            "create one isolated live task on the exact target host",
+            "does not authorize automatic live-task fallback",
+            "pause the exact recurrence before reporting",
+            "exit without messaging the owner",
+            "Queue one event to the owner task",
+            "Never interrupt a running owner turn",
+            "Do not archive",
+            "operating-system sleep suspends observation",
         ):
             self.assertIn(contract, monitor_prose)
+        for retired_topology in (
+            "Scheduled relay",
+            "nonce-bound",
+            "controller ledger",
+            "next wake",
+            "proof run",
+        ):
+            self.assertNotIn(retired_topology, monitor_prose)
         for project_specific in (
             "AIVC",
             "SCI-004",
             "/subing",
             "GSE194122",
+            "pretrain",
+            "a1001",
         ):
             self.assertNotIn(project_specific, monitor_prose)
         self.assertIn("allow_implicit_invocation: true", monitor_metadata)
-        self.assertIn("any authorized long-running job", monitor_metadata)
-        self.assertIn("select and prove a continuation topology", monitor_metadata)
+        self.assertIn("without blocking the owner", monitor_metadata)
+        self.assertIn("register low-cost read-only monitoring", monitor_metadata)
         self.assertIn(
             "returns one successful initial status sample", coordination_prose
         )
