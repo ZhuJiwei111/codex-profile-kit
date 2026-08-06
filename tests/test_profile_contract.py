@@ -58,6 +58,22 @@ class ProfileContractTest(unittest.TestCase):
             if description.group(1).startswith("Manual only."):
                 self.assertIn("allow_implicit_invocation: false", metadata)
 
+    def test_profile_sync_reports_material_file_contents(self) -> None:
+        profile_sync_skill = (
+            PROFILE / "skills" / "personal-profile-sync" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        prose = " ".join(profile_sync_skill.split())
+
+        for contract in (
+            "material contents of the reviewed diff",
+            "actual rules, behavior, configuration keys, or managed entries",
+            "When `AGENTS.md` changes",
+            "When `profile-manifest.toml` changes",
+            "Do not replace this content summary with an abstract objective",
+            "use enough of them to cover every material change",
+        ):
+            self.assertIn(contract, prose)
+
     def test_portable_config_has_exact_owned_leaf_keys(self) -> None:
         with (ROOT / "personal.config.toml").open("rb") as handle:
             leaves = profile_sync.flatten(tomllib.load(handle))

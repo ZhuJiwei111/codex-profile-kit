@@ -15,7 +15,8 @@ active profile state back into the repository.
   same `codex-tools` Python recorded in `HOST_LOCAL.md`; that interpreter is
   rendered into the host's hook definition.
 - update from GitHub: inspect local state, fetch, and accept only a selected
-  non-conflicting update before preview/apply.
+  non-conflicting update before preview/apply. Review the accepted diff well
+  enough to explain its material contents.
 - submit or sync to GitHub: validate and inspect the exact diff, stage only
   task-owned paths, create one factual commit, and non-force push. Do not create
   a PR unless separately requested.
@@ -39,5 +40,24 @@ caches, plugins, host facts, connection contracts, and unlisted configuration.
 
 When hook definitions change, keep any runner still loaded by the current task.
 Use a fresh task to review `/hooks` trust and dispatch before retiring that old
-runner. Report the backup path, commit, checks, unrun work, and remaining fresh
-task action.
+runner.
+
+## Report The Update
+
+After every accepted GitHub update or applied portable-profile update, briefly
+summarize the material contents of the reviewed diff. For each materially
+changed managed file or logical group, name it and state the actual rules,
+behavior, configuration keys, or managed entries added, removed, or revised.
+Group files only when they implement the same change; omit purely mechanical
+files that add no useful information.
+
+When `AGENTS.md` changes, summarize the concrete defaults or workflow rules
+that changed. When `profile-manifest.toml` changes, name the managed or retired
+entries affected. Apply the same standard to skills, hooks, and configuration
+leaves. Do not replace this content summary with an abstract objective such as
+"updated AGENTS.md and manifest to enable project journaling." Keep the bullets
+brief, but use enough of them to cover every material change. If no
+profile-visible change occurred, say so.
+
+Also report the source commit, backup path when deployment changed the target,
+checks, material unrun work, and any remaining fresh-task action.
