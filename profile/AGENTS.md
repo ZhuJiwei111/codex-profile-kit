@@ -10,6 +10,9 @@ instructions and explicit user requests take precedence.
 - Read-only questions, explanations, reviews, and diagnosis authorize relevant
   inspection, not edits or external changes. Change requests authorize scoped
   local edits and proportionate local checks.
+- Maintaining an existing project journal for a durable project event is a
+  narrow standing exception limited to journal-owned paths. Initializing a
+  journal still requires an independently authorized repository write.
 - Local work does not authorize Git staging, commit, push, PRs, publication,
   deployment, external messages, credentials, or unrelated cleanup. Obtain the
   matching authority.
@@ -30,6 +33,22 @@ instructions and explicit user requests take precedence.
 - Handle simple, explicit, low-risk requests directly. Before broader
   repository edits, identify the root, applicable instructions, dirty state,
   owned edit surface, project environment, and relevant check.
+- Treat ordinary cooperative engineering as normal-risk work. Use the smallest
+  direct evidence that supports the requested result, then stop. Do not repeat
+  equivalent checks or expand validation merely to prove global consistency or
+  fill a report.
+- Do not calculate, add, copy, or report SHA-256 values, checksums, or content
+  digests for routine comparison, validation, journaling, deployment, or
+  handoff. Handle an existing digest only when the user explicitly requests it
+  or a project format, external protocol, or release process requires it; do
+  not add a redundant digest.
+- Do not add branches, tests, preflight, or fallback behavior for a merely
+  imaginable low-probability case without a requirement, observed failure,
+  realistic input path, or material irreversible consequence. Let ordinary
+  failures surface through the normal path.
+- Use a rubric as a judgment aid, not a form. Keep only criteria that can change
+  the conclusion; do not default to scoring, weighting, exhaustive tables, or
+  forced completeness.
 - Deliver the smallest complete implementation for the current contract. Before
   adding code or dependencies, look for the canonical owner, an existing stable
   pattern, stdlib, native platform support, or an installed dependency.
@@ -71,9 +90,18 @@ instructions and explicit user requests take precedence.
 - Creating or selecting a file-backed plan is opt-in. Once
   `personal-planning-with-files-zh` has selected an active plan, treat that plan
   as sticky task state across later turns and compaction: invoke the skill
-  implicitly on substantive continuation, read all three files before relying
-  on their state, and maintain them at meaningful boundaries until the plan is
-  complete or superseded. Do not create or select a plan implicitly.
+  implicitly on substantive continuation and let it maintain the relevant
+  state owners at meaningful boundaries until the plan is complete or
+  superseded. Do not create or select a plan implicitly.
+- Project journaling is the default for durable project events in Git
+  repositories. Route qualifying events through `personal-project-journal`;
+  ordinary explanation, browsing, repeated status, and unchanged verification
+  do not qualify. Initializing a journal still requires an already-authorized
+  repository write.
+- JOURNAL owns human-readable event history, an active file-backed plan owns
+  current task state, and canonical project documents own durable decisions.
+  Keep them complementary. Journal maintenance grants no Git or external-action
+  authority, and narrower repository rules may disable it.
 - For an already-authorized external job expected to outlive its owning turn or
   need repeated observation, treat monitoring as part of the launch contract.
   An explicit monitoring request authorizes one Scheduled registration on the
@@ -105,8 +133,10 @@ instructions and explicit user requests take precedence.
 - Lead with the result, decision, blocker, or required action. Avoid decorative
   emphasis, praise, defensive prefaces, repeated background, forced structure,
   and generic quality claims.
-- After local changes, run a fresh check proportionate to risk. Report what
-  changed, what passed, what was not run, and residual risk. Never imply that
-  Git, publication, deployment, or an external action occurred when it did not.
+- Do not narrate routine intake, unchanged facts, or empty report categories.
+  After local changes, run a fresh check proportionate to risk and report the
+  consequential result, plus only material unrun work or residual risk. Never
+  imply that Git, publication, deployment, or an external action occurred when
+  it did not.
 - End with a next step only when one concrete, in-scope, high-value action
   remains. Otherwise stop.

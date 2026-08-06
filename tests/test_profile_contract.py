@@ -58,6 +58,22 @@ class ProfileContractTest(unittest.TestCase):
             if description.group(1).startswith("Manual only."):
                 self.assertIn("allow_implicit_invocation: false", metadata)
 
+    def test_profile_sync_reports_material_file_contents(self) -> None:
+        profile_sync_skill = (
+            PROFILE / "skills" / "personal-profile-sync" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        prose = " ".join(profile_sync_skill.split())
+
+        for contract in (
+            "material contents of the reviewed diff",
+            "actual rules, behavior, configuration keys, or managed entries",
+            "When `AGENTS.md` changes",
+            "When `profile-manifest.toml` changes",
+            "Do not replace this content summary with an abstract objective",
+            "use enough of them to cover every material change",
+        ):
+            self.assertIn(contract, prose)
+
     def test_portable_config_has_exact_owned_leaf_keys(self) -> None:
         with (ROOT / "personal.config.toml").open("rb") as handle:
             leaves = profile_sync.flatten(tomllib.load(handle))
@@ -115,10 +131,12 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn(
             "Do not create or select a plan implicitly.", planning_prose
         )
-        self.assertIn("every substantive continuation turn", planning_prose)
-        self.assertIn(
-            "one consistency pass across all three files", planning_prose
-        )
+        self.assertIn("two compact current-state files", planning_prose)
+        self.assertIn("`task_plan.md`: the sole owner", planning_prose)
+        self.assertIn("`findings.md`", planning_prose)
+        self.assertIn("Do not create a new `progress.md`", planning_prose)
+        self.assertIn("optional legacy record", planning_prose)
+        self.assertNotIn("read all three files", planning_prose)
         self.assertIn("allow_implicit_invocation: true", planning_metadata)
 
         for contract in (
@@ -222,6 +240,89 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn(
             "Do not create or select a plan implicitly.", agents_prose
         )
+
+    def test_default_project_journal_is_implicit_and_separate(self) -> None:
+        journal_root = PROFILE / "skills" / "personal-project-journal"
+        journal = (journal_root / "SKILL.md").read_text(encoding="utf-8")
+        metadata = (journal_root / "agents" / "openai.yaml").read_text(
+            encoding="utf-8"
+        )
+        index = (journal_root / "assets" / "journal-index.md").read_text(
+            encoding="utf-8"
+        )
+        readme = (journal_root / "assets" / "journal-readme.md").read_text(
+            encoding="utf-8"
+        )
+        month = (journal_root / "assets" / "journal-month.md").read_text(
+            encoding="utf-8"
+        )
+        planning = (
+            PROFILE
+            / "skills"
+            / "personal-planning-with-files-zh"
+            / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        agents = (PROFILE / "AGENTS.md").read_text(encoding="utf-8")
+        journal_prose = " ".join(journal.split())
+        planning_prose = " ".join(planning.split())
+        agents_prose = " ".join(agents.split())
+
+        self.assertIn("allow_implicit_invocation: true", metadata)
+        self.assertIn("$personal-project-journal", metadata)
+        for contract in (
+            "durable project event",
+            "Do not initialize a journal during a read-only task",
+            "narrow standing write exception",
+            "high",
+            "medium",
+            "routine",
+            "Never predict a future commit or push",
+            "JOURNAL owns chronological event history",
+            "It never authorizes implementation",
+        ):
+            self.assertIn(contract, journal_prose)
+        self.assertIn("<!-- journal-months -->", index)
+        self.assertIn("{{YEAR_MONTH}}", index)
+        self.assertIn("<!-- journal-entries -->", month)
+        self.assertIn("{{YEAR_MONTH}}", month)
+        self.assertIn("Completion alone is never a reason", readme)
+        repository_journal = ROOT / ".agent"
+        self.assertEqual(
+            (repository_journal / "README.md").read_text(encoding="utf-8"),
+            readme,
+        )
+        repository_index = (repository_journal / "JOURNAL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("<!-- journal-months -->", repository_index)
+        months = re.findall(
+            r"\./journal/(\d{4}-\d{2})\.md", repository_index
+        )
+        self.assertTrue(months)
+        self.assertEqual(months, sorted(set(months), reverse=True))
+        for month_name in months:
+            month_path = repository_journal / "journal" / f"{month_name}.md"
+            self.assertTrue(month_path.is_file(), month_path)
+            repository_month = month_path.read_text(encoding="utf-8")
+            self.assertIn(
+                f"# {month_name} Project Journal", repository_month
+            )
+            self.assertIn("<!-- journal-entries -->", repository_month)
+        for contract in (
+            "Project journaling is the default for durable project events",
+            "Initializing a journal still requires",
+            "JOURNAL owns human-readable event history",
+            "Journal maintenance grants no Git",
+        ):
+            self.assertIn(contract, agents_prose)
+        for contract in (
+            "continuing importance",
+            "never reduce an important completed outcome mechanically",
+            "let JOURNAL own chronological event history",
+            "not a competing current-state ledger",
+            "owned independently by `personal-project-journal`",
+        ):
+            self.assertIn(contract, planning_prose)
 
 
 if __name__ == "__main__":

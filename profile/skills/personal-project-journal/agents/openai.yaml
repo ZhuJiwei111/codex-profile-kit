@@ -1,0 +1,6 @@
+interface:
+  display_name: "Project Journal"
+  short_description: "Maintain human-auditable project journals"
+  default_prompt: "Use $personal-project-journal to initialize or update this project's audit journal."
+policy:
+  allow_implicit_invocation: true

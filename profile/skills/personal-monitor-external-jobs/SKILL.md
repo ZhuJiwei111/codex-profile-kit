@@ -39,6 +39,28 @@ cadence. Use only values verified for the current job. Never embed a concrete
 host, port, project path, job ID, stage name, threshold, or artifact layout as
 a portable default.
 
+## Use One Direct Registration Topology
+
+Keep registration on the shortest product-native path.
+
+- When the owner already runs on the local controller and can call the native
+  scheduling API, perform preflight, registration, and readback in the owner.
+  Do not create a setup task.
+- When the owner runs on another host, create exactly one local setup task
+  directly from the owner. The setup task performs local-controller preflight,
+  exact recurrence reconciliation, one registration, and one readback, then
+  stops. It is a one-time registration surface, not a monitor, and must never
+  poll the external job after registration.
+- Never create a same-host coordinator, relay task, or intermediate task before
+  the local setup task. Do not invoke `personal-multiline-coordination` merely
+  to register recurring monitoring. If the owner cannot create or reach the
+  one local setup task, report that exact blocker instead of building a relay
+  chain.
+
+Report the local setup task ID separately from the Scheduled automation ID.
+Once a stable automation ID and registration state reach the owner, both the
+owner and setup task stop waiting or polling.
+
 ## Fix Controller Identity And Model
 
 Reuse one fixed local monitoring controller for long jobs. Configure that task
