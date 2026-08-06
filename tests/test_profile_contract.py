@@ -210,6 +210,93 @@ class ProfileContractTest(unittest.TestCase):
             "Do not create or select a plan implicitly.", agents_prose
         )
 
+    def test_default_project_journal_is_implicit_and_separate(self) -> None:
+        journal_root = PROFILE / "skills" / "personal-project-journal"
+        journal = (journal_root / "SKILL.md").read_text(encoding="utf-8")
+        metadata = (journal_root / "agents" / "openai.yaml").read_text(
+            encoding="utf-8"
+        )
+        index = (journal_root / "assets" / "journal-index.md").read_text(
+            encoding="utf-8"
+        )
+        readme = (journal_root / "assets" / "journal-readme.md").read_text(
+            encoding="utf-8"
+        )
+        month = (journal_root / "assets" / "journal-month.md").read_text(
+            encoding="utf-8"
+        )
+        planning = (
+            PROFILE
+            / "skills"
+            / "personal-planning-with-files-zh"
+            / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        agents = (PROFILE / "AGENTS.md").read_text(encoding="utf-8")
+        journal_prose = " ".join(journal.split())
+        planning_prose = " ".join(planning.split())
+        agents_prose = " ".join(agents.split())
+
+        self.assertIn("allow_implicit_invocation: true", metadata)
+        self.assertIn("$personal-project-journal", metadata)
+        for contract in (
+            "every substantive task",
+            "Do not initialize a journal during a read-only task",
+            "narrow standing write exception",
+            "high",
+            "medium",
+            "routine",
+            "Never predict a future commit or push",
+            "JOURNAL owns chronological audit history",
+            "It never authorizes implementation",
+        ):
+            self.assertIn(contract, journal_prose)
+        self.assertIn("<!-- journal-months -->", index)
+        self.assertIn("{{YEAR_MONTH}}", index)
+        self.assertIn("<!-- journal-entries -->", month)
+        self.assertIn("{{YEAR_MONTH}}", month)
+        self.assertIn("Completion alone is never a reason", readme)
+        repository_journal = ROOT / ".agent"
+        self.assertFalse(repository_journal.is_symlink())
+        self.assertEqual(
+            (repository_journal / "README.md").read_text(encoding="utf-8"),
+            readme,
+        )
+        repository_index = (repository_journal / "JOURNAL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("<!-- journal-months -->", repository_index)
+        months = re.findall(
+            r"\./journal/(\d{4}-\d{2})\.md", repository_index
+        )
+        self.assertTrue(months)
+        self.assertEqual(months, sorted(set(months), reverse=True))
+        for month_name in months:
+            month_path = repository_journal / "journal" / f"{month_name}.md"
+            self.assertTrue(month_path.is_file(), month_path)
+            self.assertFalse(month_path.is_symlink(), month_path)
+            repository_month = month_path.read_text(encoding="utf-8")
+            self.assertIn(
+                f"# {month_name} Project Journal", repository_month
+            )
+            self.assertIn("<!-- journal-entries -->", repository_month)
+        for contract in (
+            "Project journaling is the default",
+            "including for read-only substantive tasks",
+            "Initializing a journal still requires",
+            "JOURNAL owns human-readable history",
+            "subagents return evidence",
+            "Journal maintenance grants no Git",
+        ):
+            self.assertIn(contract, agents_prose)
+        for contract in (
+            "continuing importance",
+            "never reduce a completed phase mechanically to one line",
+            "let JOURNAL own chronological audit history",
+            "not a competing current-state ledger",
+            "owned independently by `personal-project-journal`",
+        ):
+            self.assertIn(contract, planning_prose)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -34,8 +34,9 @@ Maintain only:
   one next action;
 - `findings.md`: only facts, decisions, assumptions, unknowns, and evidence
   anchors that still affect later work;
-- `progress.md`: completed outcomes, most recent relevant checks, current
-  blocker or running work, and a directly resumable next action.
+- `progress.md`: completed outcomes retained in proportion to their continuing
+  importance, most recent relevant checks, current blocker or running work, and
+  a directly resumable next action.
 
 An older plan without an explicit status may count as active only when its
 unfinished current phase and next action clearly match the task.
@@ -52,10 +53,14 @@ require a plan write. A meaningful state change does.
 
 ## Keep Current State
 
-Overwrite or fold in new information; do not append a transcript. Remove or
-mark superseded detail when it no longer controls the task. Do not record every
-tool call, raw output, complete timeline, repeated decision, inventory count, or
-format-driven placeholder.
+Overwrite or fold in new information; do not append a transcript. Retain
+completed outcomes in proportion to their future and audit importance. Preserve
+enough rationale and evidence for scope changes, consequential decisions,
+critical gates, expensive failures, and pitfalls that prevent costly
+repetition. Compact routine or superseded detail when it no longer controls the
+task; never reduce a completed phase mechanically to one line merely because it
+is old. Do not record every tool call, raw output, complete timeline, repeated
+decision, inventory count, or format-driven placeholder.
 
 Update only when scope or a decision changes, a phase changes, evidence alters
 the strategy, a blocker appears, or before compaction, handoff, stopping, or
@@ -67,13 +72,23 @@ status and phase, running work, blocker, latest relevant check, and the one next
 action must agree. In particular, completed or retired work must not remain
 described as running, and superseded next actions must be folded away.
 
+## Coordinate With The Project Journal
+
+When `personal-project-journal` is active, keep this plan as the sole owner of
+current task state and let JOURNAL own chronological audit history. Update the
+plan with what remains true and journal only the substantive delta; link to
+canonical decisions and evidence rather than copying them into both records.
+The journal workflow is independently owned and is not a competing current-state
+ledger created by this skill.
+
 ## Stop
 
 At closure, mark the plan complete or superseded and fold the final outcome,
 checks, remaining risk, and any real continuation point into the same files.
 That terminal status ends implicit maintenance. Do not create automatic
-archives, successor plans, hooks, validators, ledgers, Git actions, or a forced
-continuation state machine.
+archives, successor plans, hooks, validators, Git actions, or a forced
+continuation state machine. Any active project-journal entry is owned
+independently by `personal-project-journal`.
 
 This skill does not own grilling decisions, formal documentation, external-job
 monitoring, or task-history reconstruction.

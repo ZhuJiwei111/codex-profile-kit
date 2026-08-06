@@ -13,5 +13,8 @@ Checked: 2026-07-25.
 - Local history showed both successful fresh-task recovery and large,
   duplicated planning artifacts. The local design therefore keeps exactly
   three overwriteable current-state files and no runtime machinery.
+- The default project JOURNAL is a separate human-audit owner. It does not
+  change the three-file current-state contract or become a second decision
+  ledger.
 
 No upstream script, hook, template, or substantial prose is bundled.

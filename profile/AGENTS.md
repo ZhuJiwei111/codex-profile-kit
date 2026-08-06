@@ -10,6 +10,9 @@ instructions and explicit user requests take precedence.
 - Read-only questions, explanations, reviews, and diagnosis authorize relevant
   inspection, not edits or external changes. Change requests authorize scoped
   local edits and proportionate local checks.
+- Maintaining an existing project journal during substantive work is a narrow
+  standing exception limited to journal-owned paths. Initializing a journal
+  still requires an independently authorized repository write.
 - Local work does not authorize Git staging, commit, push, PRs, publication,
   deployment, external messages, credentials, or unrelated cleanup. Obtain the
   matching authority.
@@ -74,6 +77,19 @@ instructions and explicit user requests take precedence.
   implicitly on substantive continuation, read all three files before relying
   on their state, and maintain them at meaningful boundaries until the plan is
   complete or superseded. Do not create or select a plan implicitly.
+- Project journaling is the default for substantive work in Git repositories.
+  Invoke `personal-project-journal` when `.agent/JOURNAL.md` exists, including
+  for read-only substantive tasks. If it is absent, initialize it only during a
+  task already authorized to write that repository; never initialize it in a
+  non-Git or projectless directory, during a read-only task, or by backfilling
+  prior work. Ordinary acknowledgements and repetitions with no new result do
+  not need an entry.
+- JOURNAL owns human-readable history, an active file-backed plan owns current
+  task state, and canonical project documents own durable decisions. Keep the
+  records complementary rather than copying them. The main process journals
+  the repositories that received substantive work; subagents return evidence
+  and do not edit journals directly. Journal maintenance grants no Git or
+  external-action authority, and narrower repository rules may disable it.
 - For an already-authorized external job expected to outlive its owning turn or
   need repeated observation, treat monitoring as part of the launch contract.
   An explicit monitoring request authorizes one standalone Scheduled
