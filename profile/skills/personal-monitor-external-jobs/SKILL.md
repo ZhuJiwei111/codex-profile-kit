@@ -47,6 +47,28 @@ Use only values verified for the current job. Never embed a concrete host,
 port, project path, job ID, stage name, threshold, or artifact layout as a
 portable default.
 
+## Use One Direct Registration Topology
+
+Keep registration on the shortest product-native path.
+
+- When the owner already runs on the local controller and can call the native
+  scheduling API, perform preflight, registration, and readback in the owner.
+  Do not create a setup task.
+- When the owner runs on another host, create exactly one local setup task
+  directly from the owner. The setup task performs local-controller preflight,
+  exact recurrence reconciliation, one registration, and one readback, then
+  stops. It is a one-time registration surface, not a monitor, and must never
+  poll the external job after registration.
+- Never create a same-host coordinator, relay task, or intermediate task before
+  the local setup task. Do not invoke `personal-multiline-coordination` merely
+  to register recurring monitoring. If the owner cannot create or reach the
+  one local setup task, report that exact blocker instead of building a relay
+  chain.
+
+Report the local setup task ID separately from the Scheduled automation ID.
+Once a stable automation ID and registration state reach the owner, both the
+owner and setup task stop waiting or polling.
+
 ## Resolve The Local Controller And SSH Alias
 
 Run long Scheduled monitoring from the local controller. Treat that
@@ -86,9 +108,19 @@ Prefer one standalone Scheduled task. Configure each scheduled invocation so
 that it performs one bounded fresh sample and exits. It must not sleep, loop,
 start a watcher, copy a growing log, recursively scan broad trees, or control
 the external job. Choose the cheapest cadence consistent with the evidence
-rate. Dynamically select the lowest-cost available model known to support the
-required tools, with low reasoning; if capability or cost is not exposed, keep
-the destination default rather than guessing.
+rate.
+
+Before creating any local setup task, Scheduled invocation, or authorized live
+fallback, inspect whether its destination supports `gpt-5.6-luna` and the
+required tools. When supported, explicitly select `gpt-5.6-luna` with low
+reasoning for every such execution surface. When Luna is unavailable, use the
+destination default model with low reasoning; do not choose another concrete
+fallback model. For a task API, omit the model override while setting low
+reasoning when that is how the destination default is expressed. For a
+Scheduled API that requires a concrete model, use a reliably exposed
+destination-default value. If the default cannot be discovered or expressed,
+report the exact blocker instead of guessing, copying the owner model, or
+hard-coding another model.
 
 Scheduled registration succeeds when the product returns a stable schedule ID
 and, when inspection is supported, the same schedule reads back as enabled with
@@ -109,7 +141,7 @@ created by this registration attempt or discovered as ambiguous during it. It
 never applies to historical, merely similar, or unrelated recurrences. A stable
 thread ID is sufficient to report `live_registered`; do not wait for its first
 sample. The dedicated live task inherits the same read-only contract, cadence,
-and dynamic low-cost model policy and monitors through terminal state, blocker,
+and Luna/low model policy and monitors through terminal state, blocker,
 identity loss, or a user-owned decision. It may use efficient foreground waits,
 but must not busy-poll. Without the required pre-authorization, or if neither
 monitor can be registered, report the exact blocker without creating duplicates
