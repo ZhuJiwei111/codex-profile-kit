@@ -1,8 +1,8 @@
 # `.agent/` project audit journal
 
-This journal is the human-readable history of substantive work in this Git
-repository. It records what happened and why; it is not proof of current state,
-an active task plan, or the binding decision owner.
+This journal is the human-readable history of durable project events in this
+Git repository. It records what happened and why; it is not proof of current
+state, an active task plan, or the binding decision owner.
 
 ## Layout
 
@@ -17,33 +17,44 @@ an active task plan, or the binding decision owner.
   costly pitfalls, external actions, handoffs, and final outcomes.
 - `medium`: material implementation, diagnosis, phase progress, or changed
   risk.
-- `routine`: ordinary substantive analysis, verification, or maintenance.
+- `routine`: ordinary durable maintenance or implementation.
 
 Detail is proportional to importance. Completion alone is never a reason to
 compress an important result to one line.
 
-## Entry template
+## What belongs here
+
+Record repository changes, project-level decisions, confirmed root causes,
+important blockers or costly failures, consequential external actions,
+handoffs, and final outcomes. Ordinary explanation, browsing, repeated status,
+and unchanged verification do not need an entry.
+
+## Entry shape
 
 ```markdown
 ## YYYY-MM-DDTHH:MM:SS+08:00 · high|medium|routine · topic
 
-- **目标**：request or purpose
-- **结果**：outcome or decision
-- **改动**：task changes, separating journal maintenance
-- **验证 / 证据**：fresh checks or evidence anchors
-- **决定 / 风险**：authority, supersession, caveat, or remaining risk
-- **状态 / 后续**：observed state and concrete continuation
+Concise request and outcome summary.
+
+- **改动**：include only when useful
+- **证据**：include only evidence already gathered and worth retaining
+- **影响 / 后续**：include only when consequential
 ```
+
+Labels are optional. A routine entry can be one to three sentences. Do not fill
+unused fields or run checks merely to complete an entry.
 
 ## Rules
 
-1. Preserve historical entry bytes. Add a correction entry instead of silently
-   rewriting an earlier fact.
+1. Preserve the meaning of historical entries. Correct a material fact,
+   decision, or conclusion with a new entry; spelling, punctuation, and
+   meaning-preserving formatting may be fixed directly.
 2. Do not record secrets, full internal addresses, personal data, raw large
    logs, or unsupported inference.
 3. Record only Git and external state already observed before the journal edit;
-   do not predict later commit or push results.
+   do not predict later commit or push results or create an entry solely for
+   ordinary Git mechanics.
 4. Keep journal files trackable, but never stage, commit, or push without
    matching authority.
-5. When a safe exact append is impossible, leave the journal unchanged and
-   report the missing entry.
+5. When the normal append fails, leave the journal unchanged and report it
+   instead of adding fallback write paths.

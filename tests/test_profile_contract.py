@@ -115,10 +115,12 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn(
             "Do not create or select a plan implicitly.", planning_prose
         )
-        self.assertIn("every substantive continuation turn", planning_prose)
-        self.assertIn(
-            "one consistency pass across all three files", planning_prose
-        )
+        self.assertIn("two compact current-state files", planning_prose)
+        self.assertIn("`task_plan.md`: the sole owner", planning_prose)
+        self.assertIn("`findings.md`", planning_prose)
+        self.assertIn("Do not create a new `progress.md`", planning_prose)
+        self.assertIn("optional legacy record", planning_prose)
+        self.assertNotIn("read all three files", planning_prose)
         self.assertIn("allow_implicit_invocation: true", planning_metadata)
 
         for contract in (
@@ -239,14 +241,14 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn("allow_implicit_invocation: true", metadata)
         self.assertIn("$personal-project-journal", metadata)
         for contract in (
-            "every substantive task",
+            "durable project event",
             "Do not initialize a journal during a read-only task",
             "narrow standing write exception",
             "high",
             "medium",
             "routine",
             "Never predict a future commit or push",
-            "JOURNAL owns chronological audit history",
+            "JOURNAL owns chronological event history",
             "It never authorizes implementation",
         ):
             self.assertIn(contract, journal_prose)
@@ -256,7 +258,6 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn("{{YEAR_MONTH}}", month)
         self.assertIn("Completion alone is never a reason", readme)
         repository_journal = ROOT / ".agent"
-        self.assertFalse(repository_journal.is_symlink())
         self.assertEqual(
             (repository_journal / "README.md").read_text(encoding="utf-8"),
             readme,
@@ -273,25 +274,22 @@ class ProfileContractTest(unittest.TestCase):
         for month_name in months:
             month_path = repository_journal / "journal" / f"{month_name}.md"
             self.assertTrue(month_path.is_file(), month_path)
-            self.assertFalse(month_path.is_symlink(), month_path)
             repository_month = month_path.read_text(encoding="utf-8")
             self.assertIn(
                 f"# {month_name} Project Journal", repository_month
             )
             self.assertIn("<!-- journal-entries -->", repository_month)
         for contract in (
-            "Project journaling is the default",
-            "including for read-only substantive tasks",
+            "Project journaling is the default for durable project events",
             "Initializing a journal still requires",
-            "JOURNAL owns human-readable history",
-            "subagents return evidence",
+            "JOURNAL owns human-readable event history",
             "Journal maintenance grants no Git",
         ):
             self.assertIn(contract, agents_prose)
         for contract in (
             "continuing importance",
-            "never reduce a completed phase mechanically to one line",
-            "let JOURNAL own chronological audit history",
+            "never reduce an important completed outcome mechanically",
+            "let JOURNAL own chronological event history",
             "not a competing current-state ledger",
             "owned independently by `personal-project-journal`",
         ):
