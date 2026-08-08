@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Reference Verifier"
+  short_description: "Cross-check bibliography fields across sources"
+  default_prompt: "Use $nature-ref-verifier to cross-check every field in these references across scholarly sources."
+
+policy:
+  allow_implicit_invocation: false

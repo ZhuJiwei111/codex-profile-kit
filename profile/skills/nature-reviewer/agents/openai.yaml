@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Reviewer"
+  short_description: "Simulate grounded pre-submission peer review"
+  default_prompt: "Use $nature-reviewer to run a grounded pre-submission peer review of this manuscript."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Experiment Log"
+  short_description: "Structure raw experiment notes for Obsidian"
+  default_prompt: "Use $nature-experiment-log to turn these raw experiment notes into a structured Obsidian record."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Shared References"
+  short_description: "Support explicit Nature workflows with shared rules"
+  default_prompt: "Use $nature-shared only as an internal dependency requested by another Nature workflow."
+
+policy:
+  allow_implicit_invocation: false

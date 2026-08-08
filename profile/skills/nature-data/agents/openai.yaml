@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Data"
+  short_description: "Draft Nature-ready data availability materials"
+  default_prompt: "Use $nature-data to draft a data availability statement, repository plan, and FAIR checklist."
+
+policy:
+  allow_implicit_invocation: false

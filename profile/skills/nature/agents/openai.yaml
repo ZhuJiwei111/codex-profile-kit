@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Skill Router"
+  short_description: "Route one request to portable Nature workflows"
+  default_prompt: "Use $nature to select and apply the right installed Nature workflow for this task."
+
+policy:
+  allow_implicit_invocation: false

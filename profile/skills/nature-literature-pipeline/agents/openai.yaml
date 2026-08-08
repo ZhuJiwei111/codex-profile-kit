@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Literature Pipeline"
+  short_description: "Run evidence-led literature discovery pipelines"
+  default_prompt: "Use $nature-literature-pipeline to design an evidence-led literature discovery and delivery pipeline."
+
+policy:
+  allow_implicit_invocation: false

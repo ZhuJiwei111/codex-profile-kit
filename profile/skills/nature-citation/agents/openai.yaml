@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Citation"
+  short_description: "Attach high-quality sources to manuscript claims"
+  default_prompt: "Use $nature-citation to find and attach high-quality sources to these manuscript claims."
+
+policy:
+  allow_implicit_invocation: false
