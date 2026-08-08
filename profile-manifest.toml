@@ -6,6 +6,17 @@ files = [
 ]
 
 trees = [
+  "skills/ask-matt",
+  "skills/code-review",
+  "skills/codebase-design",
+  "skills/diagnosing-bugs",
+  "skills/domain-modeling",
+  "skills/grill-me",
+  "skills/grill-with-docs",
+  "skills/grilling",
+  "skills/handoff",
+  "skills/implement",
+  "skills/improve-codebase-architecture",
   "skills/personal-code-documentation",
   "skills/personal-code-simplifier",
   "skills/personal-codex-hook-rules",
@@ -24,6 +35,20 @@ trees = [
   "skills/personal-temporary-work",
   "skills/personal-thread-closeout",
   "skills/personal-triad-discussion",
+  "skills/prototype",
+  "skills/research",
+  "skills/resolving-merge-conflicts",
+  "skills/setup-matt-pocock-skills",
+  "skills/tdd",
+  "skills/teach",
+  "skills/to-questionnaire",
+  "skills/to-spec",
+  "skills/to-tickets",
+  "skills/triage",
+  "skills/wait-what",
+  "skills/wayfinder",
+  "skills/wizard",
+  "skills/writing-for-agents",
 ]
 
 retired_files = [

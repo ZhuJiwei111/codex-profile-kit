@@ -54,7 +54,12 @@ class ProfileContractTest(unittest.TestCase):
             metadata = (skill / "agents" / "openai.yaml").read_text(
                 encoding="utf-8"
             )
-            self.assertIn(f"${name}", metadata)
+            self.assertIn("display_name:", metadata)
+            self.assertIn("short_description:", metadata)
+            if name.startswith("personal-"):
+                self.assertIn(f"${name}", metadata)
+            if "disable-model-invocation: true" in frontmatter:
+                self.assertIn("allow_implicit_invocation: false", metadata)
             if description.group(1).startswith("Manual only."):
                 self.assertIn("allow_implicit_invocation: false", metadata)
 
