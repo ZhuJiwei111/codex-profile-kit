@@ -43,6 +43,7 @@ CONFIG_KEYS = (
     "apps._default.approvals_reviewer",
     "apps._default.default_tools_approval_mode",
     "apps.connector_76869538009648d5b282a4bb21c3d157.enabled",
+    "apps.connector_76869538009648d5b282a4bb21c3d157.default_tools_approval_mode",
 )
 
 
@@ -454,9 +455,9 @@ def render_hooks(runtime: Path, codex_home: Path) -> Leaf:
         return item
 
     rendered = replace_tokens(value)
-    if substitutions != {"posix": 2, "windows": 2}:
+    if substitutions != {"posix": 3, "windows": 3}:
         raise SyncError(
-            "portable hooks.json must contain exactly two POSIX and two Windows command tokens"
+            "portable hooks.json must contain exactly three POSIX and three Windows command tokens"
         )
     data = (
         json.dumps(rendered, ensure_ascii=False, indent=2) + "\n"

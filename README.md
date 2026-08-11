@@ -10,7 +10,7 @@ active profile 不是反向导出源。
 
 ## 管理范围
 
-- `profile/`：按目标相对路径保存 `AGENTS.md`、两个 hooks 和 personal
+- `profile/`：按目标相对路径保存 `AGENTS.md`、三个 hooks 和 personal
   skills，以及固定版本、经审查的第三方 skills。
 - `profile-manifest.toml`：列出受管 file/tree 和经过审阅的精确退役
   file/tree；除这些退役项外，相邻的外部 skill、plugin cache 和未列出文件不受

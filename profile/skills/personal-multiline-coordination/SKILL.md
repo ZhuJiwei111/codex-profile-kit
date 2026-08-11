@@ -1,6 +1,6 @@
 ---
 name: personal-multiline-coordination
-description: Coordinate persistent Codex App tasks, isolated Git worktrees, and cross-line intake; invoke implicitly only for read-only ownership reconciliation when existing task or worktree identity is ambiguous. Not for managed subagents or recurring external-job monitoring.
+description: Coordinate persistent Codex App tasks, isolated Git worktrees, and cross-line intake; invoke implicitly only for read-only ownership reconciliation when existing task or worktree identity is ambiguous. Not for managed subagents or same-task deferred commands.
 ---
 
 # Personal Multiline Coordination
@@ -35,13 +35,10 @@ checks source, revision, scope, and conflicts before accepting a handoff; do not
 vote by task count or let several lines publish competing “final” states.
 
 Use managed subagents for bounded one-shot internal workers. Use
-`personal-monitor-external-jobs` for repeated observation of an external job.
-Creating an App task still requires matching authority, and a monitoring
-handoff follows `personal-monitor-external-jobs`: a stable schedule ID establishes
-`registered_unverified`, while a pre-authorized live fallback's stable thread ID
-establishes `live_registered`. Neither state claims a successful sample or a
-verified execution path. Once the stable ID is returned, the owner stops active
-polling. A parent discussion task does not duplicate routine polling.
+`personal-defer-and-resume` when an authorized non-interactive command should
+wake and continue the same task after completion or a task-specific attention
+condition. Do not create a persistent App task, worktree, Scheduled task, Luna
+poller, setup task, or relay merely to wait for that command.
 
 ## Intake And Stop
 

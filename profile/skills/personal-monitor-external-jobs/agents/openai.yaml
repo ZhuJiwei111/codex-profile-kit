@@ -1,6 +1,0 @@
-interface:
-  display_name: "Monitor External Jobs"
-  short_description: "Monitor long jobs without blocking the owner"
-  default_prompt: "Use $personal-monitor-external-jobs to register low-cost read-only monitoring for this exact authorized job without blocking the owner task."
-policy:
-  allow_implicit_invocation: true
