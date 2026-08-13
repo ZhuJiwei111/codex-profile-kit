@@ -1,35 +1,33 @@
 ---
 name: personal-defer-and-resume
-description: Defer an authorized non-interactive local or blocking remote command, wait without model polling, and resume the same Codex task when the command exits or a task-specific watchdog reports sustained attention evidence. Use for builds, training jobs, CI watchers, migrations, artifact generation, and exact job wait commands expected to exceed about ten minutes. Not for work that must survive closing the task or restarting the host.
+description: Use when an authorized build, training job, CI wait, migration, artifact generation, or blocking remote watcher is expected to exceed about ten minutes and the same Codex task must resume on command exit or sustained attention evidence; not when work must survive closing the task or restarting the host.
 ---
 
 # Personal Defer And Resume
 
 Use the bundled runner and `Stop` hook as one same-task waiting primitive. The
-runner knows only whether the registered command exited; the command itself
-must represent terminal completion or an attention condition.
+runner knows only whether one registered command exited. The command must
+represent a terminal completion or attention boundary.
 
 ## Choose The Command
 
-- Run ordinary foreground commands expected to finish within about ten minutes.
 - Defer only a non-interactive command already authorized in the current task.
 - For remote work, prefer one blocking command such as an SSH scheduler wait or
-  a project-owned watcher. A dropped SSH connection is a command failure, not
-  proof that the remote job failed.
-- Encode GPU, log, or artifact attention conditions in a task-specific watcher.
-  Require a sustained window and exact job identity; never alert on one sample.
-- A watcher reports evidence only. Monitoring never authorizes cancellation,
-  restart, repair, retry, reconfiguration, or cleanup of the underlying job.
+  project-owned watcher. Treat SSH loss as command failure, not remote-job
+  failure.
+- Put GPU, log, or artifact conditions in a task-specific watcher with exact
+  job identity and a sustained window.
+- Aggregate parallel jobs behind one launcher or watcher instead of registering
+  several waits. Leave evidence-dependent later phases outside it.
+- Treat watcher exit as evidence only; it grants no authority to control the
+  underlying job.
 
 Do not use Scheduled tasks, Luna polling tasks, setup tasks, live fallbacks,
-relay tasks, or a separate App task for this workflow. Keep Codex Desktop, the
-current task, and the local host running. Closing the task or restarting the
-host is outside this contract.
+relay tasks, or a separate App task. Keep the task and local host running.
 
 ## Start And Defer
 
-Resolve the installed script under the active Codex home, then register the
-command:
+Register the command with the installed script:
 
 ```bash
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/personal-defer-and-resume/scripts/defer.py" start \
@@ -38,50 +36,44 @@ python3 "${CODEX_HOME:-$HOME/.codex}/skills/personal-defer-and-resume/scripts/de
   -- command arg1 arg2
 ```
 
-Use `--timeout SECONDS` only when the user authorized that time limit. A timeout
-terminates the registered command process group and records exit code `124`.
+Authorized `--timeout SECONDS` terminates the process group and records `124`.
 
-After registration succeeds, finish the turn. Do not poll, inspect logs, or
-start another monitor. The local Hook checks state without model calls. About
-every 50 minutes it may wake the current model once to re-arm the Hook; on a
-`Deferred wait re-arm` prompt, call no tools and end the turn immediately.
+After registration, finish the turn. The local Hook waits without model calls.
+On `Deferred wait re-arm`, call no tools and end the turn immediately.
+
+Handle user messages normally. New authorization or resource preferences leave
+the registered command unchanged and apply only after checking its result. Use
+bounded `status` and authoritative job evidence for status requests.
 
 ## Resume On Completion Or Attention
 
-On a completion prompt:
+First run the prompt's exact `resume --task-dir ...` command. It returns bounded
+metadata and atomically acknowledges delivery without returning command output.
 
-1. Inspect bounded result metadata:
+- Exit `0` proves only command success; verify intended artifacts or workflow
+  state before claiming wider success.
+- Exit `124` is an authorized timeout; `125` means the worker vanished without
+  a result. Check authoritative state before inferring remote-job status.
+- Any other nonzero exit needs diagnosis of the registered command. Read only
+  the necessary tail of the private `output.log`.
 
-   ```bash
-   python3 "${CODEX_HOME:-$HOME/.codex}/skills/personal-defer-and-resume/scripts/defer.py" inspect --task-dir <path>
-   ```
+Continue after recording evidence. Launch phases only when authorized and
+ready. Clean acknowledged state when no longer needed:
 
-2. Read only the necessary tail of the recorded output when the result needs
-   diagnosis. Treat exit as command completion or watcher attention, not proof
-   that a wider workflow succeeded.
-3. Acknowledge the wake after recording the evidence:
-
-   ```bash
-   python3 "${CODEX_HOME:-$HOME/.codex}/skills/personal-defer-and-resume/scripts/defer.py" ack --task-dir <path>
-   ```
-
-4. Continue the original task. Remove acknowledged runtime state when it is no
-   longer needed:
-
-   ```bash
-   python3 "${CODEX_HOME:-$HOME/.codex}/skills/personal-defer-and-resume/scripts/defer.py" clean --task-dir <path>
-   ```
+```bash
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/personal-defer-and-resume/scripts/defer.py" clean --task-dir <path>
+```
 
 ## Recovery And Boundaries
 
-Use `list` for registrations owned by the current task and `status` for one
-registration. A missing worker records exit code `125`; do not infer what
-happened to an underlying remote job without checking its authoritative state.
+Use `list` for this task's registrations, `status` for one, and legacy `inspect`
+or `ack` only for recovery. `start` refuses a running or
+completed-unacknowledged registration. Completion is delivered at most three
+times; afterward the Hook releases normal turns while `list` and the next
+`start` still expose it.
 
-The runner has no cancel operation. Do not force-clean unacknowledged state.
-Commands receive no interactive input or TTY. Do not place secrets in command
-arguments; persistent metadata omits them, but the operating system may expose
-live process arguments.
+The runner cannot cancel and accepts no input or TTY. Clean only acknowledged
+state. Keep secrets out of OS-visible arguments.
 
 Read `references/source-notes.md` only when updating provenance or importing
 upstream changes.

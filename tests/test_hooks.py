@@ -37,6 +37,74 @@ def invoke(name: str, tool_name: str, tool_input: dict[str, object]) -> str:
     return result.stdout
 
 
+def deferred_paths() -> tuple[Path, Path]:
+    skill = HOOKS.parent / "skills" / "personal-defer-and-resume"
+    return skill / "scripts" / "defer.py", skill / "scripts" / "stop_hook.py"
+
+
+def deferred_environment(directory: str) -> dict[str, str]:
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "CODEX_HOME": directory,
+            "CODEX_THREAD_ID": "test-thread",
+            "CODEX_DEFER_POLL_SECONDS": "0.01",
+            "CODEX_DEFER_WAKE_RETRY_SECONDS": "0.02",
+        }
+    )
+    return environment
+
+
+def start_deferred(
+    defer: Path,
+    directory: str,
+    environment: dict[str, str],
+    code: str,
+    *,
+    check: bool = True,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(defer),
+            "start",
+            "--name",
+            "test command",
+            "--cwd",
+            directory,
+            "--",
+            sys.executable,
+            "-c",
+            code,
+        ],
+        text=True,
+        capture_output=True,
+        check=check,
+        env=environment,
+    )
+
+
+def wait_for_result(task_dir: Path) -> None:
+    deadline = time.monotonic() + 3
+    while not (task_dir / "result.json").exists() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    if not (task_dir / "result.json").exists():
+        raise AssertionError(f"deferred result was not written: {task_dir}")
+
+
+def invoke_stop(stop_hook: Path, environment: dict[str, str]) -> dict[str, object]:
+    completed = subprocess.run(
+        [sys.executable, str(stop_hook)],
+        input="{}",
+        text=True,
+        capture_output=True,
+        check=True,
+        env=environment,
+        timeout=3,
+    )
+    return json.loads(completed.stdout)
+
+
 class HookBehaviorTest(unittest.TestCase):
     def test_wiring_contains_owned_guards_and_deferred_stop_hook(self) -> None:
         hooks = json.loads(HOOKS_JSON.read_text(encoding="utf-8"))["hooks"]
@@ -318,6 +386,184 @@ class HookBehaviorTest(unittest.TestCase):
             )
             self.assertEqual(result["exit_code"], 124)
             self.assertTrue(result["timed_out"])
+
+    def test_deferred_missing_worker_records_125(self) -> None:
+        defer, _ = deferred_paths()
+        with tempfile.TemporaryDirectory() as directory:
+            environment = deferred_environment(directory)
+            task_dir = (
+                Path(directory)
+                / "runtime/personal-defer-and-resume/test-thread/stale-task"
+            )
+            task_dir.mkdir(parents=True)
+            (task_dir / "metadata.json").write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "task_id": "stale-task",
+                        "thread_id": "test-thread",
+                        "name": "stale worker",
+                        "cwd": directory,
+                        "registered_at": "2000-01-01T00:00:00+00:00",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (task_dir / "worker.json").write_text(
+                json.dumps(
+                    {
+                        "pid": 999999,
+                        "started_at": "2000-01-01T00:00:00+00:00",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            status = subprocess.run(
+                [sys.executable, str(defer), "status", "--task-dir", str(task_dir)],
+                text=True,
+                capture_output=True,
+                check=True,
+                env=environment,
+            )
+            status_value = json.loads(status.stdout)
+
+            self.assertEqual(status_value["state"], "completed-unacknowledged")
+            self.assertEqual(status_value["exit_code"], 125)
+
+    def test_deferred_resume_acknowledges_without_returning_log_output(self) -> None:
+        defer, _ = deferred_paths()
+        with tempfile.TemporaryDirectory() as directory:
+            environment = deferred_environment(directory)
+            started = start_deferred(
+                defer,
+                directory,
+                environment,
+                "import sys; print('private log'); sys.exit(1)",
+            )
+            task_dir = Path(json.loads(started.stdout)["task_dir"])
+            wait_for_result(task_dir)
+
+            status = subprocess.run(
+                [sys.executable, str(defer), "status", "--task-dir", str(task_dir)],
+                text=True,
+                capture_output=True,
+                check=True,
+                env=environment,
+            )
+            self.assertEqual(
+                json.loads(status.stdout)["state"],
+                "completed-unacknowledged",
+            )
+            resumed = subprocess.run(
+                [sys.executable, str(defer), "resume", "--task-dir", str(task_dir)],
+                text=True,
+                capture_output=True,
+                check=True,
+                env=environment,
+            )
+            resume_value = json.loads(resumed.stdout)
+
+            self.assertEqual(resume_value["status"]["state"], "acknowledged")
+            self.assertIn("ack", resume_value)
+            self.assertNotIn("output", resume_value)
+            self.assertNotIn("output_tail", resume_value)
+            self.assertTrue((task_dir / "ack.json").is_file())
+
+    def test_deferred_start_rejects_pending_until_resume(self) -> None:
+        defer, _ = deferred_paths()
+        with tempfile.TemporaryDirectory() as directory:
+            environment = deferred_environment(directory)
+            started = start_deferred(
+                defer,
+                directory,
+                environment,
+                "import time; time.sleep(0.1)",
+            )
+            task_dir = Path(json.loads(started.stdout)["task_dir"])
+
+            while_running = start_deferred(
+                defer,
+                directory,
+                environment,
+                "pass",
+                check=False,
+            )
+            self.assertNotEqual(while_running.returncode, 0)
+            self.assertIn("unacknowledged registration", while_running.stderr)
+
+            wait_for_result(task_dir)
+            while_completed = start_deferred(
+                defer,
+                directory,
+                environment,
+                "pass",
+                check=False,
+            )
+            self.assertNotEqual(while_completed.returncode, 0)
+            self.assertIn("unacknowledged registration", while_completed.stderr)
+
+            subprocess.run(
+                [sys.executable, str(defer), "resume", "--task-dir", str(task_dir)],
+                text=True,
+                capture_output=True,
+                check=True,
+                env=environment,
+            )
+            allowed = start_deferred(
+                defer,
+                directory,
+                environment,
+                "pass",
+            )
+            self.assertEqual(allowed.returncode, 0)
+
+    def test_deferred_completion_retries_three_times_then_releases(self) -> None:
+        defer, stop_hook = deferred_paths()
+        with tempfile.TemporaryDirectory() as directory:
+            environment = deferred_environment(directory)
+            started = start_deferred(defer, directory, environment, "pass")
+            task_dir = Path(json.loads(started.stdout)["task_dir"])
+            wait_for_result(task_dir)
+
+            for attempt in range(1, 4):
+                if attempt > 1:
+                    time.sleep(0.03)
+                wake = invoke_stop(stop_hook, environment)
+                self.assertEqual(wake["decision"], "block")
+                self.assertIn("resume --task-dir", str(wake["reason"]))
+                wake_state = json.loads(
+                    (task_dir / "wake.json").read_text(encoding="utf-8")
+                )
+                self.assertEqual(wake_state["attempt"], attempt)
+
+            released = invoke_stop(stop_hook, environment)
+            self.assertEqual(released, {"continue": True})
+            self.assertFalse((task_dir / "ack.json").exists())
+
+    def test_deferred_legacy_wake_counts_as_first_delivery(self) -> None:
+        defer, stop_hook = deferred_paths()
+        with tempfile.TemporaryDirectory() as directory:
+            environment = deferred_environment(directory)
+            started = start_deferred(defer, directory, environment, "pass")
+            task_dir = Path(json.loads(started.stdout)["task_dir"])
+            wait_for_result(task_dir)
+            (task_dir / "wake.json").write_text(
+                json.dumps(
+                    {
+                        "emitted_at": "2000-01-01T00:00:00+00:00",
+                        "exit_code": 0,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            wake = invoke_stop(stop_hook, environment)
+            self.assertEqual(wake["decision"], "block")
+            wake_state = json.loads(
+                (task_dir / "wake.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(wake_state["attempt"], 2)
 
 
 if __name__ == "__main__":

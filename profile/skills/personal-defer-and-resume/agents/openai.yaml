@@ -1,6 +1,6 @@
 interface:
   display_name: "Defer And Resume"
   short_description: "Resume this task after long work finishes"
-  default_prompt: "Use $personal-defer-and-resume to wait locally for this authorized command or watchdog and resume the same task when it exits."
+  default_prompt: "Use $personal-defer-and-resume to defer this authorized long-running command and resume the same task through its completion handoff."
 policy:
   allow_implicit_invocation: true

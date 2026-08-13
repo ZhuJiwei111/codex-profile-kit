@@ -5,7 +5,10 @@ This skill adapts `zibo-chen/codex-defer-and-resume` at Git commit
 removes cancellation and garbage collection, fixes the re-arm interval at 50
 minutes, terminates the registered process group on an authorized timeout,
 uses a worker lock to avoid PID-only identity checks, and routes installation
-through `codex-profile-kit` instead of the upstream installer.
+through `codex-profile-kit` instead of the upstream installer. It also permits
+only one unacknowledged registration per Codex task, provides atomic
+`resume`/acknowledgement, and caps completion delivery at three attempts so an
+abandoned result cannot block later turns indefinitely.
 
 Upstream license:
 

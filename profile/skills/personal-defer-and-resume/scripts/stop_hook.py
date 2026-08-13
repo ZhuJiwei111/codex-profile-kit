@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import sys
 import time
 import uuid
@@ -28,6 +29,7 @@ def positive_seconds(name: str, default: float) -> float:
 POLL_SECONDS = positive_seconds("CODEX_DEFER_POLL_SECONDS", 0.5)
 REARM_SECONDS = 3000.0
 WAKE_RETRY_SECONDS = positive_seconds("CODEX_DEFER_WAKE_RETRY_SECONDS", 60.0)
+MAX_WAKE_ATTEMPTS = 3
 RESULT_STALE_WORKER = 125
 
 
@@ -143,8 +145,21 @@ def active_tasks(thread_dir: Path) -> list[Path]:
     return tasks
 
 
+def wake_attempt(task_dir: Path) -> int:
+    wake_path = task_dir / "wake.json"
+    if not wake_path.exists():
+        return 0
+    try:
+        value = int(read_json(wake_path).get("attempt", 1))
+    except (TypeError, ValueError):
+        return 1
+    return max(1, value)
+
+
 def wake_due_in(task_dir: Path) -> float | None:
     if not (task_dir / "result.json").exists():
+        return None
+    if wake_attempt(task_dir) >= MAX_WAKE_ATTEMPTS:
         return None
     wake_path = task_dir / "wake.json"
     if not wake_path.exists():
@@ -161,10 +176,28 @@ def emit_completion(tasks: list[Path]) -> None:
     for task_dir in tasks:
         metadata = read_json(task_dir / "metadata.json")
         result = read_json(task_dir / "result.json")
-        write_json_atomic(task_dir / "wake.json", {"emitted_at": now_iso(), "exit_code": result.get("exit_code")})
+        attempt = wake_attempt(task_dir) + 1
+        write_json_atomic(
+            task_dir / "wake.json",
+            {
+                "emitted_at": now_iso(),
+                "exit_code": result.get("exit_code"),
+                "attempt": attempt,
+                "max_attempts": MAX_WAKE_ATTEMPTS,
+            },
+        )
+        resume_command = shlex.join(
+            [
+                sys.executable,
+                str(Path(__file__).with_name("defer.py")),
+                "resume",
+                "--task-dir",
+                str(task_dir),
+            ]
+        )
         summaries.append(
             f"{metadata.get('name', task_dir.name)} exited with code {result.get('exit_code')}; "
-            f"task directory: {task_dir}"
+            f"task directory: {task_dir}; resume command: {resume_command}"
         )
     emit(
         {
@@ -200,6 +233,15 @@ def main() -> int:
                 emit_completion(due)
                 return 0
             incomplete = [task for task in tasks if not (task / "result.json").exists()]
+            retryable = [
+                task
+                for task in tasks
+                if (task / "result.json").exists()
+                and wake_attempt(task) < MAX_WAKE_ATTEMPTS
+            ]
+            if not incomplete and not retryable:
+                emit({"continue": True})
+                return 0
             remaining = deadline - time.monotonic()
             if incomplete and remaining <= 0:
                 names = [str(read_json(task / "metadata.json").get("name", task.name)) for task in incomplete]
@@ -212,7 +254,11 @@ def main() -> int:
                     }
                 )
                 return 0
-            retry_delays = [delay for task in tasks if (delay := wake_due_in(task)) is not None and delay > 0]
+            retry_delays = [
+                delay
+                for task in retryable
+                if (delay := wake_due_in(task)) is not None and delay > 0
+            ]
             sleep_for = min(POLL_SECONDS, max(0.01, remaining)) if incomplete else POLL_SECONDS
             if retry_delays:
                 sleep_for = min(sleep_for, max(0.01, min(retry_delays)))

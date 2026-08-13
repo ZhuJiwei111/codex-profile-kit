@@ -231,8 +231,23 @@ def start(args: argparse.Namespace) -> int:
     if not cwd.is_dir():
         raise SystemExit(f"working directory does not exist: {cwd}")
 
+    thread_root = runtime_root() / thread_id()
+    pending = [
+        child
+        for child in sorted(thread_root.iterdir())
+        if child.is_dir()
+        and (child / "metadata.json").is_file()
+        and not (child / "ack.json").exists()
+    ] if thread_root.is_dir() else []
+    if pending:
+        paths = ", ".join(str(path) for path in pending)
+        raise SystemExit(
+            "existing unacknowledged registration; run list and resume or ack "
+            f"before start: {paths}"
+        )
+
     task_id = uuid.uuid4().hex
-    task_dir = runtime_root() / thread_id() / task_id
+    task_dir = thread_root / task_id
     task_dir.mkdir(parents=True, mode=0o700)
     os.chmod(task_dir, 0o700)
     write_json_atomic(
@@ -284,7 +299,7 @@ def task_status(task_dir: Path) -> dict[str, Any]:
     if (task_dir / "ack.json").exists():
         state = "acknowledged"
     elif result is not None:
-        state = "completed"
+        state = "completed-unacknowledged"
     elif worker_holds_lock(task_dir):
         state = "running"
     else:
@@ -309,13 +324,18 @@ def task_status(task_dir: Path) -> dict[str, Any]:
     return value
 
 
-def inspect_task(args: argparse.Namespace) -> int:
-    task_dir = validate_task_dir(args.task_dir)
+def inspect_value(task_dir: Path) -> dict[str, Any]:
     value: dict[str, Any] = {"task_dir": str(task_dir), "status": task_status(task_dir)}
     for name in ("metadata.json", "worker.json", "result.json", "wake.json", "ack.json"):
         path = task_dir / name
         if path.exists():
             value[name.removesuffix(".json")] = read_json(path)
+    return value
+
+
+def inspect_task(args: argparse.Namespace) -> int:
+    task_dir = validate_task_dir(args.task_dir)
+    value = inspect_value(task_dir)
     print(json.dumps(value, ensure_ascii=False, indent=2))
     return 0
 
@@ -333,6 +353,15 @@ def acknowledge(args: argparse.Namespace) -> int:
         raise SystemExit("cannot acknowledge an incomplete task")
     write_json_atomic(task_dir / "ack.json", {"acknowledged_at": now_iso()})
     print(json.dumps(task_status(task_dir), ensure_ascii=False))
+    return 0
+
+
+def resume(args: argparse.Namespace) -> int:
+    task_dir = validate_task_dir(args.task_dir)
+    if stale_worker_result(task_dir) is None:
+        raise SystemExit("cannot resume an incomplete task")
+    write_json_atomic(task_dir / "ack.json", {"acknowledged_at": now_iso()})
+    print(json.dumps(inspect_value(task_dir), ensure_ascii=False, indent=2))
     return 0
 
 
@@ -354,7 +383,7 @@ def parse_args() -> argparse.Namespace:
     start_parser.add_argument("command", nargs=argparse.REMAINDER)
     worker_parser = subparsers.add_parser("_worker")
     worker_parser.add_argument("task_dir")
-    for action in ("inspect", "status", "ack", "clean"):
+    for action in ("inspect", "status", "resume", "ack", "clean"):
         action_parser = subparsers.add_parser(action)
         action_parser.add_argument("--task-dir", required=True)
     subparsers.add_parser("list")
@@ -374,6 +403,8 @@ def main() -> int:
         return 0
     if args.action == "list":
         return list_tasks(args)
+    if args.action == "resume":
+        return resume(args)
     if args.action == "ack":
         return acknowledge(args)
     if args.action == "clean":

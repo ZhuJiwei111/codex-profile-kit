@@ -152,14 +152,17 @@ class ProfileContractTest(unittest.TestCase):
 
         for contract in (
             "about ten minutes",
-            "resume the same Codex task",
+            "same Codex task must resume",
             "task-specific watcher",
-            "sustained window and exact job identity",
-            "Monitoring never authorizes cancellation",
+            "exact job identity and a sustained window",
+            "grants no authority to control",
             "Do not use Scheduled tasks, Luna polling tasks, setup tasks",
-            "About every 50 minutes",
-            "The runner has no cancel operation",
-            "Not for work that must survive closing the task or restarting the host",
+            "Deferred wait re-arm",
+            "atomically acknowledges delivery",
+            "completed-unacknowledged registration",
+            "delivered at most three times",
+            "leave the registered command unchanged",
+            "not when work must survive closing the task or restarting the host",
         ):
             self.assertIn(contract, deferred_prose)
         for project_specific in (
