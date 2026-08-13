@@ -235,28 +235,10 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn("<!-- journal-entries -->", month)
         self.assertIn("{{YEAR_MONTH}}", month)
         self.assertIn("Completion alone is never a reason", readme)
-        repository_journal = ROOT / ".agent"
-        self.assertEqual(
-            (repository_journal / "README.md").read_text(encoding="utf-8"),
-            readme,
-        )
-        repository_index = (repository_journal / "JOURNAL.md").read_text(
+        gitignore_lines = (ROOT / ".gitignore").read_text(
             encoding="utf-8"
-        )
-        self.assertIn("<!-- journal-months -->", repository_index)
-        months = re.findall(
-            r"\./journal/(\d{4}-\d{2})\.md", repository_index
-        )
-        self.assertTrue(months)
-        self.assertEqual(months, sorted(set(months), reverse=True))
-        for month_name in months:
-            month_path = repository_journal / "journal" / f"{month_name}.md"
-            self.assertTrue(month_path.is_file(), month_path)
-            repository_month = month_path.read_text(encoding="utf-8")
-            self.assertIn(
-                f"# {month_name} Project Journal", repository_month
-            )
-            self.assertIn("<!-- journal-entries -->", repository_month)
+        ).splitlines()
+        self.assertIn("/.agent/", gitignore_lines)
         for contract in (
             "Project journaling is the default for durable project events",
             "Initializing a journal still requires",
