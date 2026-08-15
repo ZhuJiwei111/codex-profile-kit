@@ -1,0 +1,6 @@
+interface:
+  display_name: "Personal Task Archive"
+  short_description: "Safely archive tasks on the current host"
+  default_prompt: "Use $personal-task-archive to audit only this task's current host, preserve durable context, and propose exact archives without mutating until I confirm."
+policy:
+  allow_implicit_invocation: true

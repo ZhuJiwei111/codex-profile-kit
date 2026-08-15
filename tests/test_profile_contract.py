@@ -161,6 +161,40 @@ class ProfileContractTest(unittest.TestCase):
             "Do not create or select a plan implicitly.", agents_prose
         )
 
+    def test_task_archive_is_portable_and_current_host_only(self) -> None:
+        _, trees, _, retired_trees = profile_sync.load_manifest()
+        managed = {str(path) for path in trees}
+        retired = {str(path) for path in retired_trees}
+        self.assertIn("skills/personal-task-archive", managed)
+        self.assertIn("skills/personal-session-memory-hygiene", retired)
+
+        archive_root = PROFILE / "skills" / "personal-task-archive"
+        skill = (archive_root / "SKILL.md").read_text(encoding="utf-8")
+        inventory = (archive_root / "references" / "session-inventory.md").read_text(
+            encoding="utf-8"
+        )
+        prose = " ".join(skill.split())
+        inventory_prose = " ".join(inventory.split())
+
+        for contract in (
+            "current execution host",
+            "same exact host identity",
+            "manage that host from a task executing there",
+            "explicit confirmation",
+            "`personal-thread-closeout`",
+            "Treat archival as organization",
+        ):
+            self.assertIn(contract, prose)
+        for contract in (
+            "Windows, macOS, and Linux",
+            "Do not install a parser",
+            "Never follow rollout/session paths",
+            "Do not use an app-wide list or cross-host count",
+        ):
+            self.assertIn(contract, inventory_prose)
+        self.assertNotIn("current Windows host", prose)
+        self.assertNotIn("hostId=local", prose)
+
     def test_default_project_journal_is_implicit_and_separate(self) -> None:
         journal_root = PROFILE / "skills" / "personal-project-journal"
         journal = (journal_root / "SKILL.md").read_text(encoding="utf-8")
