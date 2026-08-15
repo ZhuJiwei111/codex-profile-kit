@@ -18,4 +18,4 @@ default_tools_approval_mode = "prompt"
 
 [apps.connector_76869538009648d5b282a4bb21c3d157]
 enabled = true
-default_tools_approval_mode = "writes"
+default_tools_approval_mode = "approve"

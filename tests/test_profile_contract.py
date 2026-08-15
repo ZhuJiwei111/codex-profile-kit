@@ -97,7 +97,7 @@ class ProfileContractTest(unittest.TestCase):
             leaves[
                 "apps.connector_76869538009648d5b282a4bb21c3d157.default_tools_approval_mode"
             ],
-            "writes",
+            "approve",
         )
 
     def test_long_task_continuity_is_sticky_but_opt_in(self) -> None:
