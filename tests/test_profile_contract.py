@@ -5,7 +5,7 @@ from pathlib import Path
 import tomllib
 import unittest
 
-from scripts import profile_sync
+from scripts import plugin_sync, profile_sync
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,6 +70,10 @@ class ProfileContractTest(unittest.TestCase):
         prose = " ".join(profile_sync_skill.split())
 
         for contract in (
+            "orchestrate both the core profile and `scripts/plugin_sync.py` in that single command",
+            "personal-long-job-supervisor@profile-kit",
+            "personal-long-job-supervisor@personal",
+            "Preserve every other marketplace",
             "material contents of the reviewed diff",
             "actual rules, behavior, configuration keys, or managed entries",
             "When `AGENTS.md` changes",
@@ -79,12 +83,27 @@ class ProfileContractTest(unittest.TestCase):
         ):
             self.assertIn(contract, prose)
 
+    def test_repository_marketplace_owns_the_long_job_plugin(self) -> None:
+        self.assertEqual(plugin_sync.validate_source(), plugin_sync.read_json(
+            plugin_sync.PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+        )["version"])
+        marketplace = plugin_sync.read_json(plugin_sync.MARKETPLACE_PATH)
+        self.assertEqual(marketplace["name"], "profile-kit")
+        self.assertEqual(
+            [entry["name"] for entry in marketplace["plugins"]],
+            ["personal-long-job-supervisor"],
+        )
+
     def test_portable_config_has_exact_owned_leaf_keys(self) -> None:
         with (ROOT / "personal.config.toml").open("rb") as handle:
             leaves = profile_sync.flatten(tomllib.load(handle))
 
         self.assertEqual(set(leaves), set(profile_sync.CONFIG_KEYS))
         self.assertTrue(leaves["features.memories"])
+        self.assertEqual(
+            leaves["features.code_mode.direct_only_tool_namespaces"],
+            ["mcp__long_job_supervisor"],
+        )
         self.assertFalse(leaves["memories.generate_memories"])
         self.assertTrue(leaves["memories.use_memories"])
         self.assertFalse(leaves["apps._default.enabled"])
@@ -100,7 +119,7 @@ class ProfileContractTest(unittest.TestCase):
             "approve",
         )
 
-    def test_long_task_continuity_is_sticky_but_opt_in(self) -> None:
+    def test_file_plan_continuity_is_sticky_but_opt_in(self) -> None:
         planning = (
             PROFILE
             / "skills"
@@ -114,19 +133,6 @@ class ProfileContractTest(unittest.TestCase):
             / "agents"
             / "openai.yaml"
         ).read_text(encoding="utf-8")
-        deferred = (
-            PROFILE
-            / "skills"
-            / "personal-defer-and-resume"
-            / "SKILL.md"
-        ).read_text(encoding="utf-8")
-        deferred_metadata = (
-            PROFILE
-            / "skills"
-            / "personal-defer-and-resume"
-            / "agents"
-            / "openai.yaml"
-        ).read_text(encoding="utf-8")
         coordination = (
             PROFILE
             / "skills"
@@ -135,7 +141,6 @@ class ProfileContractTest(unittest.TestCase):
         ).read_text(encoding="utf-8")
         agents = (PROFILE / "AGENTS.md").read_text(encoding="utf-8")
         planning_prose = " ".join(planning.split())
-        deferred_prose = " ".join(deferred.split())
         coordination_prose = " ".join(coordination.split())
         agents_prose = " ".join(agents.split())
 
@@ -149,42 +154,6 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn("optional legacy record", planning_prose)
         self.assertNotIn("read all three files", planning_prose)
         self.assertIn("allow_implicit_invocation: true", planning_metadata)
-
-        for contract in (
-            "about ten minutes",
-            "same Codex task must resume",
-            "task-specific watcher",
-            "exact job identity and a sustained window",
-            "grants no authority to control",
-            "Do not use Scheduled tasks, Luna polling tasks, setup tasks",
-            "Deferred wait re-arm",
-            "atomically acknowledges delivery",
-            "completed-unacknowledged registration",
-            "delivered at most three times",
-            "leave the registered command unchanged",
-            "not when work must survive closing the task or restarting the host",
-        ):
-            self.assertIn(contract, deferred_prose)
-        for project_specific in (
-            "AIVC",
-            "SCI-004",
-            "/subing",
-            "GSE194122",
-            "pretrain",
-            "a1001",
-        ):
-            self.assertNotIn(project_specific, deferred_prose)
-        self.assertIn("allow_implicit_invocation: true", deferred_metadata)
-        for obsolete_monitoring in (
-            "personal-monitor-external-jobs",
-            "`registered_unverified`",
-            "stable schedule ID",
-        ):
-            self.assertNotIn(obsolete_monitoring, coordination_prose)
-            self.assertNotIn(obsolete_monitoring, agents_prose)
-            self.assertNotIn(obsolete_monitoring, deferred_prose)
-        self.assertIn("`personal-defer-and-resume`", coordination_prose)
-        self.assertIn("`personal-defer-and-resume`", agents_prose)
 
         self.assertIn("recommend `/goal` once", agents_prose)
         self.assertIn("Keep related phases in the same task.", agents_prose)

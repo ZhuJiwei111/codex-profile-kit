@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "long_job_supervisor": {
+      "cwd": ".",
+      "command": "python3",
+      "args": [
+        "./scripts/mcp_server.py"
+      ],
+      "tool_timeout_sec": 604800
+    }
+  }
+}

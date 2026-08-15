@@ -1,0 +1,11 @@
+interface:
+  display_name: "Supervise Long Jobs"
+  short_description: "Event-driven supervision for long local commands"
+  default_prompt: "Use $supervise-long-jobs to launch and supervise this long command without model polling."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "long_job_supervisor"
+      description: "Wait for and inspect bounded durable job events"
+policy:
+  allow_implicit_invocation: true

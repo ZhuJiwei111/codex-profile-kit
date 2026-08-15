@@ -102,14 +102,6 @@ instructions and explicit user requests take precedence.
   current task state, and canonical project documents own durable decisions.
   Keep them complementary. Journal maintenance grants no Git or external-action
   authority, and narrower repository rules may disable it.
-- For an authorized non-interactive command expected to run longer than about
-  ten minutes, use `personal-defer-and-resume` when the current task should
-  continue after the command exits or a task-specific watchdog reports an
-  attention condition. The local runner and `Stop` hook own waiting; do not
-  create Scheduled tasks, Luna polling tasks, setup tasks, live fallbacks, or
-  relay tasks for this workflow. A watchdog may report sustained conditions
-  such as low GPU use or stalled artifacts, but it never grants authority to
-  cancel, restart, repair, or reconfigure the underlying work.
 - Use Goal mode only when explicitly requested. When an ordinary task grows
   into a multi-phase long task with a clear outcome, constraints, and
   verification, recommend `/goal` once at a meaningful boundary; do not enable
