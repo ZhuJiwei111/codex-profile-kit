@@ -1,0 +1,22 @@
+{
+  "name": "personal-long-job-supervisor",
+  "version": "0.1.0+codex.20260815141259",
+  "description": "Run long local commands under systemd and resume Codex only for durable events.",
+  "author": {
+    "name": "Jiwei Zhu"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Personal Long Job Supervisor",
+    "shortDescription": "Event-driven supervision without model polling.",
+    "longDescription": "Launch long local commands as transient user services, keep logs outside model context, and wait for bounded completed, failed, or heartbeat-attention events.",
+    "developerName": "Jiwei Zhu",
+    "category": "Productivity",
+    "capabilities": [
+      "Local jobs",
+      "Event-driven observation"
+    ],
+    "defaultPrompt": "Supervise this authorized long command without model polling, then continue only when an event arrives."
+  },
+  "mcpServers": "./.mcp.json"
+}

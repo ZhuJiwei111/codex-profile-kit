@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Profile Sync"
-  short_description: "Preview, apply, or check the portable profile"
-  default_prompt: "Use $personal-profile-sync to preview the portable profile against this host."
+  short_description: "Sync the portable profile and owned plugins"
+  default_prompt: "Use $personal-profile-sync to update from GitHub and deploy the complete portable profile on this host."
 policy:
   allow_implicit_invocation: false

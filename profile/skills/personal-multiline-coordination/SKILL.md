@@ -34,11 +34,7 @@ one line is not automatically authority for another. The integration owner
 checks source, revision, scope, and conflicts before accepting a handoff; do not
 vote by task count or let several lines publish competing “final” states.
 
-Use managed subagents for bounded one-shot internal workers. Use
-`personal-defer-and-resume` when an authorized non-interactive command should
-wake and continue the same task after completion or a task-specific attention
-condition. Do not create a persistent App task, worktree, Scheduled task, Luna
-poller, setup task, or relay merely to wait for that command.
+Use managed subagents for bounded one-shot internal workers.
 
 ## Intake And Stop
 

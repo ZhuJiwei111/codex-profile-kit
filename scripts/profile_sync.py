@@ -39,6 +39,7 @@ CONFIG_KEYS = (
     "memories.use_memories",
     "features.hooks",
     "features.apps",
+    "features.code_mode.direct_only_tool_namespaces",
     "apps._default.enabled",
     "apps._default.approvals_reviewer",
     "apps._default.default_tools_approval_mode",
@@ -455,9 +456,9 @@ def render_hooks(runtime: Path, codex_home: Path) -> Leaf:
         return item
 
     rendered = replace_tokens(value)
-    if substitutions != {"posix": 3, "windows": 3}:
+    if substitutions != {"posix": 2, "windows": 2}:
         raise SyncError(
-            "portable hooks.json must contain exactly three POSIX and three Windows command tokens"
+            "portable hooks.json must contain exactly two POSIX and two Windows command tokens"
         )
     data = (
         json.dumps(rendered, ensure_ascii=False, indent=2) + "\n"
@@ -909,6 +910,11 @@ def apply_profile(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("preview", "apply", "check"))
+    parser.add_argument(
+        "--profile-only",
+        action="store_true",
+        help="Operate only on the core profile; intended for focused diagnostics.",
+    )
     args = parser.parse_args()
     try:
         codex_home = resolve_codex_home()
@@ -917,13 +923,34 @@ def main() -> int:
         )
         state = compare(codex_home)
         print_changes(state, revision, dirty=dirty)
+        plugin_module = None
+        plugin_state = None
+        if not args.profile_only:
+            if __package__:
+                from scripts import plugin_sync as plugin_module
+            else:
+                sys.modules.setdefault("profile_sync", sys.modules[__name__])
+                import plugin_sync as plugin_module
+            plugin_state = plugin_module.inspect_state(
+                codex_home,
+                require_clean=args.command == "apply",
+            )
+            print("Owned plugin state:")
+            plugin_module.print_state(plugin_state)
         if args.command == "preview":
             return 0
         if args.command == "check":
-            return 0 if not state.changes else 1
+            return 0 if not state.changes and (
+                plugin_state is None or not plugin_state.changes
+            ) else 1
+        if plugin_module is not None:
+            plugin_module.validate_host()
         backup = apply_profile(state, expected_revision=revision)
         if backup is not None:
             print(f"Backup: {backup}")
+        if plugin_module is not None:
+            installed = plugin_module.apply_plugins(codex_home)
+            print(f"Installed plugin: {plugin_module.PLUGIN_ID}@{installed.version}")
         print("Post-check: clean")
         return 0
     except SyncError as exc:

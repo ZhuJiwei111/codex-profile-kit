@@ -32,7 +32,7 @@ class ProfileSyncCliTest(unittest.TestCase):
             env["CODEX_HOME"] = str(codex_home)
 
             result = subprocess.run(
-                [sys.executable, str(SCRIPT), "preview"],
+                [sys.executable, str(SCRIPT), "preview", "--profile-only"],
                 cwd=ROOT,
                 env=env,
                 text=True,
@@ -76,7 +76,7 @@ class ProfileSyncCliTest(unittest.TestCase):
             env["CODEX_HOME"] = str(codex_home)
 
             result = subprocess.run(
-                [sys.executable, str(SCRIPT), "preview"],
+                [sys.executable, str(SCRIPT), "preview", "--profile-only"],
                 cwd=ROOT,
                 env=env,
                 text=True,
