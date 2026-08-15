@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Polishing"
+  short_description: "Polish academic prose and repair LaTeX layout"
+  default_prompt: "Use $nature-polishing to polish this academic prose and repair any related LaTeX presentation issues."
+
+policy:
+  allow_implicit_invocation: false

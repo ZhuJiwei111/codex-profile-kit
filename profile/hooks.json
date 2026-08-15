@@ -25,6 +25,19 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{PROFILE_SYNC_COMMAND:skills/personal-defer-and-resume/scripts/stop_hook.py}}",
+            "commandWindows": "{{PROFILE_SYNC_COMMAND_WINDOWS:skills/personal-defer-and-resume/scripts/stop_hook.py}}",
+            "timeout": 3700,
+            "statusMessage": "Waiting for deferred work"
+          }
+        ]
+      }
     ]
   }
 }

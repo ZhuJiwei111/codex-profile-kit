@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Response"
+  short_description: "Draft and audit revision correspondence packages"
+  default_prompt: "Use $nature-response to draft or audit this reviewer-response and revision package."
+
+policy:
+  allow_implicit_invocation: false

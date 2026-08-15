@@ -10,8 +10,8 @@ active profile 不是反向导出源。
 
 ## 管理范围
 
-- `profile/`：按目标相对路径保存 `AGENTS.md`、两个 hooks 和 personal
-  skills。
+- `profile/`：按目标相对路径保存 `AGENTS.md`、三个 hooks 和 personal
+  skills，以及固定版本、经审查的第三方 skills。
 - `profile-manifest.toml`：列出受管 file/tree 和经过审阅的精确退役
   file/tree；除这些退役项外，相邻的外部 skill、plugin cache 和未列出文件不受
   影响。
@@ -23,6 +23,8 @@ active profile 不是反向导出源。
   `~/.codex/HOST_LOCAL.md`，不得包含秘密；普通任务和监控只读。
 - `external-overlays/`：记录经审阅的第三方 skill 本地补丁与精确上游 revision；
   不由 profile sync 自动安装或部署。
+- `third-party/`：记录由 profile 直接管理的第三方内容的上游版本、导入范围和
+  许可证；实际部署内容仍位于 `profile/` 并由 manifest 精确列出。
 - `archive/`：保留本次重构前的旧实现，不部署到 active profile。
 
 仓库不管理 live `memories/MEMORY.md`、`model_reasoning_effort`、

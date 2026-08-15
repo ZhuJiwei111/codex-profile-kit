@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Figure"
+  short_description: "Build and audit submission-grade scientific figures"
+  default_prompt: "Use $nature-figure to design, build, and audit this manuscript figure."
+
+policy:
+  allow_implicit_invocation: false

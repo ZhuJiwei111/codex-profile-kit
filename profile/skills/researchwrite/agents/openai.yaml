@@ -1,0 +1,7 @@
+interface:
+  display_name: "ResearchWrite"
+  short_description: "Run proposal-first scientific writing workflows"
+  default_prompt: "Use $researchwrite to compose or revise this scientific proposal through an evidence-first workflow."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,6 +1,0 @@
-interface:
-  display_name: "Monitor External Jobs"
-  short_description: "Run one Luna-based read-only monitor"
-  default_prompt: "Use $personal-monitor-external-jobs to update the fixed gpt-5.6-luna monitoring controller and register one direct read-only Scheduled monitor for this exact job."
-policy:
-  allow_implicit_invocation: true

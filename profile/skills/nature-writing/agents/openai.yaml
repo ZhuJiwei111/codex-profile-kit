@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Writing"
+  short_description: "Draft manuscripts and initial-submission materials"
+  default_prompt: "Use $nature-writing to draft this manuscript section or initial-submission package from the supplied evidence."
+
+policy:
+  allow_implicit_invocation: false

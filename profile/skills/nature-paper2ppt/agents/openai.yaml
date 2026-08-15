@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Paper to PPT"
+  short_description: "Build Chinese evidence-led paper presentations"
+  default_prompt: "Use $nature-paper2ppt to build a Chinese evidence-led presentation from this paper."
+
+policy:
+  allow_implicit_invocation: false

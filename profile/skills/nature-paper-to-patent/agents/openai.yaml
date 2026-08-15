@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Paper to Patent"
+  short_description: "Convert research into Chinese patent materials"
+  default_prompt: "Use $nature-paper-to-patent to convert these research materials into a Chinese patent disclosure."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Statistics"
+  short_description: "Audit scientific statistics reporting and legends"
+  default_prompt: "Use $nature-statistics to audit the statistical reporting, methods, and figure legends in this manuscript."
+
+policy:
+  allow_implicit_invocation: false

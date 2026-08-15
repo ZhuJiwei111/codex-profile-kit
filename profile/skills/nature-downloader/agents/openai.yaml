@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nature Downloader"
+  short_description: "Retrieve lawful academic full text and supplements"
+  default_prompt: "Use $nature-downloader to retrieve this paper and its supplements through an authorized route."
+
+policy:
+  allow_implicit_invocation: false

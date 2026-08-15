@@ -54,7 +54,12 @@ class ProfileContractTest(unittest.TestCase):
             metadata = (skill / "agents" / "openai.yaml").read_text(
                 encoding="utf-8"
             )
-            self.assertIn(f"${name}", metadata)
+            self.assertIn("display_name:", metadata)
+            self.assertIn("short_description:", metadata)
+            if name.startswith("personal-"):
+                self.assertIn(f"${name}", metadata)
+            if "disable-model-invocation: true" in frontmatter:
+                self.assertIn("allow_implicit_invocation: false", metadata)
             if description.group(1).startswith("Manual only."):
                 self.assertIn("allow_implicit_invocation: false", metadata)
 
@@ -88,6 +93,12 @@ class ProfileContractTest(unittest.TestCase):
                 "apps.connector_76869538009648d5b282a4bb21c3d157.enabled"
             ]
         )
+        self.assertEqual(
+            leaves[
+                "apps.connector_76869538009648d5b282a4bb21c3d157.default_tools_approval_mode"
+            ],
+            "writes",
+        )
 
     def test_long_task_continuity_is_sticky_but_opt_in(self) -> None:
         planning = (
@@ -103,16 +114,16 @@ class ProfileContractTest(unittest.TestCase):
             / "agents"
             / "openai.yaml"
         ).read_text(encoding="utf-8")
-        monitor = (
+        deferred = (
             PROFILE
             / "skills"
-            / "personal-monitor-external-jobs"
+            / "personal-defer-and-resume"
             / "SKILL.md"
         ).read_text(encoding="utf-8")
-        monitor_metadata = (
+        deferred_metadata = (
             PROFILE
             / "skills"
-            / "personal-monitor-external-jobs"
+            / "personal-defer-and-resume"
             / "agents"
             / "openai.yaml"
         ).read_text(encoding="utf-8")
@@ -124,7 +135,7 @@ class ProfileContractTest(unittest.TestCase):
         ).read_text(encoding="utf-8")
         agents = (PROFILE / "AGENTS.md").read_text(encoding="utf-8")
         planning_prose = " ".join(planning.split())
-        monitor_prose = " ".join(monitor.split())
+        deferred_prose = " ".join(deferred.split())
         coordination_prose = " ".join(coordination.split())
         agents_prose = " ".join(agents.split())
 
@@ -140,71 +151,20 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn("allow_implicit_invocation: true", planning_metadata)
 
         for contract in (
-            "10 minutes or less",
-            "explicit request to monitor authorizes one Scheduled registration",
-            "fixed local monitoring controller",
-            "`gpt-5.6-luna`",
-            "`medium` reasoning",
-            "one heartbeat automation",
-            "required contract fields that cannot be discovered read-only",
-            "exact task identity, status source, terminal evidence, stall evidence",
-            "expected remaining duration, and cadence",
-            "question card without auto-resolution",
-            "proposed cadence",
-            "pre-authorization for one live-task fallback",
-            "`~/.codex/HOST_LOCAL.md`",
-            "as read-only input",
-            "never permits creating, editing, or refreshing it",
-            "request separate configuration authority",
-            "`ssh <alias>`",
-            "`ssh -G <alias>`",
-            "`BatchMode=yes`",
-            "immutable job, run, scheduler identity, or PID plus start time",
-            "exact status sources",
-            "terminal success/failure evidence",
-            "stall evidence",
-            "expected remaining-time bucket and proposed sample cadence",
-            "canonical thread ID",
-            "`clientThreadId` is not a canonical task ID",
-            "stable schedule ID",
-            "`registered_unverified`",
-            "Do not wait for the first scheduled run",
-            "stops active polling",
-            "one bounded fresh sample and exits",
-            "directly through `ssh <alias>`",
-            "must not relay routine samples through a remote App task",
-            "raw-file hash",
-            "canonical content self-hash",
-            "creation timeouts and interrupted calls are ambiguous",
-            "explicitly pre-authorized both actions",
-            "exactly matches the current observation contract",
-            "created by this registration attempt or discovered as ambiguous during it",
-            "never applies to historical, merely similar, or unrelated recurrences",
-            "create one isolated live task on the exact target host",
-            "stable task ID alone is not enough",
-            "live continuation",
-            "idle or returns a final answer while the job is still running",
-            "does not authorize automatic live-task fallback",
-            "pause the exact recurrence before reporting",
-            "exit without messaging the owner",
-            "Queue one event to the owner task",
-            "Never interrupt a running owner turn",
-            "Do not archive",
-            "operating-system sleep suspends observation",
+            "about ten minutes",
+            "same Codex task must resume",
+            "task-specific watcher",
+            "exact job identity and a sustained window",
+            "grants no authority to control",
+            "Do not use Scheduled tasks, Luna polling tasks, setup tasks",
+            "Deferred wait re-arm",
+            "atomically acknowledges delivery",
+            "completed-unacknowledged registration",
+            "delivered at most three times",
+            "leave the registered command unchanged",
+            "not when work must survive closing the task or restarting the host",
         ):
-            self.assertIn(contract, monitor_prose)
-        for retired_topology in (
-            "Scheduled relay",
-            "nonce-bound",
-            "controller ledger",
-            "next wake",
-            "proof run",
-            "current-chat",
-            "Dynamically select the lowest-cost",
-            "with low reasoning",
-            "stable thread ID establishes `live_registered`",
-        ):
-            self.assertNotIn(retired_topology, monitor_prose)
+            self.assertIn(contract, deferred_prose)
         for project_specific in (
             "AIVC",
             "SCI-004",
@@ -213,27 +173,18 @@ class ProfileContractTest(unittest.TestCase):
             "pretrain",
             "a1001",
         ):
-            self.assertNotIn(project_specific, monitor_prose)
-        self.assertIn("allow_implicit_invocation: true", monitor_metadata)
-        self.assertIn("Luna-based read-only monitor", monitor_metadata)
-        self.assertIn("fixed gpt-5.6-luna monitoring controller", monitor_metadata)
-
-        for shared_contract in (
+            self.assertNotIn(project_specific, deferred_prose)
+        self.assertIn("allow_implicit_invocation: true", deferred_metadata)
+        for obsolete_monitoring in (
+            "personal-monitor-external-jobs",
             "`registered_unverified`",
             "stable schedule ID",
-            "stops active polling",
-            "canonical thread ID",
-            "idle while the job is still running",
         ):
-            self.assertIn(shared_contract, coordination_prose)
-            self.assertIn(shared_contract, agents_prose)
-        for obsolete_release_rule in (
-            "returns one successful initial status sample",
-            "obtain one successful initial sample",
-        ):
-            self.assertNotIn(obsolete_release_rule, coordination_prose)
-            self.assertNotIn(obsolete_release_rule, agents_prose)
-            self.assertNotIn(obsolete_release_rule, monitor_prose)
+            self.assertNotIn(obsolete_monitoring, coordination_prose)
+            self.assertNotIn(obsolete_monitoring, agents_prose)
+            self.assertNotIn(obsolete_monitoring, deferred_prose)
+        self.assertIn("`personal-defer-and-resume`", coordination_prose)
+        self.assertIn("`personal-defer-and-resume`", agents_prose)
 
         self.assertIn("recommend `/goal` once", agents_prose)
         self.assertIn("Keep related phases in the same task.", agents_prose)
@@ -286,28 +237,10 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn("<!-- journal-entries -->", month)
         self.assertIn("{{YEAR_MONTH}}", month)
         self.assertIn("Completion alone is never a reason", readme)
-        repository_journal = ROOT / ".agent"
-        self.assertEqual(
-            (repository_journal / "README.md").read_text(encoding="utf-8"),
-            readme,
-        )
-        repository_index = (repository_journal / "JOURNAL.md").read_text(
+        gitignore_lines = (ROOT / ".gitignore").read_text(
             encoding="utf-8"
-        )
-        self.assertIn("<!-- journal-months -->", repository_index)
-        months = re.findall(
-            r"\./journal/(\d{4}-\d{2})\.md", repository_index
-        )
-        self.assertTrue(months)
-        self.assertEqual(months, sorted(set(months), reverse=True))
-        for month_name in months:
-            month_path = repository_journal / "journal" / f"{month_name}.md"
-            self.assertTrue(month_path.is_file(), month_path)
-            repository_month = month_path.read_text(encoding="utf-8")
-            self.assertIn(
-                f"# {month_name} Project Journal", repository_month
-            )
-            self.assertIn("<!-- journal-entries -->", repository_month)
+        ).splitlines()
+        self.assertIn("/.agent/", gitignore_lines)
         for contract in (
             "Project journaling is the default for durable project events",
             "Initializing a journal still requires",
