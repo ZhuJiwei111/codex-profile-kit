@@ -35,23 +35,13 @@ paths from the index or transfer the index to another host for processing.
 
 ## Product Reconciliation
 
-- Resolve each candidate with an exact read on the frozen host identity.
 - Avoid an unfiltered global task list while multiple hosts are connected.
+- Project safe product metadata first and apply the exclusions in `SKILL.md`.
+- Sort the remaining candidates by oldest substantive activity first and
+  exact-read no more than the current run's bounded batch.
 - Classify `No Codex thread found` once as index-only, stale, or unsupported;
   do not retry it as an archive operation.
-- Protect records whose active, unread, Goal, automation, or ownership state is
-  unavailable.
 
-## Classification And Verification
-
-Classify each resolved task as:
-
-- protected calling, active, Goal, automation, unread, or main task;
-- source task eligible for summary then archive;
-- completed standalone task eligible for exact archival;
-- index-only child or stale entry;
-- uncertain and requiring user review.
-
-After execution, exact-read every main or protected task and every archived
-target on the frozen host. Do not use an app-wide list or cross-host count as
-proof.
+After execution, verify only each actual archive target on the frozen host. Do
+not re-read protected or main tasks merely to prove they were preserved. Do not
+use an app-wide list or cross-host count as proof of archival.

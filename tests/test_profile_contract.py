@@ -180,11 +180,27 @@ class ProfileContractTest(unittest.TestCase):
             "current execution host",
             "same exact host identity",
             "manage that host from a task executing there",
-            "explicit confirmation",
             "`personal-thread-closeout`",
             "Treat archival as organization",
+            "24 hours",
+            "15 days",
+            "50",
+            "pinned",
+            "oldest",
         ):
             self.assertIn(contract, prose)
+        for contract in (
+            "lightweight",
+            "explicitly owns",
+            "closed failure",
+            "actually archived",
+            "thread://",
+            "Do not copy a summary by default",
+            "does not modify memory",
+            "override the age windows",
+        ):
+            self.assertIn(contract.lower(), prose.lower())
+        self.assertNotIn("decision card", prose.lower())
         for contract in (
             "Windows, macOS, and Linux",
             "Do not install a parser",
