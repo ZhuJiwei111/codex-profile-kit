@@ -30,6 +30,16 @@ def atomic_write(path: Path, value: dict) -> None:
         raise
 
 
+def process_identity() -> dict:
+    pid = os.getpid()
+    raw = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
+    _, separator, tail = raw.rpartition(")")
+    fields = tail.strip().split() if separator else []
+    if len(fields) < 20:
+        raise RuntimeError(f"invalid /proc identity for process {pid}")
+    return {"pid": pid, "start_ticks": int(fields[19])}
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--job-dir", required=True, type=Path)
@@ -39,6 +49,7 @@ def main(argv=None) -> int:
     if not command:
         return 125
     os.umask(0o077)
+    atomic_write(args.job_dir / "process.json", process_identity())
     try:
         exit_code = subprocess.run(command, check=False).returncode
         worker_error = None

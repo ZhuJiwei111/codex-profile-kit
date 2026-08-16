@@ -75,9 +75,24 @@ class FakeCodex:
 
 
 class PluginSyncTest(unittest.TestCase):
+    def test_validate_host_requires_linux_proc_without_systemd(self) -> None:
+        with mock.patch.object(plugin_sync.os, "name", "posix"), mock.patch.object(
+            plugin_sync.sys, "platform", "linux"
+        ), mock.patch.object(
+            plugin_sync.shutil, "which", return_value="/usr/bin/python3"
+        ) as which, mock.patch.object(
+            plugin_sync.Path, "is_file", return_value=True
+        ), mock.patch.object(
+            plugin_sync.subprocess, "run"
+        ) as run:
+            plugin_sync.validate_host()
+
+        which.assert_called_once_with("python3")
+        run.assert_not_called()
+
     def test_source_contract_is_portable_and_bounded(self) -> None:
         version = plugin_sync.validate_source()
-        self.assertRegex(version, r"^0\.1\.0\+codex\.[A-Za-z0-9._-]+$")
+        self.assertRegex(version, r"^0\.2\.0\+codex\.[A-Za-z0-9._-]+$")
 
         mcp = plugin_sync.read_json(plugin_sync.PLUGIN_ROOT / ".mcp.json")
         server = mcp["mcpServers"]["long_job_supervisor"]
@@ -85,6 +100,12 @@ class PluginSyncTest(unittest.TestCase):
         self.assertEqual(server["command"], "python3")
         self.assertEqual(server["args"], ["./scripts/mcp_server.py"])
         self.assertNotIn("/home/", str(mcp))
+        for path in (
+            plugin_sync.PLUGIN_ROOT / ".codex-plugin" / "plugin.json",
+            plugin_sync.PLUGIN_ROOT / "scripts" / "supervisor.py",
+            plugin_sync.PLUGIN_ROOT / "skills" / "supervise-long-jobs" / "SKILL.md",
+        ):
+            self.assertNotIn("systemd", path.read_text(encoding="utf-8").lower())
 
     def test_preview_reports_marketplace_install_and_exact_legacy_retirement(self) -> None:
         fake = FakeCodex()

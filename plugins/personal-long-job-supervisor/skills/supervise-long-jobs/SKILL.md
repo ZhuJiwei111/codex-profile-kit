@@ -1,6 +1,6 @@
 ---
 name: supervise-long-jobs
-description: Launch and supervise an already-authorized non-interactive local command expected to run longer than about ten minutes when the current Codex task should resume after completion, failure, or an explicit stale-heartbeat condition. Use event-driven systemd waiting instead of Goal polling, repeated exec polling, Scheduled tasks, Stop hooks, or ad hoc background terminals. Also use to inspect, reconnect to, acknowledge, or clean registrations created by this supervisor. Do not use for interactive commands, short commands, unauthorized resource use, experiment orchestration, or automatic cancel/retry/restart/reconfiguration.
+description: Launch and supervise an already-authorized non-interactive local command expected to run longer than about ten minutes when the current Codex task should resume after completion, failure, or an explicit stale-heartbeat condition. Use event-driven detached-process waiting instead of Goal polling, repeated exec polling, Scheduled tasks, Stop hooks, or ad hoc background terminals. Also use to inspect, reconnect to, acknowledge, or clean registrations created by this supervisor. Do not use for interactive commands, short commands, unauthorized resource use, experiment orchestration, or automatic cancel/retry/restart/reconfiguration.
 ---
 
 # Supervise Long Jobs
@@ -26,7 +26,13 @@ clone location.
 
 Add both `--heartbeat-path <absolute-path>` and `--stale-after <seconds>` only when the underlying task explicitly owns and updates that heartbeat. Do not infer health from GPU use, log content, or ordinary silence.
 
-The returned registration is durable. Preserve its `job_id`. Full stdout and stderr remain in the reported `combined.log` path and must not be copied into model context by default.
+The worker starts in a new process session and atomically records its PID plus
+Linux `/proc` start ticks before running the command. The returned registration
+is durable and every inspection verifies both identity fields before treating
+the process as active. Preserve its `job_id`. Full stdout and stderr remain in
+the reported `combined.log` path and must not be copied into model context by
+default. Terminal success or failure comes only from the worker's atomic
+`result.json`, not from PID disappearance alone.
 
 ## Wait And Resume
 
@@ -58,4 +64,7 @@ Use the CLI equivalents only when MCP is unavailable:
 <plugin-root>/scripts/supervisor.py clean JOB_ID
 ```
 
-`clean` removes only an inactive registration whose events are all acknowledged. No interface in this plugin cancels, retries, restarts, or changes an underlying process.
+`clean` removes only an inactive registration after a `completed`, `failed`, or
+`supervisor_error` event has been acknowledged. PID disappearance alone is not
+a terminal event. No interface in this plugin cancels, retries, restarts,
+signals, or changes an underlying process.

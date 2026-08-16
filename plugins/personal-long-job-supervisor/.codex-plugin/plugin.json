@@ -1,7 +1,7 @@
 {
   "name": "personal-long-job-supervisor",
-  "version": "0.1.0+codex.20260815141259",
-  "description": "Run long local commands under systemd and resume Codex only for durable events.",
+  "version": "0.2.0+codex.20260816225642",
+  "description": "Run long local commands in detached process sessions and resume Codex only for durable events.",
   "author": {
     "name": "Jiwei Zhu"
   },
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Personal Long Job Supervisor",
     "shortDescription": "Event-driven supervision without model polling.",
-    "longDescription": "Launch long local commands as transient user services, keep logs outside model context, and wait for bounded completed, failed, or heartbeat-attention events.",
+    "longDescription": "Launch long local commands in detached process sessions, verify PID identity through Linux procfs, keep logs outside model context, and wait for bounded completed, failed, or heartbeat-attention events.",
     "developerName": "Jiwei Zhu",
     "category": "Productivity",
     "capabilities": [

@@ -18,18 +18,23 @@ import mcp_server  # noqa: E402
 from supervisor import JobStore  # noqa: E402
 
 
-class FakeSystemd:
+class FakeRuntime:
     def start(self, registration, worker_path, python_executable):
-        return None
+        return {"pid": 1234, "start_ticks": 5678}
 
-    def inspect(self, unit):
-        return {"ActiveState": "active", "SubState": "running", "Result": "success"}
-
+    def inspect(self, process):
+        return {
+            **process,
+            "observed_start_ticks": process["start_ticks"],
+            "identity_matches": True,
+            "active": True,
+            "state": "running",
+        }
 
 class McpObservationContractTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self.store = JobStore(Path(self.tmp.name) / "state", systemd=FakeSystemd())
+        self.store = JobStore(Path(self.tmp.name) / "state", runtime=FakeRuntime())
         self.cwd = Path(self.tmp.name) / "work"
         self.cwd.mkdir()
         mcp_server.STORE = self.store
@@ -125,11 +130,11 @@ class McpStdioProtocolTest(unittest.TestCase):
         job_dir = Path(self.tmp.name) / "state" / "jobs" / "20260815000000-canceltest00"
         job_dir.mkdir(parents=True)
         registration = {
-            "schema_version": 1,
+            "schema_version": 2,
             "job_id": job_dir.name,
             "name": "cancel",
             "cwd": self.tmp.name,
-            "unit": "not-running.service",
+            "process": {"pid": os.getpid(), "start_ticks": 0},
             "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "executable": "true",
             "argument_count": 1,
@@ -145,7 +150,7 @@ class McpStdioProtocolTest(unittest.TestCase):
             },
         }
         (job_dir / "job.json").write_text(json.dumps(registration))
-        (job_dir / "events.json").write_text(json.dumps({"schema_version": 1, "next_event_id": 1, "events": [], "conditions": {}}))
+        (job_dir / "events.json").write_text(json.dumps({"schema_version": 2, "next_event_id": 1, "events": [], "conditions": {}}))
         (job_dir / "combined.log").touch()
         wait_request = {
             "jsonrpc": "2.0",

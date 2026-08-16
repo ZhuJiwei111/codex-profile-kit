@@ -199,19 +199,11 @@ def inspect_state(
 
 def validate_host() -> None:
     if os.name != "posix" or not sys.platform.startswith("linux"):
-        raise PluginSyncError("personal-long-job-supervisor requires Linux systemd --user")
-    for executable in ("python3", "systemd-run", "systemctl"):
-        if shutil.which(executable) is None:
-            raise PluginSyncError(f"required host executable is unavailable: {executable}")
-    completed = subprocess.run(
-        ["systemctl", "--user", "show-environment"],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if completed.returncode != 0:
-        detail = (completed.stderr or completed.stdout).strip()[:1000]
-        raise PluginSyncError(f"systemd --user is unavailable: {detail}")
+        raise PluginSyncError("personal-long-job-supervisor requires Linux /proc")
+    if shutil.which("python3") is None:
+        raise PluginSyncError("required host executable is unavailable: python3")
+    if not Path("/proc/self/stat").is_file():
+        raise PluginSyncError("Linux process identity source is unavailable: /proc/self/stat")
 
 
 def print_state(state: PluginState) -> None:

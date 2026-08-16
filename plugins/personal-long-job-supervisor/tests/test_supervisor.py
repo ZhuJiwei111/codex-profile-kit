@@ -14,46 +14,46 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = PLUGIN_ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-from supervisor import JobStore, SupervisorError, SystemdUser  # noqa: E402
+from supervisor import DetachedProcessRuntime, JobStore, SupervisorError  # noqa: E402
 
 
-class FakeSystemd:
+class FakeRuntime:
     def __init__(self):
         self.started = []
         self.states = {}
-        self.cleaned = []
+        self.next_pid = 1000
 
     def start(self, registration, worker_path, python_executable):
         self.started.append((registration, worker_path, python_executable))
-        self.states[registration["unit"]] = {
-            "ActiveState": "active",
-            "SubState": "running",
-            "Result": "success",
-            "ExecMainStatus": "0",
+        identity = {"pid": self.next_pid, "start_ticks": self.next_pid * 10}
+        self.next_pid += 1
+        self.states[identity["pid"]] = {
+            **identity,
+            "observed_start_ticks": identity["start_ticks"],
+            "identity_matches": True,
+            "active": True,
+            "state": "running",
         }
+        return identity
 
-    def inspect(self, unit):
+    def inspect(self, process):
         return self.states.get(
-            unit,
+            process["pid"],
             {
-                "ActiveState": "inactive",
-                "SubState": "dead",
-                "Result": "success",
-                "ExecMainStatus": "0",
+                **process,
+                "observed_start_ticks": None,
+                "identity_matches": False,
+                "active": False,
+                "state": "exited",
             },
         )
-
-    def clean(self, unit):
-        self.cleaned.append(unit)
-        self.states.pop(unit, None)
-
 
 class JobStoreTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name) / "state"
-        self.systemd = FakeSystemd()
-        self.store = JobStore(self.root, systemd=self.systemd)
+        self.runtime = FakeRuntime()
+        self.store = JobStore(self.root, runtime=self.runtime)
         self.cwd = Path(self.tmp.name) / "work"
         self.cwd.mkdir()
 
@@ -83,7 +83,9 @@ class JobStoreTest(unittest.TestCase):
         self.assertNotIn("command", registration)
         self.assertEqual("echo", registration["executable"])
         self.assertEqual(2, registration["argument_count"])
-        self.assertEqual(1, len(self.systemd.started))
+        self.assertEqual(1, len(self.runtime.started))
+        self.assertGreater(registration["process"]["pid"], 0)
+        self.assertGreater(registration["process"]["start_ticks"], 0)
 
     def test_completed_and_failed_events_are_deduplicated(self):
         ok = self.start(name="ok")
@@ -107,7 +109,7 @@ class JobStoreTest(unittest.TestCase):
 
         first = self.store.ack_event(job["job_id"], event["event_id"])
         second = self.store.ack_event(job["job_id"], event["event_id"])
-        restarted = JobStore(self.root, systemd=self.systemd)
+        restarted = JobStore(self.root, runtime=self.runtime)
         observed = restarted.inspect_job(job["job_id"])
 
         self.assertTrue(first["acknowledged"])
@@ -116,6 +118,22 @@ class JobStoreTest(unittest.TestCase):
         self.assertEqual("completed", observed["status"])
         with self.assertRaisesRegex(SupervisorError, "already terminal"):
             restarted.wait_event(job["job_id"], poll_interval=0.001)
+
+    def test_restart_recovers_process_identity_written_by_worker(self):
+        job = self.start()
+        job_dir = self.store.job_dir(job["job_id"])
+        registration_path = job_dir / "job.json"
+        registration = json.loads(registration_path.read_text(encoding="utf-8"))
+        process = registration.pop("process")
+        self.store._atomic_write_json(registration_path, registration)
+        self.store._atomic_write_json(job_dir / "process.json", process)
+
+        restarted = JobStore(self.root, runtime=self.runtime)
+        observed = restarted.inspect_job(job["job_id"])
+        recovered = json.loads(registration_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(process, observed["process"])
+        self.assertEqual(process, recovered["process"])
 
     def test_heartbeat_stale_attention_does_not_stop_or_repeat(self):
         heartbeat = self.cwd / "heartbeat"
@@ -126,7 +144,7 @@ class JobStoreTest(unittest.TestCase):
 
         event = self.store.wait_event(job["job_id"], poll_interval=0.001)
         self.assertEqual("attention", event["event_type"])
-        self.assertEqual("active", self.systemd.inspect(job["unit"])["ActiveState"])
+        self.assertTrue(self.runtime.inspect(job["process"])["active"])
         self.store.ack_event(job["job_id"], event["event_id"])
         self.assertIsNone(self.store.inspect_job(job["job_id"])["pending_event"])
 
@@ -194,23 +212,59 @@ class JobStoreTest(unittest.TestCase):
         with self.assertRaises(SupervisorError):
             self.store.inspect_job("broken")
 
-    def test_clean_resets_exact_inactive_unit(self):
+    def test_clean_removes_only_an_inactive_registration(self):
         job = self.start()
         self.write_result(job["job_id"], 0)
         event = self.store.wait_event(job["job_id"], poll_interval=0.001)
         self.store.ack_event(job["job_id"], event["event_id"])
-        self.systemd.states[job["unit"]] = {
-            "LoadState": "loaded",
-            "ActiveState": "inactive",
-            "SubState": "dead",
-            "Result": "success",
+        self.runtime.states[job["process"]["pid"]] = {
+            **job["process"],
+            "observed_start_ticks": None,
+            "identity_matches": False,
+            "active": False,
+            "state": "exited",
         }
 
         cleaned = self.store.clean_job(job["job_id"])
 
         self.assertTrue(cleaned["cleaned"])
-        self.assertEqual([job["unit"]], self.systemd.cleaned)
         self.assertFalse(self.store.job_dir(job["job_id"]).exists())
+
+    def test_clean_refuses_pid_disappearance_without_a_terminal_event(self):
+        job = self.start()
+        self.runtime.states[job["process"]["pid"]] = {
+            **job["process"],
+            "observed_start_ticks": None,
+            "identity_matches": False,
+            "active": False,
+            "state": "exited",
+        }
+
+        with self.assertRaisesRegex(SupervisorError, "confirmed terminal event"):
+            self.store.clean_job(job["job_id"])
+
+        self.assertTrue(self.store.job_dir(job["job_id"]).exists())
+
+    def test_pid_reuse_is_identity_loss_not_a_running_job(self):
+        job = self.start()
+        self.runtime.states[job["process"]["pid"]] = {
+            **job["process"],
+            "observed_start_ticks": job["process"]["start_ticks"] + 1,
+            "identity_matches": False,
+            "active": False,
+            "state": "identity_lost",
+        }
+        registration_path = self.store.job_dir(job["job_id"]) / "job.json"
+        registration = json.loads(registration_path.read_text(encoding="utf-8"))
+        registration["created_at"] = "2026-08-15T00:00:00Z"
+        self.store._atomic_write_json(registration_path, registration)
+
+        observed = self.store.inspect_job(job["job_id"])
+
+        self.assertEqual("identity_lost", observed["status"])
+        self.assertFalse(observed["process_state"]["identity_matches"])
+        self.assertEqual("supervisor_error", observed["pending_event"]["event_type"])
+        self.assertIn("identity was lost", observed["pending_event"]["detail"])
 
 
 class CliContractTest(unittest.TestCase):
@@ -227,26 +281,44 @@ class CliContractTest(unittest.TestCase):
         for forbidden in ("cancel", "retry", "restart"):
             self.assertNotIn(forbidden, completed.stdout)
 
-    @mock.patch("supervisor.subprocess.run")
-    def test_systemd_inspect_supplies_user_bus_environment(self, run):
-        run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="ActiveState=active\nSubState=running\n", stderr=""
-        )
+    @mock.patch.object(DetachedProcessRuntime, "_identity")
+    @mock.patch("supervisor.subprocess.Popen")
+    def test_detached_launch_starts_new_session(self, popen, identity):
+        popen.return_value.pid = 1234
+        popen.return_value.poll.return_value = None
+        identity.return_value = {"pid": 1234, "start_ticks": 5678, "state_code": "R"}
+        runtime = DetachedProcessRuntime()
+        with tempfile.TemporaryDirectory() as temporary:
+            job_dir = Path(temporary) / "job"
+            job_dir.mkdir()
+            log = job_dir / "combined.log"
+            log.touch()
+            identity_path = job_dir / "process.json"
+            identity_path.write_text(
+                json.dumps({"pid": 1234, "start_ticks": 5678}), encoding="utf-8"
+            )
+            registration = {
+                "cwd": temporary,
+                "paths": {
+                    "job_dir": str(job_dir),
+                    "log": str(log),
+                    "identity": str(identity_path),
+                },
+                "_launch_command": ["/bin/true"],
+            }
 
-        with mock.patch.dict(os.environ, {}, clear=True):
-            observed = SystemdUser().inspect("example.service")
+            observed = runtime.start(registration, Path("/worker.py"), sys.executable)
 
-        environment = run.call_args.kwargs["env"]
-        runtime = f"/run/user/{os.getuid()}"
-        self.assertEqual(runtime, environment["XDG_RUNTIME_DIR"])
-        self.assertEqual(f"unix:path={runtime}/bus", environment["DBUS_SESSION_BUS_ADDRESS"])
-        self.assertEqual("active", observed["ActiveState"])
+        self.assertEqual({"pid": 1234, "start_ticks": 5678}, observed)
+        self.assertTrue(popen.call_args.kwargs["start_new_session"])
+        self.assertEqual(subprocess.DEVNULL, popen.call_args.kwargs["stdin"])
+        self.assertEqual(subprocess.STDOUT, popen.call_args.kwargs["stderr"])
 
     def test_launch_failure_reports_recoverable_job_id(self):
-        systemd = FakeSystemd()
-        systemd.start = mock.Mock(side_effect=SupervisorError("launcher unavailable"))
+        runtime = FakeRuntime()
+        runtime.start = mock.Mock(side_effect=SupervisorError("launcher unavailable"))
         with tempfile.TemporaryDirectory() as temporary:
-            store = JobStore(Path(temporary) / "state", systemd=systemd)
+            store = JobStore(Path(temporary) / "state", runtime=runtime)
             with self.assertRaisesRegex(SupervisorError, r"registered job \d{14}-[a-f0-9]{12}"):
                 store.start_job(name="launch-fail", cwd=temporary, command=["/bin/true"])
 

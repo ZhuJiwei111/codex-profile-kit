@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Event-driven supervision for long-running user systemd services."""
+"""Event-driven supervision for detached long-running processes."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ import time
 import uuid
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 MAX_PAYLOAD_BYTES = 8192
 DEFAULT_STATE_ROOT = Path.home() / ".local" / "state" / "personal-long-job-supervisor"
 NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
@@ -37,30 +37,30 @@ def parse_time(value: str) -> float:
     return datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp()
 
 
-class SystemdUser:
-    @staticmethod
-    def _environment() -> dict:
-        environment = os.environ.copy()
-        runtime = f"/run/user/{os.getuid()}"
-        environment.setdefault("XDG_RUNTIME_DIR", runtime)
-        environment.setdefault("DBUS_SESSION_BUS_ADDRESS", f"unix:path={runtime}/bus")
-        return environment
+class DetachedProcessRuntime:
+    def __init__(self):
+        self._children: dict[int, subprocess.Popen] = {}
 
-    def start(self, registration: dict, worker_path: Path, python_executable: str) -> None:
-        log_path = registration["paths"]["log"]
+    @staticmethod
+    def _identity(pid: int) -> dict | None:
+        try:
+            raw = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return None
+        except OSError as error:
+            raise SupervisorError(f"cannot inspect process {pid}: {error}") from error
+        _, separator, tail = raw.rpartition(")")
+        fields = tail.strip().split() if separator else []
+        if len(fields) < 20:
+            raise SupervisorError(f"invalid /proc identity for process {pid}")
+        return {
+            "pid": pid,
+            "start_ticks": int(fields[19]),
+            "state_code": fields[0],
+        }
+
+    def start(self, registration: dict, worker_path: Path, python_executable: str) -> dict:
         command = [
-            "systemd-run",
-            "--user",
-            "--quiet",
-            "--no-block",
-            f"--unit={registration['unit']}",
-            "--service-type=exec",
-            f"--description=Long job: {registration['name']}",
-            f"--working-directory={registration['cwd']}",
-            "--property=Restart=no",
-            "--property=KillMode=control-group",
-            f"--property=StandardOutput=append:{log_path}",
-            f"--property=StandardError=append:{log_path}",
             python_executable,
             str(worker_path),
             "--job-dir",
@@ -68,67 +68,80 @@ class SystemdUser:
             "--",
             *registration.pop("_launch_command"),
         ]
-        completed = subprocess.run(
-            command,
-            text=True,
-            capture_output=True,
-            check=False,
-            env=self._environment(),
-        )
-        if completed.returncode != 0:
-            detail = (completed.stderr or completed.stdout).strip()[:1000]
-            raise SupervisorError(f"systemd-run failed ({completed.returncode}): {detail}")
+        log_path = registration["paths"]["log"]
+        try:
+            with open(log_path, "ab", buffering=0) as log_handle:
+                process = subprocess.Popen(
+                    command,
+                    cwd=registration["cwd"],
+                    stdin=subprocess.DEVNULL,
+                    stdout=log_handle,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=True,
+                    close_fds=True,
+                )
+        except OSError as error:
+            raise SupervisorError(f"detached launch failed: {error}") from error
+        self._children[process.pid] = process
+        identity_path = Path(registration["paths"]["identity"])
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            if identity_path.exists():
+                try:
+                    identity = json.loads(identity_path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError) as error:
+                    raise SupervisorError(f"invalid worker identity file: {error}") from error
+                observed = self._identity(process.pid)
+                if (
+                    not isinstance(identity, dict)
+                    or int(identity.get("pid", -1)) != process.pid
+                    or observed is None
+                    or int(identity.get("start_ticks", -1)) != observed["start_ticks"]
+                ):
+                    raise SupervisorError("detached worker identity did not verify")
+                return {
+                    "pid": process.pid,
+                    "start_ticks": observed["start_ticks"],
+                }
+            if process.poll() is not None:
+                raise SupervisorError(
+                    f"detached worker {process.pid} exited before identity capture"
+                )
+            time.sleep(0.01)
+        raise SupervisorError(f"timed out waiting for detached worker {process.pid} identity")
 
-    def inspect(self, unit: str) -> dict:
-        completed = subprocess.run(
-            [
-                "systemctl",
-                "--user",
-                "show",
-                unit,
-                "--property=LoadState,ActiveState,SubState,Result,ExecMainStatus",
-            ],
-            text=True,
-            capture_output=True,
-            check=False,
-            env=self._environment(),
-        )
-        fields = {}
-        for line in completed.stdout.splitlines():
-            key, separator, value = line.partition("=")
-            if separator:
-                fields[key] = value
-        if completed.returncode != 0 and not fields:
-            fields = {
-                "LoadState": "error",
-                "ActiveState": "unknown",
-                "SubState": "unknown",
-                "Result": "unknown",
-                "ExecMainStatus": "",
-            }
-        return fields
-
-    def clean(self, unit: str) -> None:
-        state = self.inspect(unit)
-        if state.get("LoadState") == "not-found":
-            return
-        completed = subprocess.run(
-            ["systemctl", "--user", "reset-failed", unit],
-            text=True,
-            capture_output=True,
-            check=False,
-            env=self._environment(),
-        )
-        if completed.returncode != 0:
-            detail = (completed.stderr or completed.stdout).strip()[:1000]
-            raise SupervisorError(f"failed to reset exact unit {unit}: {detail}")
-
+    def inspect(self, expected: dict) -> dict:
+        pid = int(expected["pid"])
+        start_ticks = int(expected["start_ticks"])
+        child = self._children.get(pid)
+        if child is not None and child.poll() is not None:
+            self._children.pop(pid, None)
+        observed = self._identity(pid)
+        observed_start = observed["start_ticks"] if observed else None
+        identity_matches = observed_start == start_ticks
+        active = bool(identity_matches and observed["state_code"] not in ("X", "Z"))
+        if active:
+            state = "running"
+        elif observed is None:
+            state = "exited"
+        elif not identity_matches:
+            state = "identity_lost"
+        else:
+            state = "exited"
+        return {
+            "pid": pid,
+            "start_ticks": start_ticks,
+            "observed_start_ticks": observed_start,
+            "identity_matches": identity_matches,
+            "active": active,
+            "state": state,
+        }
 
 class JobStore:
-    def __init__(self, state_root: Path | str | None = None, systemd=None):
+    def __init__(self, state_root: Path | str | None = None, runtime=None):
         self.state_root = Path(state_root or os.environ.get("PLJS_STATE_ROOT", DEFAULT_STATE_ROOT)).resolve()
         self.jobs_root = self.state_root / "jobs"
-        self.systemd = systemd or SystemdUser()
+        self.runtime = runtime or DetachedProcessRuntime()
         self._ensure_private_dir(self.state_root)
         self._ensure_private_dir(self.jobs_root)
 
@@ -174,7 +187,23 @@ class JobStore:
         return path
 
     def _registration(self, job_id: str) -> dict:
-        return self._read_json(self.job_dir(job_id) / "job.json")
+        job_dir = self.job_dir(job_id)
+        path = job_dir / "job.json"
+        registration = self._read_json(path)
+        if "process" not in registration:
+            identity_path = job_dir / "process.json"
+            if not identity_path.exists():
+                raise SupervisorError(f"process identity is not yet available for job {job_id}")
+            identity = self._read_json(identity_path)
+            try:
+                registration["process"] = {
+                    "pid": int(identity["pid"]),
+                    "start_ticks": int(identity["start_ticks"]),
+                }
+            except (KeyError, TypeError, ValueError) as error:
+                raise SupervisorError(f"invalid process identity for job {job_id}") from error
+            self._atomic_write_json(path, registration)
+        return registration
 
     def start_job(
         self,
@@ -207,7 +236,6 @@ class JobStore:
         log_path = job_dir / "combined.log"
         log_path.touch(mode=0o600)
         log_path.chmod(0o600)
-        unit = f"personal-long-job-{uuid.uuid4().hex}.service"
         artifact_paths = [str(Path(item).expanduser().resolve()) for item in (artifacts or [])]
         heartbeat = str(Path(heartbeat_path).expanduser().resolve()) if heartbeat_path else None
         python_executable = str(Path(sys.executable).resolve())
@@ -217,7 +245,6 @@ class JobStore:
             "job_id": job_id,
             "name": name,
             "cwd": str(cwd_path),
-            "unit": unit,
             "created_at": utc_now(),
             "executable": Path(command[0]).name,
             "argument_count": len(command),
@@ -229,6 +256,7 @@ class JobStore:
             "paths": {
                 "job_dir": str(job_dir),
                 "log": str(log_path),
+                "identity": str(job_dir / "process.json"),
                 "result": str(job_dir / "result.json"),
             },
         }
@@ -240,9 +268,14 @@ class JobStore:
         launch_registration = dict(registration)
         launch_registration["_launch_command"] = list(command)
         try:
-            self.systemd.start(launch_registration, worker_path, python_executable)
+            registration["process"] = self.runtime.start(
+                launch_registration, worker_path, python_executable
+            )
+            self._atomic_write_json(job_dir / "job.json", registration)
         except Exception as error:
-            self._record_supervisor_error(job_id, f"launch failed: {error}")
+            self._record_supervisor_error(
+                job_id, f"launch failed: {error}", registration=registration
+            )
             raise SupervisorError(f"launch failed for registered job {job_id}: {error}") from error
         return self.inspect_job(job_id)
 
@@ -276,15 +309,17 @@ class JobStore:
         data["events"].append(event)
         return event
 
-    def _record_supervisor_error(self, job_id: str, message: str) -> None:
-        registration = self._registration(job_id)
+    def _record_supervisor_error(
+        self, job_id: str, message: str, registration: dict | None = None
+    ) -> None:
+        registration = registration or self._registration(job_id)
         with self._locked_events(job_id) as data:
             if not any(event["event_type"] == "supervisor_error" for event in data["events"]):
                 self._new_event(data, registration, "supervisor_error", detail=message[:1000])
 
     def _reconcile(self, job_id: str) -> tuple[dict, dict, dict]:
         registration = self._registration(job_id)
-        unit_state = self.systemd.inspect(registration["unit"])
+        process_state = self.runtime.inspect(registration["process"])
         result_path = self.job_dir(job_id) / "result.json"
         result = self._read_json(result_path) if result_path.exists() else None
         with self._locked_events(job_id) as data:
@@ -320,18 +355,22 @@ class JobStore:
                     )
                 data["conditions"]["heartbeat_stale"] = stale
 
-            if result is None and unit_state.get("ActiveState") in ("inactive", "failed"):
+            if result is None and not process_state["active"]:
                 age = time.time() - parse_time(registration["created_at"])
                 if age >= 2 and not any(event["event_type"] == "supervisor_error" for event in data["events"]):
                     self._new_event(
                         data,
                         registration,
                         "supervisor_error",
-                        detail="systemd unit exited without a result record",
+                        detail=(
+                            "process identity was lost without a result record"
+                            if process_state["state"] == "identity_lost"
+                            else "detached worker exited without a result record"
+                        ),
                     )
-            return registration, data, unit_state
+            return registration, data, process_state
 
-    def _event_view(self, event: dict, registration: dict, unit_state: dict) -> dict:
+    def _event_view(self, event: dict, registration: dict, process_state: dict) -> dict:
         command = f"{registration['python_executable']} {registration['supervisor_path']}"
         view = {
             "job_id": registration["job_id"],
@@ -344,12 +383,8 @@ class JobStore:
             "heartbeat_age_seconds": event.get("heartbeat_age_seconds"),
             "reason": event.get("reason"),
             "detail": event.get("detail"),
-            "unit": registration["unit"],
-            "unit_state": {
-                key: unit_state.get(key)
-                for key in ("LoadState", "ActiveState", "SubState", "Result", "ExecMainStatus")
-                if unit_state.get(key) is not None
-            },
+            "process": registration["process"],
+            "process_state": process_state,
             "paths": {
                 "job_dir": registration["paths"]["job_dir"],
                 "log": registration["paths"]["log"],
@@ -404,8 +439,8 @@ class JobStore:
                 "event_time",
                 "reason",
                 "heartbeat_age_seconds",
-                "unit",
-                "unit_state",
+                "process",
+                "process_state",
                 "commands",
                 "authority",
             )
@@ -423,7 +458,7 @@ class JobStore:
         return payload
 
     def inspect_job(self, job_id: str) -> dict:
-        registration, data, unit_state = self._reconcile(job_id)
+        registration, data, process_state = self._reconcile(job_id)
         pending = next((event for event in data["events"] if not event.get("acknowledged_at")), None)
         terminal = next(
             (event for event in reversed(data["events"]) if event["event_type"] in ("completed", "failed")),
@@ -431,17 +466,17 @@ class JobStore:
         )
         if terminal:
             status = terminal["event_type"]
-        elif unit_state.get("ActiveState") == "active":
+        elif process_state["active"]:
             status = "running"
         else:
-            status = unit_state.get("ActiveState", "unknown")
+            status = process_state["state"]
         result = {
             "job_id": job_id,
             "name": registration["name"],
             "status": status,
-            "unit": registration["unit"],
-            "unit_state": unit_state,
-            "pending_event": self._event_view(pending, registration, unit_state) if pending else None,
+            "process": registration["process"],
+            "process_state": process_state,
+            "pending_event": self._event_view(pending, registration, process_state) if pending else None,
             "paths": registration["paths"],
             "heartbeat_path": registration.get("heartbeat_path"),
             "stale_after_seconds": registration.get("stale_after_seconds"),
@@ -497,7 +532,7 @@ class JobStore:
                         "job_id": observed["job_id"],
                         "name": observed["name"],
                         "status": observed["status"],
-                        "unit": observed["unit"],
+                        "process": observed["process"],
                         "pending_event": (
                             {
                                 "event_id": pending["event_id"],
@@ -533,19 +568,24 @@ class JobStore:
 
     def clean_job(self, job_id: str) -> dict:
         observed = self.inspect_job(job_id)
-        if observed["unit_state"].get("ActiveState") == "active":
+        if observed["process_state"]["active"]:
             raise SupervisorError("refusing to clean a running job")
         if observed["pending_event"] is not None:
             raise SupervisorError("acknowledge all events before cleaning the job")
-        registration = self._registration(job_id)
-        self.systemd.clean(registration["unit"])
+        events = self._read_json(self.job_dir(job_id) / "events.json")["events"]
+        if not any(
+            event.get("event_type") in ("completed", "failed", "supervisor_error")
+            and event.get("acknowledged_at")
+            for event in events
+        ):
+            raise SupervisorError("refusing to clean without a confirmed terminal event")
         path = self.job_dir(job_id)
         shutil.rmtree(path)
         return {"job_id": job_id, "cleaned": True}
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Supervise long commands with systemd user services")
+    parser = argparse.ArgumentParser(description="Supervise detached long-running processes")
     parser.add_argument("--state-root", type=Path, help=argparse.SUPPRESS)
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 

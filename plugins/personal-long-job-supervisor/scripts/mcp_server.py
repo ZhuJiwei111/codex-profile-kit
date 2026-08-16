@@ -23,7 +23,7 @@ def wait_event(job_id: str, cancel_event=None) -> str:
 
 
 def inspect_job(job_id: str) -> str:
-    """Inspect current job, unit, paths, and any pending event without reading logs."""
+    """Inspect current job, process identity, paths, and pending event without logs."""
     return STORE.render_payload(STORE.inspect_job(job_id))
 
 
@@ -53,7 +53,7 @@ def tool_definitions() -> list[dict]:
         },
         {
             "name": "inspect_job",
-            "description": "Inspect bounded job, unit, path, and pending-event state without reading logs.",
+            "description": "Inspect bounded job, process identity, paths, and pending-event state without reading logs.",
             "inputSchema": {
                 "type": "object",
                 "properties": {"job_id": job_id},
@@ -135,7 +135,7 @@ class StdioMcpServer:
                     {
                         "protocolVersion": negotiated,
                         "capabilities": {"tools": {"listChanged": False}},
-                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.1.0"},
+                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.2.0"},
                         "instructions": "Observe durable local job events. Never cancel, retry, restart, reconfigure, or launch a next stage.",
                     },
                 )
