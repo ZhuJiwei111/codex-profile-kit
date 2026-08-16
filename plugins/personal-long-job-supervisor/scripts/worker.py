@@ -1,37 +1,20 @@
 #!/usr/bin/env python3
-"""Run one registered command and atomically record its exit status."""
+"""Run one command, sample its observation contract, and persist durable events."""
 
 from __future__ import annotations
 
 import argparse
-import json
 import os
 from pathlib import Path
 import subprocess
-import sys
-import tempfile
-from datetime import datetime, timezone
+import time
+
+from durable import append_event, atomic_write_json, locked_events, read_json, utc_now
+from monitoring import MonitorEngine
 
 
-def atomic_write(path: Path, value: dict) -> None:
-    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
-    try:
-        os.fchmod(descriptor, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            json.dump(value, handle, sort_keys=True, separators=(",", ":"))
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    except Exception:
-        try:
-            os.unlink(temporary)
-        except FileNotFoundError:
-            pass
-        raise
-
-
-def process_identity() -> dict:
-    pid = os.getpid()
+def process_identity(pid: int | None = None) -> dict:
+    pid = pid or os.getpid()
     raw = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
     _, separator, tail = raw.rpartition(")")
     fields = tail.strip().split() if separator else []
@@ -49,20 +32,47 @@ def main(argv=None) -> int:
     if not command:
         return 125
     os.umask(0o077)
-    atomic_write(args.job_dir / "process.json", process_identity())
+    atomic_write_json(args.job_dir / "process.json", process_identity())
+    registration = read_json(args.job_dir / "job.json")
+    worker_error = None
     try:
-        exit_code = subprocess.run(command, check=False).returncode
-        worker_error = None
+        target = subprocess.Popen(command, stdin=subprocess.DEVNULL, close_fds=True)
+        target_identity = process_identity(target.pid)
+        atomic_write_json(args.job_dir / "target_process.json", target_identity)
+        engine = MonitorEngine(args.job_dir, registration, target.pid)
+        wait_timeout = min(
+            [2.0]
+            + [float(monitor["sample_interval_seconds"]) for monitor in registration.get("monitors", [])]
+        )
+        while True:
+            try:
+                engine.tick()
+            except Exception as error:  # preserve the target; surface monitor corruption once
+                with locked_events(args.job_dir) as data:
+                    if not any(event["event_type"] == "supervisor_error" for event in data["events"]):
+                        append_event(data, registration, "supervisor_error", detail=f"worker monitor engine failed: {error}"[:1000])
+            try:
+                exit_code = target.wait(timeout=wait_timeout)
+                break
+            except subprocess.TimeoutExpired:
+                pass
     except OSError as error:
         exit_code = 125
         worker_error = f"exec failed: {error}"
-    result = {
-        "exit_code": exit_code,
-        "finished_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-    }
+
+    result = {"exit_code": exit_code, "finished_at": utc_now()}
     if worker_error:
         result["worker_error"] = worker_error[:1000]
-    atomic_write(args.job_dir / "result.json", result)
+    atomic_write_json(args.job_dir / "result.json", result)
+    with locked_events(args.job_dir) as data:
+        if not any(event["event_type"] in ("completed", "failed") for event in data["events"]):
+            append_event(
+                data,
+                registration,
+                "completed" if exit_code == 0 else "failed",
+                exit_code=exit_code,
+                finished_at=result["finished_at"],
+            )
     return exit_code
 
 

@@ -101,7 +101,7 @@ def validate_source() -> str:
     if server.get("tool_timeout_sec") != 604800:
         raise PluginSyncError("MCP wait timeout must remain seven days")
 
-    for script in ("mcp_server.py", "supervisor.py", "worker.py"):
+    for script in ("durable.py", "monitoring.py", "mcp_server.py", "supervisor.py", "worker.py"):
         path = PLUGIN_ROOT / "scripts" / script
         try:
             compile(path.read_bytes(), str(path), "exec")

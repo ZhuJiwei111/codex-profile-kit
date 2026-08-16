@@ -183,6 +183,59 @@ class DetachedProcessIntegrationTest(unittest.TestCase):
         self.assertEqual("completed", event["event_type"])
         self.ack_and_clean(job["job_id"], event)
 
+    def test_health_attention_persists_while_mcp_is_disconnected(self):
+        heartbeat = Path(self.tmp.name) / "detached-heartbeat"
+        heartbeat.touch()
+        monitor = json.dumps(
+            {
+                "kind": "heartbeat_stale",
+                "path": str(heartbeat),
+                "stale_after_seconds": 0.15,
+                "sample_interval_seconds": 0.05,
+            }
+        )
+        job = self.start(
+            "health-reconnect",
+            "import time; time.sleep(0.7)",
+            monitors=[monitor],
+        )
+        environment = os.environ.copy()
+        environment["PLJS_STATE_ROOT"] = str(self.store.state_root)
+        command = [sys.executable, str(PLUGIN_ROOT / "scripts" / "mcp_server.py")]
+
+        disconnected = subprocess.Popen(
+            command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=environment,
+        )
+        disconnected.terminate()
+        disconnected.wait(timeout=5)
+        for stream in (disconnected.stdin, disconnected.stdout, disconnected.stderr):
+            stream.close()
+
+        deadline = time.time() + 3
+        events_path = self.store.job_dir(job["job_id"]) / "events.json"
+        while time.time() < deadline:
+            events = json.loads(events_path.read_text(encoding="utf-8"))["events"]
+            if any(event.get("reason") == "heartbeat_stale" for event in events):
+                break
+            time.sleep(0.02)
+        else:
+            self.fail("worker did not persist health attention while MCP was absent")
+
+        reconnected = JobStore(self.store.state_root)
+        event = reconnected.wait_event(job["job_id"], poll_interval=0.02)
+        self.assertEqual("attention", event["event_type"])
+        self.assertEqual("heartbeat_stale", event["reason"])
+        self.assertEqual("job_declared_path", event["scope"])
+        reconnected.ack_event(job["job_id"], event["event_id"])
+        terminal = reconnected.wait_event(job["job_id"], poll_interval=0.02)
+        self.assertEqual("completed", terminal["event_type"])
+        self.ack_and_clean(job["job_id"], terminal)
+
 
 if __name__ == "__main__":
     unittest.main()

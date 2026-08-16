@@ -92,7 +92,7 @@ class PluginSyncTest(unittest.TestCase):
 
     def test_source_contract_is_portable_and_bounded(self) -> None:
         version = plugin_sync.validate_source()
-        self.assertRegex(version, r"^0\.2\.0\+codex\.[A-Za-z0-9._-]+$")
+        self.assertRegex(version, r"^0\.3\.0\+codex\.[A-Za-z0-9._-]+$")
 
         mcp = plugin_sync.read_json(plugin_sync.PLUGIN_ROOT / ".mcp.json")
         server = mcp["mcpServers"]["long_job_supervisor"]
@@ -102,6 +102,7 @@ class PluginSyncTest(unittest.TestCase):
         self.assertNotIn("/home/", str(mcp))
         for path in (
             plugin_sync.PLUGIN_ROOT / ".codex-plugin" / "plugin.json",
+            plugin_sync.PLUGIN_ROOT / "scripts" / "monitoring.py",
             plugin_sync.PLUGIN_ROOT / "scripts" / "supervisor.py",
             plugin_sync.PLUGIN_ROOT / "skills" / "supervise-long-jobs" / "SKILL.md",
         ):

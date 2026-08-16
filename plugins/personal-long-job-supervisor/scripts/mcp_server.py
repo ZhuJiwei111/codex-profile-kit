@@ -8,38 +8,61 @@ import os
 import sys
 import threading
 
+from monitoring import discover_capabilities
 from supervisor import JobStore, SupervisorError
 
 
 PROTOCOL_VERSION = "2025-06-18"
-TOOL_NAMES = ("wait_event", "inspect_job", "list_jobs", "ack_event")
-STORE = JobStore()
+TOOL_NAMES = ("wait_event", "inspect_job", "list_jobs", "ack_event", "get_capabilities")
+STORE = None
+
+
+def get_store() -> JobStore:
+    global STORE
+    if STORE is None:
+        STORE = JobStore()
+    return STORE
 
 
 def wait_event(job_id: str, cancel_event=None) -> str:
     """Wait without model sampling until this job has an unacknowledged event."""
     interval = float(os.environ.get("PLJS_POLL_INTERVAL_SECONDS", "2"))
-    return STORE.render_payload(STORE.wait_event(job_id, poll_interval=interval, cancel_event=cancel_event))
+    store = get_store()
+    return store.render_payload(store.wait_event(job_id, poll_interval=interval, cancel_event=cancel_event))
 
 
 def inspect_job(job_id: str) -> str:
     """Inspect current job, process identity, paths, and pending event without logs."""
-    return STORE.render_payload(STORE.inspect_job(job_id))
+    store = get_store()
+    return store.render_payload(store.inspect_job(job_id))
 
 
 def list_jobs() -> str:
     """List durable job registrations and pending event state without reading logs."""
-    return STORE.render_payload(STORE.list_jobs())
+    store = get_store()
+    return store.render_payload(store.list_jobs())
 
 
 def ack_event(job_id: str, event_id: int) -> str:
     """Idempotently acknowledge one delivered event; never alter the underlying job."""
-    return STORE.render_payload(STORE.ack_event(job_id, event_id))
+    store = get_store()
+    return store.render_payload(store.ack_event(job_id, event_id))
+
+
+def get_capabilities() -> str:
+    """Discover monitor support without creating supervisor state."""
+    return json.dumps(discover_capabilities(), ensure_ascii=False, separators=(",", ":"))
 
 
 def tool_definitions() -> list[dict]:
     job_id = {"type": "string", "description": "Durable job ID returned by start"}
     return [
+        {
+            "name": "get_capabilities",
+            "description": "Discover Linux procfs and available built-in monitor adapters without creating job state.",
+            "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+            "annotations": {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True},
+        },
         {
             "name": "wait_event",
             "description": "Block inside the host until a durable unacknowledged job event exists; never read logs or alter the job.",
@@ -114,6 +137,8 @@ class StdioMcpServer:
             payload = list_jobs()
         elif name == "ack_event":
             payload = ack_event(arguments["job_id"], int(arguments["event_id"]))
+        elif name == "get_capabilities":
+            payload = get_capabilities()
         else:
             raise KeyError(name)
         return {
@@ -135,7 +160,7 @@ class StdioMcpServer:
                     {
                         "protocolVersion": negotiated,
                         "capabilities": {"tools": {"listChanged": False}},
-                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.2.0"},
+                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.3.0"},
                         "instructions": "Observe durable local job events. Never cancel, retry, restart, reconfigure, or launch a next stage.",
                     },
                 )

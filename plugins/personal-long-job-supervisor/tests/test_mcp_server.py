@@ -44,9 +44,15 @@ class McpObservationContractTest(unittest.TestCase):
 
     def test_exposes_only_observation_and_ack_tools(self):
         self.assertEqual(
-            {"wait_event", "inspect_job", "list_jobs", "ack_event"},
+            {"wait_event", "inspect_job", "list_jobs", "ack_event", "get_capabilities"},
             set(mcp_server.TOOL_NAMES),
         )
+
+    def test_capabilities_does_not_require_job_store(self):
+        mcp_server.STORE = None
+        payload = json.loads(mcp_server.get_capabilities())
+        self.assertEqual(1, payload["schema_version"])
+        self.assertIn("gpu_process_idle", payload["monitors"])
 
     def test_wait_event_and_ack_are_bounded_json(self):
         job = self.store.start_job(name="mcp", cwd=self.cwd, command=["/bin/true"])

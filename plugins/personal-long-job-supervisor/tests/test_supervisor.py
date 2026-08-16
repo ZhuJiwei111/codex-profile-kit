@@ -14,7 +14,11 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = PLUGIN_ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-from supervisor import DetachedProcessRuntime, JobStore, SupervisorError  # noqa: E402
+from supervisor import (  # noqa: E402
+    DetachedProcessRuntime,
+    JobStore,
+    SupervisorError,
+)
 
 
 class FakeRuntime:
@@ -47,6 +51,7 @@ class FakeRuntime:
                 "state": "exited",
             },
         )
+
 
 class JobStoreTest(unittest.TestCase):
     def setUp(self):
@@ -140,7 +145,15 @@ class JobStoreTest(unittest.TestCase):
         heartbeat.touch()
         old = time.time() - 100
         os.utime(heartbeat, (old, old))
-        job = self.start(heartbeat_path=heartbeat, stale_after=5)
+        job = self.start()
+        registration_path = self.store.job_dir(job["job_id"]) / "job.json"
+        registration = json.loads(registration_path.read_text(encoding="utf-8"))
+        registration.update(
+            schema_version=2,
+            heartbeat_path=str(heartbeat),
+            stale_after_seconds=5,
+        )
+        self.store._atomic_write_json(registration_path, registration)
 
         event = self.store.wait_event(job["job_id"], poll_interval=0.001)
         self.assertEqual("attention", event["event_type"])
@@ -280,6 +293,18 @@ class CliContractTest(unittest.TestCase):
             self.assertIn(command, completed.stdout)
         for forbidden in ("cancel", "retry", "restart"):
             self.assertNotIn(forbidden, completed.stdout)
+
+    def test_start_help_exposes_repeatable_monitor_json(self):
+        completed = subprocess.run(
+            [sys.executable, str(SCRIPTS / "supervisor.py"), "start", "--help"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        self.assertIn("--monitor", completed.stdout)
+        self.assertNotIn("--gpu-id", completed.stdout)
 
     @mock.patch.object(DetachedProcessRuntime, "_identity")
     @mock.patch("supervisor.subprocess.Popen")
