@@ -76,7 +76,7 @@ class ProfileSyncCliTest(unittest.TestCase):
             expected.parent.mkdir(parents=True)
             expected.write_bytes(b"placeholder")
 
-            with mock.patch.object(profile_sync.os, "name", "nt"), mock.patch.dict(
+            with mock.patch.object(profile_sync.sys, "platform", "win32"), mock.patch.dict(
                 profile_sync.os.environ,
                 {"LOCALAPPDATA": str(local_app_data)},
                 clear=True,

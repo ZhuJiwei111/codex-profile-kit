@@ -82,7 +82,7 @@ def resolve_codex_executable() -> str:
                 "CODEX_PROFILE_CODEX_BIN must name an existing absolute file"
             )
         return str(candidate)
-    if os.name == "nt":
+    if sys.platform == "win32":
         local_app_data = os.environ.get("LOCALAPPDATA")
         if local_app_data:
             candidate = (
