@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -75,6 +77,36 @@ class FakeCodex:
 
 
 class PluginSyncTest(unittest.TestCase):
+    def test_direct_cli_imports_sibling_profile_sync(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(plugin_sync.ROOT / "scripts" / "plugin_sync.py"), "--help"],
+            cwd=plugin_sync.ROOT,
+            text=True,
+            capture_output=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_codex_commands_use_profile_executable_resolver(self) -> None:
+        completed = mock.Mock(returncode=0, stdout='{"installed": []}', stderr="")
+        with mock.patch.object(
+            plugin_sync.profile_sync,
+            "resolve_codex_executable",
+            return_value="codex-stable",
+        ) as resolve, mock.patch.object(
+            plugin_sync.subprocess,
+            "run",
+            return_value=completed,
+        ) as run:
+            value = plugin_sync.run_codex_json(
+                Path("profile-home"), ["plugin", "list", "--json"]
+            )
+
+        resolve.assert_called_once_with()
+        self.assertEqual(value, {"installed": []})
+        self.assertEqual(run.call_args.args[0], ["codex-stable", "plugin", "list", "--json"])
+        self.assertEqual(run.call_args.kwargs["encoding"], "utf-8")
+
     def test_validate_host_runs_process_identity_with_plugin_python(self) -> None:
         completed = mock.Mock(returncode=0, stdout="process identity available", stderr="")
         with mock.patch.object(

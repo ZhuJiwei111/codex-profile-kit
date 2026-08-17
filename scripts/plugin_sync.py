@@ -13,9 +13,9 @@ import subprocess
 import sys
 from typing import Callable
 
-try:
+if __package__:
     from scripts import profile_sync
-except ModuleNotFoundError:  # Direct execution from scripts/.
+else:  # Direct execution from scripts/.
     import profile_sync  # type: ignore[no-redef]
 
 
@@ -111,14 +111,13 @@ def validate_source() -> str:
 
 
 def run_codex_json(codex_home: Path, arguments: list[str]) -> dict:
-    executable = shutil.which("codex")
-    if executable is None:
-        raise PluginSyncError("codex executable is unavailable")
+    executable = profile_sync.resolve_codex_executable()
     environment = os.environ.copy()
     environment["CODEX_HOME"] = str(codex_home)
     completed = subprocess.run(
         [executable, *arguments],
         text=True,
+        encoding="utf-8",
         capture_output=True,
         check=False,
         env=environment,

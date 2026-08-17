@@ -198,6 +198,11 @@ class ProfileContractTest(unittest.TestCase):
             "Do not copy a summary by default",
             "does not modify memory",
             "override the age windows",
+            "finished subAgent",
+            "source or parent metadata",
+            "result is delivered",
+            "does not stop, cancel",
+            "main-task and subAgent counts",
         ):
             self.assertIn(contract.lower(), prose.lower())
         self.assertNotIn("decision card", prose.lower())

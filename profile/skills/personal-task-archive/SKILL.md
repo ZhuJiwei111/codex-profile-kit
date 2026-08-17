@@ -63,6 +63,8 @@ than inventing an older substantive date.
 | Completed 24 hours to 15 days ago but not clearly lightweight | Ask the user with a task link and one-sentence summary. |
 | Completed more than 15 days ago | Archive automatically when authorized after the hard-protection check. |
 | Another task already explicitly owns all remaining work | Archive the source automatically after any necessary handoff. |
+| A finished subAgent already delivered its result, or its parent explicitly owns all remaining work | Archive automatically when authorized, regardless of age. |
+| A subAgent is running, awaiting delivery, missing its parent, or otherwise ambiguous | Protect or ask. |
 | Failed with a material next action | Protect or ask; failure is unfinished work. |
 | Closed failure that the user abandoned, terminated, or moved to an explicit successor | Archive automatically when authorized. |
 
@@ -83,6 +85,14 @@ work. Similar titles, a newer task in the same category, or a summary sent
 during archival do not establish ownership. Copying a summary alone does not
 transfer ownership.
 
+Classify a thread as a subAgent only from product source or parent metadata,
+never from its title. A confirmed finished subAgent is subordinate work rather
+than an independent recent task: once its result is delivered to the parent, or
+the parent explicitly owns the remaining work, archive it without the ordinary
+24-hour delay. Preserve every hard protection, especially running, unread,
+pinned, undelivered, and ambiguous subAgents. Archival organizes history; it
+does not stop, cancel, or prove completion of a subAgent.
+
 A task that the user unarchives during the current cleanup is protected for the
 rest of that run. Use pinning for durable protection across later cleanups; do
 not create a hidden archive-exclusion list.
@@ -94,9 +104,10 @@ not create a hidden archive-exclusion list.
    filtering before results enter context. If unavailable or incomplete, use
    the safe metadata procedure in
    [current-host inventory](references/session-inventory.md).
-3. Project bounded metadata first. Exclude the calling task and metadata-known
-   running, automation, Goal, pinned, unread, and less-than-24-hours-old tasks
-   before deep reads.
+3. Project bounded metadata first and report main-task and subAgent counts
+   separately. Exclude the calling task and metadata-known running, automation,
+   Goal, pinned, unread, and less-than-24-hours-old tasks before deep reads;
+   retain finished-and-delivered subAgents as age-independent candidates.
 4. Sort remaining candidates oldest first. Deep-read at most 50 tasks in one
    normal run. A user-requested complete inventory may continue in batches.
 5. Resolve only those candidates through exact reads on the frozen host. Treat
@@ -155,7 +166,7 @@ asks to audit or change memory.
 ## Completion Report
 
 Report the current-host identity, automatically archived task links with
-individual reasons, protected categories, linked review items with one-sentence
-summaries, missing records, the remaining bounded-candidate count, and any
-product-tool limitation. Report memory work only when that branch was
-explicitly requested.
+individual reasons, main-task and subAgent counts, protected categories, linked
+review items with one-sentence summaries, missing records, the remaining
+bounded-candidate count, and any product-tool limitation. Report memory work
+only when that branch was explicitly requested.
