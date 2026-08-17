@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Durable, event-driven supervision for detached Linux processes."""
+"""Durable, event-driven supervision for detached local processes."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ import uuid
 
 from durable import append_event, atomic_write_json, locked_events, read_json, utc_now
 from monitoring import MonitorError, NvidiaAdapter, discover_capabilities, normalize_monitors
+from process_identity import ProcessIdentityError, process_identity
 
 
 SCHEMA_VERSION = 3
@@ -41,16 +42,9 @@ class DetachedProcessRuntime:
     @staticmethod
     def _identity(pid: int) -> dict | None:
         try:
-            raw = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
-        except FileNotFoundError:
-            return None
-        except OSError as error:
+            return process_identity(pid)
+        except ProcessIdentityError as error:
             raise SupervisorError(f"cannot inspect process {pid}: {error}") from error
-        _, separator, tail = raw.rpartition(")")
-        fields = tail.strip().split() if separator else []
-        if len(fields) < 20:
-            raise SupervisorError(f"invalid /proc identity for process {pid}")
-        return {"pid": pid, "start_ticks": int(fields[19]), "state_code": fields[0]}
 
     def start(self, registration: dict, worker_path: Path, python_executable: str) -> dict:
         command = [

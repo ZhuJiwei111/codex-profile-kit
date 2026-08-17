@@ -50,7 +50,8 @@ class MonitorConfigTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_gpu_index_normalizes_to_stable_uuid(self):
+    @mock.patch("monitoring.linux_process_tree_available", return_value=True)
+    def test_gpu_index_normalizes_to_stable_uuid(self, _available):
         monitors = normalize_monitors(
             [
                 {
@@ -111,12 +112,23 @@ class MonitorConfigTest(unittest.TestCase):
         observed = NvidiaAdapter("/usr/bin/nvidia-smi").process_sample({101, 102})
         self.assertEqual({0: 7.0, 1: 4.0}, observed)
 
-    def test_capabilities_report_process_attribution_and_devices(self):
+    @mock.patch("monitoring.linux_process_tree_available", return_value=True)
+    def test_capabilities_report_process_attribution_and_devices(self, _available):
         capabilities = discover_capabilities(self.adapter)
         gpu = capabilities["monitors"]["gpu_process_idle"]
         self.assertTrue(gpu["available"])
         self.assertTrue(gpu["process_attribution"])
         self.assertEqual("GPU-aaa", gpu["devices"][0]["uuid"])
+
+    @mock.patch("monitoring.linux_process_tree_available", return_value=False)
+    @mock.patch("monitoring.sys.platform", "darwin")
+    def test_macos_capabilities_keep_posix_monitors_without_gpu(self, _available):
+        capabilities = discover_capabilities(self.adapter)
+
+        self.assertEqual("darwin", capabilities["platform"])
+        self.assertFalse(capabilities["monitors"]["gpu_process_idle"]["available"])
+        self.assertTrue(capabilities["monitors"]["disk_free"]["available"])
+        self.assertTrue(capabilities["monitors"]["heartbeat_stale"]["available"])
 
 
 class MonitorEngineTest(unittest.TestCase):

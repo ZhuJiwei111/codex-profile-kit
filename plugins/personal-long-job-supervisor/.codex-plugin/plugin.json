@@ -1,6 +1,6 @@
 {
   "name": "personal-long-job-supervisor",
-  "version": "0.3.0+codex.20260816173436",
+  "version": "0.4.0+codex.20260817160211",
   "description": "Run long local commands in detached process sessions and resume Codex only for durable terminal or attention events.",
   "author": {
     "name": "Jiwei Zhu"
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Personal Long Job Supervisor",
     "shortDescription": "Event-driven supervision without model polling.",
-    "longDescription": "Launch long Linux commands in detached process sessions, persist worker-side NVIDIA GPU, disk, and heartbeat observation across MCP disconnects, and resume Codex only for bounded durable events.",
+    "longDescription": "Launch long Linux or macOS commands in detached process sessions, persist worker-side disk and heartbeat observation plus Linux NVIDIA GPU observation across MCP disconnects, and resume Codex only for bounded durable events.",
     "developerName": "Jiwei Zhu",
     "category": "Productivity",
     "capabilities": [

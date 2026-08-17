@@ -101,7 +101,7 @@ def validate_source() -> str:
     if server.get("tool_timeout_sec") != 604800:
         raise PluginSyncError("MCP wait timeout must remain seven days")
 
-    for script in ("durable.py", "monitoring.py", "mcp_server.py", "supervisor.py", "worker.py"):
+    for script in ("durable.py", "monitoring.py", "mcp_server.py", "process_identity.py", "supervisor.py", "worker.py"):
         path = PLUGIN_ROOT / "scripts" / script
         try:
             compile(path.read_bytes(), str(path), "exec")
@@ -198,12 +198,19 @@ def inspect_state(
 
 
 def validate_host() -> None:
-    if os.name != "posix" or not sys.platform.startswith("linux"):
-        raise PluginSyncError("personal-long-job-supervisor requires Linux /proc")
-    if shutil.which("python3") is None:
+    python = shutil.which("python3")
+    if python is None:
         raise PluginSyncError("required host executable is unavailable: python3")
-    if not Path("/proc/self/stat").is_file():
-        raise PluginSyncError("Linux process identity source is unavailable: /proc/self/stat")
+    probe = subprocess.run(
+        [python, str(PLUGIN_ROOT / "scripts" / "process_identity.py")],
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=5,
+    )
+    if probe.returncode:
+        detail = (probe.stderr or probe.stdout).strip()[:512]
+        raise PluginSyncError(f"process identity probe failed: {detail}")
 
 
 def print_state(state: PluginState) -> None:

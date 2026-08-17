@@ -75,24 +75,39 @@ class FakeCodex:
 
 
 class PluginSyncTest(unittest.TestCase):
-    def test_validate_host_requires_linux_proc_without_systemd(self) -> None:
-        with mock.patch.object(plugin_sync.os, "name", "posix"), mock.patch.object(
-            plugin_sync.sys, "platform", "linux"
-        ), mock.patch.object(
+    def test_validate_host_runs_process_identity_with_plugin_python(self) -> None:
+        completed = mock.Mock(returncode=0, stdout="process identity available", stderr="")
+        with mock.patch.object(
             plugin_sync.shutil, "which", return_value="/usr/bin/python3"
         ) as which, mock.patch.object(
-            plugin_sync.Path, "is_file", return_value=True
-        ), mock.patch.object(
-            plugin_sync.subprocess, "run"
+            plugin_sync.subprocess, "run", return_value=completed
         ) as run:
             plugin_sync.validate_host()
 
         which.assert_called_once_with("python3")
-        run.assert_not_called()
+        run.assert_called_once_with(
+            [
+                "/usr/bin/python3",
+                str(plugin_sync.PLUGIN_ROOT / "scripts" / "process_identity.py"),
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+
+    def test_validate_host_reports_process_identity_probe_failure(self) -> None:
+        completed = mock.Mock(returncode=1, stdout="", stderr="ERROR: unsupported")
+        with mock.patch.object(
+            plugin_sync.shutil, "which", return_value="/usr/bin/python3"
+        ), mock.patch.object(
+            plugin_sync.subprocess, "run", return_value=completed
+        ), self.assertRaisesRegex(plugin_sync.PluginSyncError, "unsupported"):
+            plugin_sync.validate_host()
 
     def test_source_contract_is_portable_and_bounded(self) -> None:
         version = plugin_sync.validate_source()
-        self.assertRegex(version, r"^0\.3\.0\+codex\.[A-Za-z0-9._-]+$")
+        self.assertRegex(version, r"^0\.4\.0\+codex\.[A-Za-z0-9._-]+$")
 
         mcp = plugin_sync.read_json(plugin_sync.PLUGIN_ROOT / ".mcp.json")
         server = mcp["mcpServers"]["long_job_supervisor"]

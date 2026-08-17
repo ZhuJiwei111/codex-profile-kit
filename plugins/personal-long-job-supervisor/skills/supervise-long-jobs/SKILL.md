@@ -1,6 +1,6 @@
 ---
 name: supervise-long-jobs
-description: Launch and supervise an already-authorized non-interactive Linux command expected to run longer than about ten minutes when the current Codex task should resume after completion, failure, or a declared health condition. Use detached worker-side observation instead of model polling, Scheduled tasks, Stop hooks, or ad hoc terminals. Also use to discover monitor capabilities, reconnect to, acknowledge, or clean registrations created by this supervisor. Do not use for interactive commands, short commands, unauthorized resource use, experiment orchestration, or automatic cancellation, retry, restart, signaling, or reconfiguration.
+description: Launch and supervise an already-authorized non-interactive Linux or macOS command expected to run longer than about ten minutes when the current Codex task should resume after completion, failure, or a declared health condition. Use detached worker-side observation instead of model polling, Scheduled tasks, Stop hooks, or ad hoc terminals. Also use to discover monitor capabilities, reconnect to, acknowledge, or clean registrations created by this supervisor. Do not use for interactive commands, short commands, unauthorized resource use, experiment orchestration, or automatic cancellation, retry, restart, signaling, or reconfiguration.
 ---
 
 # Supervise Long Jobs
@@ -19,8 +19,8 @@ python3 <plugin-root>/scripts/supervisor.py capabilities
 
 State one concise line before launch: `Observation contract: baseline + <monitors>`.
 
-- Baseline PID/start-ticks identity and atomic terminal result are always active.
-- For an ML job assigned NVIDIA GPUs, default to per-process-tree utilization below 5 percent for 15 minutes, with a 5-minute startup grace. Alert when any assigned GPU is continuously idle.
+- Baseline PID/start identity and atomic terminal result are always active on Linux and macOS.
+- For an ML job assigned NVIDIA GPUs on Linux, default to per-process-tree utilization below 5 percent for 15 minutes, with a 5-minute startup grace. Alert when any assigned GPU is continuously idle.
 - For an ML output or artifact filesystem, default to available space below 5 percent or 20 GiB for 60 seconds.
 - Add heartbeat only when the launched job explicitly owns and updates that path.
 

@@ -11,16 +11,7 @@ import time
 
 from durable import append_event, atomic_write_json, locked_events, read_json, utc_now
 from monitoring import MonitorEngine
-
-
-def process_identity(pid: int | None = None) -> dict:
-    pid = pid or os.getpid()
-    raw = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
-    _, separator, tail = raw.rpartition(")")
-    fields = tail.strip().split() if separator else []
-    if len(fields) < 20:
-        raise RuntimeError(f"invalid /proc identity for process {pid}")
-    return {"pid": pid, "start_ticks": int(fields[19])}
+from process_identity import require_process_identity
 
 
 def main(argv=None) -> int:
@@ -32,12 +23,12 @@ def main(argv=None) -> int:
     if not command:
         return 125
     os.umask(0o077)
-    atomic_write_json(args.job_dir / "process.json", process_identity())
+    atomic_write_json(args.job_dir / "process.json", require_process_identity())
     registration = read_json(args.job_dir / "job.json")
     worker_error = None
     try:
         target = subprocess.Popen(command, stdin=subprocess.DEVNULL, close_fds=True)
-        target_identity = process_identity(target.pid)
+        target_identity = require_process_identity(target.pid)
         atomic_write_json(args.job_dir / "target_process.json", target_identity)
         engine = MonitorEngine(args.job_dir, registration, target.pid)
         wait_timeout = min(

@@ -59,7 +59,7 @@ def tool_definitions() -> list[dict]:
     return [
         {
             "name": "get_capabilities",
-            "description": "Discover Linux procfs and available built-in monitor adapters without creating job state.",
+            "description": "Discover host process identity and available built-in monitor adapters without creating job state.",
             "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
             "annotations": {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True},
         },
@@ -160,7 +160,7 @@ class StdioMcpServer:
                     {
                         "protocolVersion": negotiated,
                         "capabilities": {"tools": {"listChanged": False}},
-                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.3.0"},
+                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.4.0"},
                         "instructions": "Observe durable local job events. Never cancel, retry, restart, reconfigure, or launch a next stage.",
                     },
                 )

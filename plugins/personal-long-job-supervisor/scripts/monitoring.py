@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import time
 
 from durable import append_event, locked_events, utc_now
@@ -22,6 +23,10 @@ AUTHORITY = (
     "cancel, retry, restart, signal, reconfigure, or change parameters automatically"
 )
 KINDS = ("gpu_process_idle", "disk_free", "heartbeat_stale")
+
+
+def linux_process_tree_available() -> bool:
+    return sys.platform.startswith("linux") and Path("/proc/self/stat").is_file()
 
 
 def _run(command: list[str], timeout: float = 5) -> subprocess.CompletedProcess:
@@ -89,7 +94,8 @@ class NvidiaAdapter:
 
 def discover_capabilities(adapter: NvidiaAdapter | None = None) -> dict:
     adapter = adapter or NvidiaAdapter()
-    linux = os.name == "posix" and Path("/proc/self/stat").is_file()
+    linux_procfs = linux_process_tree_available()
+    posix_files = os.name == "posix"
     gpu = {
         "available": False,
         "provider": "nvidia-smi",
@@ -97,7 +103,7 @@ def discover_capabilities(adapter: NvidiaAdapter | None = None) -> dict:
         "devices": [],
     }
     gap = None
-    if linux:
+    if linux_procfs:
         try:
             devices = adapter.devices()
             adapter.process_sample(set())
@@ -105,17 +111,17 @@ def discover_capabilities(adapter: NvidiaAdapter | None = None) -> dict:
         except MonitorError as error:
             gap = str(error)[:512]
     else:
-        gap = "Linux procfs is required"
+        gap = "Linux procfs is required for NVIDIA process-tree attribution"
     if gap:
         gpu["evidence_gap"] = gap
     return {
         "schema_version": 1,
-        "platform": "linux" if linux else "unsupported",
-        "procfs": linux,
+        "platform": "linux" if linux_procfs else ("darwin" if sys.platform == "darwin" else "unsupported"),
+        "procfs": linux_procfs,
         "monitors": {
             "gpu_process_idle": gpu,
-            "disk_free": {"available": linux, "provider": "statvfs"},
-            "heartbeat_stale": {"available": linux, "provider": "stat"},
+            "disk_free": {"available": posix_files, "provider": "statvfs"},
+            "heartbeat_stale": {"available": posix_files, "provider": "stat"},
         },
     }
 
@@ -160,6 +166,10 @@ def normalize_monitors(
         seen.add(kind)
         monitor_id = f"m{position}"
         if kind == "gpu_process_idle":
+            if not linux_process_tree_available():
+                raise MonitorError(
+                    "gpu_process_idle requires Linux procfs for process-tree attribution"
+                )
             _keys(
                 config,
                 {"kind", "devices", "utilization_below_percent", "duration_seconds", "startup_grace_seconds"},
