@@ -69,12 +69,21 @@ class ProfileSyncCliTest(unittest.TestCase):
             [change.path for change in state.changes if change.operation == "DELETE"],
         )
 
-    def test_resolve_codex_executable_prefers_windows_local_app(self) -> None:
+    def test_resolve_codex_executable_prefers_current_windows_desktop_cache(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             local_app_data = Path(directory)
-            expected = local_app_data / "OpenAI" / "Codex" / "bin" / "codex.exe"
+            bin_root = local_app_data / "OpenAI" / "Codex" / "bin"
+            legacy = bin_root / "codex.exe"
+            legacy.parent.mkdir(parents=True)
+            legacy.write_bytes(b"legacy")
+            older = bin_root / "older" / "codex.exe"
+            older.parent.mkdir()
+            older.write_bytes(b"older")
+            expected = bin_root / "current" / "codex.exe"
             expected.parent.mkdir(parents=True)
-            expected.write_bytes(b"placeholder")
+            expected.write_bytes(b"current")
+            os.utime(older, ns=(1, 1))
+            os.utime(expected, ns=(2, 2))
 
             with mock.patch.object(profile_sync.sys, "platform", "win32"), mock.patch.dict(
                 profile_sync.os.environ,
@@ -85,6 +94,22 @@ class ProfileSyncCliTest(unittest.TestCase):
                 "which",
                 return_value=r"C:\Program Files\WindowsApps\OpenAI.Codex\codex.exe",
             ):
+                resolved = profile_sync.resolve_codex_executable()
+
+        self.assertEqual(resolved, str(expected))
+
+    def test_resolve_codex_executable_uses_legacy_windows_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            local_app_data = Path(directory)
+            expected = local_app_data / "OpenAI" / "Codex" / "bin" / "codex.exe"
+            expected.parent.mkdir(parents=True)
+            expected.write_bytes(b"legacy")
+
+            with mock.patch.object(profile_sync.sys, "platform", "win32"), mock.patch.dict(
+                profile_sync.os.environ,
+                {"LOCALAPPDATA": str(local_app_data)},
+                clear=True,
+            ), mock.patch.object(profile_sync.shutil, "which", return_value=None):
                 resolved = profile_sync.resolve_codex_executable()
 
         self.assertEqual(resolved, str(expected))

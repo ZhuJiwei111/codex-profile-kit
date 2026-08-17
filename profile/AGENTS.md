@@ -87,6 +87,14 @@ instructions and explicit user requests take precedence.
   request delegation or persistent App coordination, use
   `personal-subagent-boundaries` for bounded one-shot workers and
   `personal-multiline-coordination` for persistent App tasks or worktrees.
+- Route subagent models by task shape. Keep the parent's model for ambiguous
+  diagnosis, architecture, security, shared-state writes, approval-bearing
+  work, synthesis, and final verdicts. Use `gpt-5.6-terra` for bounded
+  exploration or review that still needs judgment, and `gpt-5.6-luna` only for
+  narrow, repeatable, independently checkable work such as read-only inventory,
+  targeted lookup, classification, or mechanical summarization. Select a
+  lower-cost model explicitly with the smallest sufficient context; do not set
+  a blanket low-tier default for all subagents.
 - Creating or selecting a file-backed plan is opt-in. Once
   `personal-planning-with-files-zh` has selected an active plan, treat that plan
   as sticky task state across later turns and compaction: invoke the skill

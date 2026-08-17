@@ -85,15 +85,17 @@ def resolve_codex_executable() -> str:
     if sys.platform == "win32":
         local_app_data = os.environ.get("LOCALAPPDATA")
         if local_app_data:
-            candidate = (
-                Path(local_app_data)
-                / "OpenAI"
-                / "Codex"
-                / "bin"
-                / "codex.exe"
+            bin_root = Path(local_app_data) / "OpenAI" / "Codex" / "bin"
+            versioned_candidates = sorted(
+                bin_root.glob("*/codex.exe"),
+                key=lambda path: path.stat().st_mtime_ns,
+                reverse=True,
             )
-            if candidate.is_file():
-                return str(candidate)
+            if versioned_candidates:
+                return str(versioned_candidates[0])
+            legacy_candidate = bin_root / "codex.exe"
+            if legacy_candidate.is_file():
+                return str(legacy_candidate)
     executable = shutil.which("codex")
     if executable is None:
         raise SyncError("codex executable is unavailable for config/batchWrite")
