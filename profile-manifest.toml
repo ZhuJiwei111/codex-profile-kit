@@ -61,6 +61,7 @@ trees = [
   "skills/setup-matt-pocock-skills",
   "skills/tdd",
   "skills/teach",
+  "skills/translate-paper-zh",
   "skills/to-questionnaire",
   "skills/to-spec",
   "skills/to-tickets",

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Translate Paper ZH"
+  short_description: "Translate papers into faithful bilingual Markdown"
+  default_prompt: "Use $translate-paper-zh to translate an English academic paper PDF into paragraph-aligned English-Chinese Markdown."
+policy:
+  allow_implicit_invocation: false
