@@ -96,6 +96,7 @@ retired_trees = [
   "skills/personal-context-compression",
   "skills/personal-context-optimization",
   "skills/personal-context-save-restore",
+  "skills/personal-defer-and-resume",
   "skills/personal-docs-sync-light",
   "skills/personal-long-job-status",
   "skills/personal-monitor-external-jobs",
