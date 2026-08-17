@@ -1,6 +1,6 @@
 ---
 name: supervise-long-jobs
-description: Launch and supervise an already-authorized non-interactive Linux or macOS command expected to run longer than about ten minutes when the current Codex task should resume after completion, failure, or a declared health condition. Use detached worker-side observation instead of model polling, Scheduled tasks, Stop hooks, or ad hoc terminals. Also use to discover monitor capabilities, reconnect to, acknowledge, or clean registrations created by this supervisor. Do not use for interactive commands, short commands, unauthorized resource use, experiment orchestration, or automatic cancellation, retry, restart, signaling, or reconfiguration.
+description: Launch and supervise an already-authorized non-interactive Linux, macOS, or Windows command expected to run longer than about ten minutes when the current Codex task should resume after completion, failure, or a declared health condition. Use detached worker-side observation instead of model polling, Scheduled tasks, Stop hooks, or ad hoc terminals. Also use to discover monitor capabilities, reconnect to, acknowledge, or clean registrations created by this supervisor. Do not use for interactive commands, short commands, unauthorized resource use, experiment orchestration, or automatic cancellation, retry, restart, signaling, or reconfiguration.
 ---
 
 # Supervise Long Jobs
@@ -11,15 +11,16 @@ Keep execution, sampling, and logs in the detached worker. Return to the model o
 
 Resolve `<plugin-root>` as the directory two levels above this `SKILL.md`. Do not assume a home directory, clone path, mount, container layout, GPU index, or marketplace cache path.
 
-Call `get_capabilities()` before selecting health monitors. When MCP is unavailable, run:
+Call `get_capabilities()` before selecting health monitors. When MCP is unavailable,
+run the following with the current host's absolute Python runtime:
 
 ```text
-python3 <plugin-root>/scripts/supervisor.py capabilities
+<absolute-python-runtime> <plugin-root>/scripts/supervisor.py capabilities
 ```
 
 State one concise line before launch: `Observation contract: baseline + <monitors>`.
 
-- Baseline PID/start identity and atomic terminal result are always active on Linux and macOS.
+- Baseline PID/start identity and atomic terminal result are always active on Linux, macOS, and Windows.
 - For an ML job assigned NVIDIA GPUs on Linux, default to per-process-tree utilization below 5 percent for 15 minutes, with a 5-minute startup grace. Alert when any assigned GPU is continuously idle.
 - For an ML output or artifact filesystem, default to available space below 5 percent or 20 GiB for 60 seconds.
 - Add heartbeat only when the launched job explicitly owns and updates that path.
@@ -31,7 +32,7 @@ Derive GPU scope and filesystem paths from the authorized task and current capab
 Confirm the command, working directory, resource use, and expected duration are already authorized. Use an absolute executable path and keep credentials out of command arguments.
 
 ```text
-python3 <plugin-root>/scripts/supervisor.py \
+<absolute-python-runtime> <plugin-root>/scripts/supervisor.py \
   start --name <name> --cwd <absolute-cwd> \
   [--artifact <absolute-path>]... \
   [--monitor '<strict-json-object>']... \

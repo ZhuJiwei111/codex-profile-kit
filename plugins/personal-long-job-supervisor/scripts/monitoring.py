@@ -95,7 +95,7 @@ class NvidiaAdapter:
 def discover_capabilities(adapter: NvidiaAdapter | None = None) -> dict:
     adapter = adapter or NvidiaAdapter()
     linux_procfs = linux_process_tree_available()
-    posix_files = os.name == "posix"
+    local_files = os.name in ("posix", "nt")
     gpu = {
         "available": False,
         "provider": "nvidia-smi",
@@ -116,12 +116,12 @@ def discover_capabilities(adapter: NvidiaAdapter | None = None) -> dict:
         gpu["evidence_gap"] = gap
     return {
         "schema_version": 1,
-        "platform": "linux" if linux_procfs else ("darwin" if sys.platform == "darwin" else "unsupported"),
+        "platform": "linux" if linux_procfs else ("darwin" if sys.platform == "darwin" else ("windows" if sys.platform == "win32" else "unsupported")),
         "procfs": linux_procfs,
         "monitors": {
             "gpu_process_idle": gpu,
-            "disk_free": {"available": posix_files, "provider": "statvfs"},
-            "heartbeat_stale": {"available": posix_files, "provider": "stat"},
+            "disk_free": {"available": local_files, "provider": "disk_usage"},
+            "heartbeat_stale": {"available": local_files, "provider": "stat"},
         },
     }
 
@@ -228,7 +228,7 @@ def normalize_monitors(
                 normalized["available_below_percent"] = _number(config["available_below_percent"], "available_below_percent", strictly=True, maximum=100)
             for path in normalized["paths"]:
                 try:
-                    os.statvfs(filesystem_probe_path(path))
+                    shutil.disk_usage(filesystem_probe_path(path))
                 except (OSError, MonitorError) as error:
                     raise MonitorError(f"cannot monitor filesystem for {path}: {error}") from error
             parsed.append(normalized)
@@ -375,7 +375,7 @@ class MonitorEngine:
             try:
                 probe_path = filesystem_probe_path(path)
                 stat = os.stat(probe_path)
-                fs = os.statvfs(probe_path)
+                usage = shutil.disk_usage(probe_path)
             except (OSError, MonitorError) as error:
                 had_error = True
                 self._probe_error(data, monitor, now, error)
@@ -384,8 +384,8 @@ class MonitorEngine:
             if subject in seen:
                 continue
             seen.add(subject)
-            available = fs.f_bavail * fs.f_frsize
-            total = fs.f_blocks * fs.f_frsize
+            available = usage.free
+            total = usage.total
             percent = (available / total * 100) if total else 0.0
             low = False
             if "available_below_gib" in monitor:

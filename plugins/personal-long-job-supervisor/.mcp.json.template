@@ -2,7 +2,7 @@
   "mcpServers": {
     "long_job_supervisor": {
       "cwd": ".",
-      "command": "python3",
+      "command": "{{PROFILE_SYNC_PYTHON}}",
       "args": [
         "./scripts/mcp_server.py"
       ],

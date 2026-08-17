@@ -2,10 +2,11 @@ import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-import selectors
+import queue
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 
@@ -85,6 +86,13 @@ class McpStdioProtocolTest(unittest.TestCase):
             bufsize=1,
             env=env,
         )
+        self.responses = queue.Queue()
+        self.reader = threading.Thread(target=self._read_responses, daemon=True)
+        self.reader.start()
+
+    def _read_responses(self):
+        for line in self.process.stdout:
+            self.responses.put(json.loads(line))
 
     def tearDown(self):
         if self.process.poll() is None:
@@ -101,18 +109,15 @@ class McpStdioProtocolTest(unittest.TestCase):
         self.process.stdin.write(json.dumps(message) + "\n")
         self.process.stdin.flush()
         deadline = time.time() + 5
-        selector = selectors.DefaultSelector()
-        selector.register(self.process.stdout, selectors.EVENT_READ)
-        try:
-            while time.time() < deadline:
-                ready = selector.select(timeout=max(0, deadline - time.time()))
-                self.assertTrue(ready, self.process.stderr.read() if self.process.poll() is not None else "MCP response timeout")
-                response = json.loads(self.process.stdout.readline())
-                if response.get("id") == request_id:
-                    return response
-            self.fail("MCP response timeout")
-        finally:
-            selector.close()
+        while time.time() < deadline:
+            try:
+                response = self.responses.get(timeout=max(0, deadline - time.time()))
+            except queue.Empty:
+                detail = self.process.stderr.read() if self.process.poll() is not None else "MCP response timeout"
+                self.fail(detail)
+            if response.get("id") == request_id:
+                return response
+        self.fail("MCP response timeout")
 
     def test_initialize_list_and_call(self):
         initialized = self.request(

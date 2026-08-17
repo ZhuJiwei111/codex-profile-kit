@@ -84,7 +84,8 @@ class JobStoreTest(unittest.TestCase):
         job_dir = self.store.job_dir(job["job_id"])
         registration = json.loads((job_dir / "job.json").read_text())
 
-        self.assertEqual(0o700, job_dir.stat().st_mode & 0o777)
+        if os.name == "posix":
+            self.assertEqual(0o700, job_dir.stat().st_mode & 0o777)
         self.assertNotIn("command", registration)
         self.assertEqual("echo", registration["executable"])
         self.assertEqual(2, registration["argument_count"])

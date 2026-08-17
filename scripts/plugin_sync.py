@@ -11,6 +11,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 from typing import Callable
 
 if __package__:
@@ -25,6 +26,8 @@ MARKETPLACE_PATH = ROOT / ".agents" / "plugins" / "marketplace.json"
 PLUGIN_NAME = "personal-long-job-supervisor"
 PLUGIN_ID = f"{PLUGIN_NAME}@{MARKETPLACE_NAME}"
 PLUGIN_ROOT = ROOT / "plugins" / PLUGIN_NAME
+PLUGIN_MCP_TEMPLATE = PLUGIN_ROOT / ".mcp.json.template"
+PLUGIN_MCP_PATH = PLUGIN_ROOT / ".mcp.json"
 LEGACY_PLUGIN_ID = f"{PLUGIN_NAME}@personal"
 
 
@@ -89,13 +92,13 @@ def validate_source() -> str:
     if manifest.get("mcpServers") != "./.mcp.json":
         raise PluginSyncError("plugin manifest must point at ./.mcp.json")
 
-    mcp = read_json(PLUGIN_ROOT / ".mcp.json")
+    mcp = read_json(PLUGIN_MCP_TEMPLATE)
     servers = mcp.get("mcpServers")
     server = servers.get("long_job_supervisor") if isinstance(servers, dict) else None
     if not isinstance(server, dict):
         raise PluginSyncError("long_job_supervisor MCP definition is missing")
-    if server.get("cwd") != "." or server.get("command") != "python3":
-        raise PluginSyncError("MCP server must resolve from the installed plugin root")
+    if server.get("cwd") != "." or server.get("command") != "{{PROFILE_SYNC_PYTHON}}":
+        raise PluginSyncError("MCP template must use the profile Python placeholder")
     if server.get("args") != ["./scripts/mcp_server.py"]:
         raise PluginSyncError("MCP server path must be plugin-relative")
     if server.get("tool_timeout_sec") != 604800:
@@ -108,6 +111,36 @@ def validate_source() -> str:
         except (OSError, SyntaxError) as exc:
             raise PluginSyncError(f"invalid plugin script {path}: {exc}") from exc
     return version
+
+
+def render_mcp_config(runtime: Path | None = None) -> Path:
+    runtime = runtime or profile_sync.resolve_hook_runtime()
+    if not runtime.is_absolute() or not runtime.is_file():
+        raise PluginSyncError("plugin Python runtime must be an existing absolute file")
+    value = read_json(PLUGIN_MCP_TEMPLATE)
+    servers = value.get("mcpServers")
+    server = servers.get("long_job_supervisor") if isinstance(servers, dict) else None
+    if not isinstance(server, dict):
+        raise PluginSyncError("long_job_supervisor MCP template is missing")
+    server["command"] = str(runtime)
+    PLUGIN_MCP_PATH.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(
+        prefix=".mcp-", suffix=".json.tmp", dir=PLUGIN_MCP_PATH.parent
+    )
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(value, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, PLUGIN_MCP_PATH)
+    except Exception:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+    return PLUGIN_MCP_PATH
 
 
 def run_codex_json(codex_home: Path, arguments: list[str]) -> dict:
@@ -197,12 +230,11 @@ def inspect_state(
 
 
 def validate_host() -> None:
-    python = shutil.which("python3")
-    if python is None:
-        raise PluginSyncError("required host executable is unavailable: python3")
+    python = profile_sync.resolve_hook_runtime()
     probe = subprocess.run(
-        [python, str(PLUGIN_ROOT / "scripts" / "process_identity.py")],
+        [str(python), str(PLUGIN_ROOT / "scripts" / "process_identity.py")],
         text=True,
+        encoding="utf-8",
         capture_output=True,
         check=False,
         timeout=5,
@@ -230,6 +262,7 @@ def apply_plugins(
     runner: CodexRunner = run_codex_json,
 ) -> PluginState:
     validate_host()
+    render_mcp_config()
     expected_revision, _ = profile_sync.git_source_revision(ROOT, require_clean=True)
     with profile_sync.deployment_lock(codex_home):
         state = inspect_state(codex_home, runner=runner, require_clean=True)

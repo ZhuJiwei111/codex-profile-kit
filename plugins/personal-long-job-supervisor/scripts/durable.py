@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import datetime, timezone
-import fcntl
 import json
 import os
 from pathlib import Path
 import tempfile
+
+if os.name == "nt":
+    import msvcrt
+else:
+    import fcntl
 
 
 def utc_now() -> str:
@@ -19,7 +23,8 @@ def atomic_write_json(path: Path, value: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
     try:
-        os.fchmod(descriptor, 0o600)
+        if hasattr(os, "fchmod"):
+            os.fchmod(descriptor, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             json.dump(value, handle, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
             handle.flush()
@@ -40,17 +45,39 @@ def read_json(path: Path) -> dict:
     return value
 
 
+def _lock_file(lock) -> None:
+    if os.name == "nt":
+        lock.seek(0, os.SEEK_END)
+        if lock.tell() == 0:
+            lock.write("\0")
+            lock.flush()
+        lock.seek(0)
+        msvcrt.locking(lock.fileno(), msvcrt.LK_LOCK, 1)
+    else:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+
+
+def _unlock_file(lock) -> None:
+    if os.name == "nt":
+        lock.seek(0)
+        msvcrt.locking(lock.fileno(), msvcrt.LK_UNLCK, 1)
+    else:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+
+
 @contextmanager
 def locked_events(job_dir: Path):
     lock_path = job_dir / "events.lock"
     with lock_path.open("a+", encoding="utf-8") as lock:
         os.chmod(lock_path, 0o600)
-        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-        path = job_dir / "events.json"
-        data = read_json(path)
-        yield data
-        atomic_write_json(path, data)
-        fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+        _lock_file(lock)
+        try:
+            path = job_dir / "events.json"
+            data = read_json(path)
+            yield data
+            atomic_write_json(path, data)
+        finally:
+            _unlock_file(lock)
 
 
 def append_event(data: dict, registration: dict, event_type: str, **fields) -> dict:

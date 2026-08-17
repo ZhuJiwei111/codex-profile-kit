@@ -110,19 +110,22 @@ class PluginSyncTest(unittest.TestCase):
     def test_validate_host_runs_process_identity_with_plugin_python(self) -> None:
         completed = mock.Mock(returncode=0, stdout="process identity available", stderr="")
         with mock.patch.object(
-            plugin_sync.shutil, "which", return_value="/usr/bin/python3"
-        ) as which, mock.patch.object(
+            plugin_sync.profile_sync,
+            "resolve_hook_runtime",
+            return_value=Path("/opt/profile/python"),
+        ) as resolve, mock.patch.object(
             plugin_sync.subprocess, "run", return_value=completed
         ) as run:
             plugin_sync.validate_host()
 
-        which.assert_called_once_with("python3")
+        resolve.assert_called_once_with()
         run.assert_called_once_with(
             [
-                "/usr/bin/python3",
+                str(Path("/opt/profile/python")),
                 str(plugin_sync.PLUGIN_ROOT / "scripts" / "process_identity.py"),
             ],
             text=True,
+            encoding="utf-8",
             capture_output=True,
             check=False,
             timeout=5,
@@ -131,7 +134,9 @@ class PluginSyncTest(unittest.TestCase):
     def test_validate_host_reports_process_identity_probe_failure(self) -> None:
         completed = mock.Mock(returncode=1, stdout="", stderr="ERROR: unsupported")
         with mock.patch.object(
-            plugin_sync.shutil, "which", return_value="/usr/bin/python3"
+            plugin_sync.profile_sync,
+            "resolve_hook_runtime",
+            return_value=Path("/opt/profile/python"),
         ), mock.patch.object(
             plugin_sync.subprocess, "run", return_value=completed
         ), self.assertRaisesRegex(plugin_sync.PluginSyncError, "unsupported"):
@@ -141,10 +146,10 @@ class PluginSyncTest(unittest.TestCase):
         version = plugin_sync.validate_source()
         self.assertRegex(version, r"^0\.4\.0\+codex\.[A-Za-z0-9._-]+$")
 
-        mcp = plugin_sync.read_json(plugin_sync.PLUGIN_ROOT / ".mcp.json")
+        mcp = plugin_sync.read_json(plugin_sync.PLUGIN_MCP_TEMPLATE)
         server = mcp["mcpServers"]["long_job_supervisor"]
         self.assertEqual(server["cwd"], ".")
-        self.assertEqual(server["command"], "python3")
+        self.assertEqual(server["command"], "{{PROFILE_SYNC_PYTHON}}")
         self.assertEqual(server["args"], ["./scripts/mcp_server.py"])
         self.assertNotIn("/home/", str(mcp))
         for path in (
@@ -154,6 +159,18 @@ class PluginSyncTest(unittest.TestCase):
             plugin_sync.PLUGIN_ROOT / "skills" / "supervise-long-jobs" / "SKILL.md",
         ):
             self.assertNotIn("systemd", path.read_text(encoding="utf-8").lower())
+
+    def test_render_mcp_config_injects_absolute_profile_python(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / ".mcp.json"
+            with mock.patch.object(plugin_sync, "PLUGIN_MCP_PATH", target):
+                plugin_sync.render_mcp_config(Path(sys.executable))
+
+            rendered = plugin_sync.read_json(target)
+
+        server = rendered["mcpServers"]["long_job_supervisor"]
+        self.assertEqual(str(Path(sys.executable)), server["command"])
+        self.assertEqual(".", server["cwd"])
 
     def test_preview_reports_marketplace_install_and_exact_legacy_retirement(self) -> None:
         fake = FakeCodex()
@@ -174,6 +191,8 @@ class PluginSyncTest(unittest.TestCase):
         revision = "a" * 40
         with tempfile.TemporaryDirectory() as directory, mock.patch.object(
             plugin_sync, "validate_host"
+        ), mock.patch.object(
+            plugin_sync, "render_mcp_config"
         ), mock.patch.object(
             plugin_sync.profile_sync,
             "git_source_revision",
@@ -199,6 +218,8 @@ class PluginSyncTest(unittest.TestCase):
         revision = "b" * 40
         with tempfile.TemporaryDirectory() as directory, mock.patch.object(
             plugin_sync, "validate_host"
+        ), mock.patch.object(
+            plugin_sync, "render_mcp_config"
         ), mock.patch.object(
             plugin_sync.profile_sync,
             "git_source_revision",
