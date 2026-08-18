@@ -93,6 +93,13 @@ the parent explicitly owns the remaining work, archive it without the ordinary
 pinned, undelivered, and ambiguous subAgents. Archival organizes history; it
 does not stop, cancel, or prove completion of a subAgent.
 
+Treat parent archival state and child completion as separate facts. An
+unarchived parent does not protect a finished, delivered subAgent; it often
+remains active while it owns the integrated result and subsequent work. A
+parent ID alone is not delivery evidence. Confirm delivery or explicit
+ownership from product metadata or a bounded exact read before automatic
+archival.
+
 A task that the user unarchives during the current cleanup is protected for the
 rest of that run. Use pinning for durable protection across later cleanups; do
 not create a hidden archive-exclusion list.
@@ -100,22 +107,29 @@ not create a hidden archive-exclusion list.
 ## Build A Bounded Current-Host Inventory
 
 1. Resolve the current host identity and freeze it as the scope for this run.
-2. Seed candidate IDs from a product query that guarantees current-host
-   filtering before results enter context. If unavailable or incomplete, use
-   the safe metadata procedure in
-   [current-host inventory](references/session-inventory.md).
-3. Project bounded metadata first and report main-task and subAgent counts
-   separately. Exclude the calling task and metadata-known running, automation,
-   Goal, pinned, unread, and less-than-24-hours-old tasks before deep reads;
-   retain finished-and-delivered subAgents as age-independent candidates.
-4. Sort remaining candidates oldest first. Deep-read at most 50 tasks in one
+2. Acquire a complete host-local metadata list. Prefer a product query that
+   applies the frozen host filter before returning data, exposes source or
+   parent metadata, and pages to exhaustion. Otherwise use the local app-server
+   metadata path in [current-host inventory](references/session-inventory.md).
+3. Verify that pagination completed and record the inventory source. Treat an
+   app-wide, capped, cross-host, or child-omitting list as navigation only, not
+   as the inventory. A host filter applied after such results arrive does not
+   make the list complete.
+4. Project bounded metadata and report the raw unarchived main-task and
+   subAgent totals before exclusions. Then report protection exclusions,
+   eligible candidates, read candidates, and deferred candidates as
+   distinct counts; never label a candidate count as a host total.
+5. Exclude the calling task and metadata-known running, automation, Goal,
+   pinned, unread, and less-than-24-hours-old tasks before deep reads; retain
+   finished-and-delivered subAgents as age-independent candidates.
+6. Sort remaining candidates oldest first. Deep-read at most 50 tasks in one
    normal run. A user-requested complete inventory may continue in batches.
-5. Resolve only those candidates through exact reads on the frozen host. Treat
+7. Resolve only those candidates through exact reads on the frozen host. Treat
    `No Codex thread found` as an index-only child, stale entry, or
    unsupported record. Record it once; do not retry it as a mutation.
-6. Collect the latest substantive outcome, required next action, ownership,
+8. Collect the latest substantive outcome, required next action, ownership,
    and enough context to distinguish lightweight from continuing work.
-7. Split results into automatic archives, temporary or hard protection, and
+9. Split results into automatic archives, temporary or hard protection, and
    user review. Report whether more candidates remain beyond the 50-task cap.
 
 An incomplete, unfiltered, or cross-host product API is not archive authority.
@@ -166,7 +180,7 @@ asks to audit or change memory.
 ## Completion Report
 
 Report the current-host identity, automatically archived task links with
-individual reasons, main-task and subAgent counts, protected categories, linked
-review items with one-sentence summaries, missing records, the remaining
-bounded-candidate count, and any product-tool limitation. Report memory work
-only when that branch was explicitly requested.
+individual reasons, raw unarchived main-task and subAgent totals, protection
+exclusions, eligible and deferred candidate counts, linked review items with
+one-sentence summaries, missing records, and any product-tool limitation.
+Report memory work only when that branch was explicitly requested.

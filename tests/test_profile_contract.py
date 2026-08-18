@@ -202,7 +202,9 @@ class ProfileContractTest(unittest.TestCase):
             "source or parent metadata",
             "result is delivered",
             "does not stop, cancel",
-            "main-task and subAgent counts",
+            "raw unarchived main-task and subAgent totals",
+            "An unarchived parent does not protect",
+            "never label a candidate count as a host total",
         ):
             self.assertIn(contract.lower(), prose.lower())
         self.assertNotIn("decision card", prose.lower())
@@ -211,6 +213,9 @@ class ProfileContractTest(unittest.TestCase):
             "Do not install a parser",
             "Never follow rollout/session paths",
             "Do not use an app-wide list or cross-host count",
+            "pages to exhaustion",
+            "navigation surface",
+            "split as unknown",
         ):
             self.assertIn(contract, inventory_prose)
         self.assertNotIn("current Windows host", prose)
