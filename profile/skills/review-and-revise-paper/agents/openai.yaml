@@ -1,0 +1,6 @@
+interface:
+  display_name: "Review and Revise Paper"
+  short_description: "Discuss, approve, and apply precise paper revisions"
+  default_prompt: "Use $review-and-revise-paper to propose exact paper edits in a Markdown ledger, discuss them with me, and apply only the active package I explicitly approve."
+policy:
+  allow_implicit_invocation: false
