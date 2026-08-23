@@ -53,8 +53,11 @@ Use a fresh task to review `/hooks` trust and dispatch before retiring that old
 runner.
 
 When plugin source, version, skills, or MCP wiring changes, validate the plugin,
-run its tests, and use a fresh task after installation so Codex reloads the
-skill and MCP catalog.
+run its tests, and install it. Finish the installing task before creating the
+reload-verification task. Verify the loaded skill and MCP catalog only in a
+task created after the installing task has ended. A task created while the
+installing task is still active can inherit its pre-install catalog and is not
+fresh reload evidence.
 
 ## Report The Update
 

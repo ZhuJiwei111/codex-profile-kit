@@ -80,6 +80,9 @@ class ProfileContractTest(unittest.TestCase):
             "When `profile-manifest.toml` changes",
             "Do not replace this content summary with an abstract objective",
             "use enough of them to cover every material change",
+            "Finish the installing task before creating the reload-verification task",
+            "created while the installing task is still active",
+            "not fresh reload evidence",
         ):
             self.assertIn(contract, prose)
 
