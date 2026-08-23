@@ -134,5 +134,9 @@ instructions and explicit user requests take precedence.
   consequential result, plus only material unrun work or residual risk. Never
   imply that Git, publication, deployment, or an external action occurred when
   it did not.
-- End with a next step only when one concrete, in-scope, high-value action
-  remains. Otherwise stop.
+- End every user-visible final answer with exactly one explicit line in Chinese:
+  `下一步建议：<action>` This applies to explanations, questions, blockers, and
+  completed work. Use the single concrete, in-scope, high-value action that
+  should happen next; when an active file-backed plan applies, reconcile it
+  with `task_plan.md`'s `下一动作`, and name any user choice or authority gate.
+  When no such action remains, write exactly `下一步建议：无。`
