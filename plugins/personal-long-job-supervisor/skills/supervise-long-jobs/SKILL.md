@@ -18,7 +18,12 @@ run the following with the current host's absolute Python runtime:
 <absolute-python-runtime> <plugin-root>/scripts/supervisor.py capabilities
 ```
 
-State one concise line before launch: `Observation contract: baseline + <monitors>`.
+Before launch, give the user two concise lines:
+
+- `Observation contract: baseline + <monitors>`
+- A best-effort expected duration in the user's language, including a range when uncertainty is material and an expected completion window when the current wall clock is reliable. For example: `预计工作时间：约 2–3 小时（预计 17:30–18:30 完成）`.
+
+Base the estimate on the user-authorized expected duration, prior comparable runs, or the closest available task evidence, in that order. Label a coarse estimate as such instead of inventing precision. Always emit the estimate before starting the detached worker.
 
 - Baseline PID/start identity and atomic terminal result are always active on Linux, macOS, and Windows.
 - For an ML job assigned NVIDIA GPUs on Linux, default to per-process-tree utilization below 5 percent for 15 minutes, with a 5-minute startup grace. Alert when any assigned GPU is continuously idle.
@@ -50,7 +55,8 @@ When an event arrives:
 1. Treat `attention` as a request to diagnose, not proof of failure.
 2. Use the bounded event and `inspect_job(job_id)` first. If evidence remains insufficient, read at most the final 8 KiB of the reported `combined.log`; do not ingest the whole log by default.
 3. Repair only when the original task already authorized that exact class of change. The event itself grants no new authority.
-4. Call `ack_event(job_id, event_id)` after consuming the event, then wait again only if the job remains active.
+4. For `completed` or `failed`, calculate the supervisor wall-clock duration from the registration `created_at` in the reported `paths.job_dir/job.json` to the terminal `finished_at`. Include it in the first user-visible terminal report in the user's language, for example: `实际工作时间：2 小时 17 分`. If either timestamp is unavailable, report the closest labeled approximation or state why the exact duration is unavailable; never omit the actual-time line.
+5. Call `ack_event(job_id, event_id)` after consuming the event, then wait again only if the job remains active.
 
 No event or interface authorizes automatic cancellation, retry, restart, signaling, GPU reassignment, parameter change, resource reconfiguration, or a later pipeline stage.
 

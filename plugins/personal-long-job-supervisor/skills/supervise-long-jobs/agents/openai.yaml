@@ -1,7 +1,7 @@
 interface:
   display_name: "Supervise Long Jobs"
   short_description: "Persistent terminal and health event supervision"
-  default_prompt: "Use $supervise-long-jobs to discover capabilities, declare an observation contract, and supervise this authorized long command without model polling."
+  default_prompt: "Use $supervise-long-jobs to discover capabilities, report the expected duration, declare an observation contract, supervise this authorized long command without model polling, and report the actual duration when it ends."
 dependencies:
   tools:
     - type: "mcp"
