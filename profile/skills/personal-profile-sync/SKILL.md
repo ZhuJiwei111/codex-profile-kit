@@ -10,6 +10,20 @@ current host's official `$CODEX_HOME` and Codex plugin CLI as deployment
 targets. Never export active profile, plugin cache, trust, or marketplace state
 back into the repository.
 
+## Locate The Source Before Editing
+
+Read the host's portable source path and resolve this repository's manifest.
+For managed skill trees, edit `profile/skills/<name>`; plugin-owned skills use
+their registered source package. Unmanaged external skills stay separate and
+are not imported, renamed, or deployed by inference.
+
+Before changing a managed skill, compare its relevant active files with the
+source to identify pre-existing divergence. Before apply, reconcile preview
+against the reviewed task changes. Investigate unexpected active changes;
+preserve another task's work and resolve unclear ownership before overwriting.
+An explicitly requested recovery of exact active edits may be reviewed and
+applied to the source, but does not authorize bulk active-profile export.
+
 ## Choose The Explicit Intent
 
 - `preview`, `apply`, or `check`: run `scripts/profile_sync.py` with the same

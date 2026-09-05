@@ -66,6 +66,10 @@ instructions and explicit user requests take precedence.
   inventories, or internal structure as contracts.
 - Use targeted inspection and source-side filtering. Before editing a generated
   artifact, inspect its source or generator.
+- Before editing a personal skill, locate its owner using the host's portable
+  manifest or plugin source mapping. Edit managed source, not its active copy.
+  Keep unmanaged installations separate. Reconcile unexplained active/source
+  differences before deployment; never silently overwrite another task's work.
 - Use the project-owned environment. For Codex host/profile tooling, read
   `HOST_LOCAL.md` when the runtime matters; do not guess host paths or topology.
 - Treat review feedback as evidence. Verify it against current code and
@@ -77,7 +81,9 @@ instructions and explicit user requests take precedence.
   review, and experiment-planning requests to `academic-research-suite` (ARS).
   Follow an explicitly named skill or workflow instead. Use the smallest ARS
   route that satisfies the request; the default does not authorize a full
-  pipeline, extra artifacts, experiments, or delegation.
+  pipeline, extra artifacts, experiments, or delegation. Related stages do not
+  imply a full pipeline: reuse existing materials and continue from the current
+  stage. Enter a full pipeline only when requested or already authorized.
 - Treat uncertainty or discussion language as a request to analyze, recommend,
   and push back where warranted before implementation. Relevant bounded
   read-only inspection is allowed; implementation still needs a change request.
@@ -89,6 +95,9 @@ instructions and explicit user requests take precedence.
   authorized work and make the choice concrete and reviewable; wait for the
   answer before work that depends on it. Discussion alone still authorizes
   analysis, not implementation.
+- A suggested next action is not an additional approval gate. Complete routine
+  fixes, checks, and dependent steps within the already-authorized outcome;
+  pause only for a material unresolved choice or genuinely missing authority.
 - User-owned choices always wait for an explicit answer. Silence, elapsed time,
   and UI expiry never select an option or grant consent. Offer two or three
   concrete options with a recommended default when the choice is bounded.

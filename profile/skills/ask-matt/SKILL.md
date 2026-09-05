@@ -31,7 +31,7 @@ The route most work travels. You have an idea and want it built.
 
 Keep related phases in the same task. Before compaction or handoff, reconcile existing discussion state; afterward, reread it and linked decisions before resuming.
 
-The limit on this is the **[smart zone](https://www.aihero.dev/ai-coding-dictionary/smart-zone)**: the window (~150k tokens on state-of-the-art models) within which the model still reasons sharply. If a session approaches it before `/to-tickets`, don't push on degraded — `/compact` at the nearest phase boundary and carry on (see Phase boundaries).
+Use actual context pressure and continuity needs to decide when to compact; no fixed token threshold defines a reliable session. Resume from existing state and linked evidence.
 
 ## On-ramps
 

@@ -32,6 +32,13 @@ local adaptations:
   reproduction gates, automatic prototype integration or Git writes, mandatory
   handoffs, or tracker setup for workflows that do not need it.
 
+- `implement`, `codebase-design`, `wayfinder`, and phase-boundary guidance:
+  proportional checks, optional authorized delegation, no fixed worker/session
+  quotas, and no implicit Git authority.
+- `writing-for-agents/SKILL-MECHANICS.md`: Codex-native invocation metadata,
+  progressive loading, and authorized cross-skill references replace Claude-only
+  discovery and router assumptions.
+
 Preserve these adaptations when reviewing an upstream update. Local profile rules,
 including explicit authority for Git commits, external writes, credentials,
 heavy work, and repository changes, continue to take precedence over workflow
