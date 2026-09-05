@@ -26,10 +26,11 @@ active profile 不是反向导出源。
 - `third-party/`：记录由 profile 直接管理的第三方内容的上游版本、导入范围和
   许可证；实际部署内容仍位于 `profile/` 并由 manifest 精确列出。
 - `archive/`：保留本次重构前的旧实现，不部署到 active profile。
+- `components/remote-task-bridge/`：独立可选的远端任务桥接源码，默认关闭；使用仓库外主机配置及独立启停命令，不进入默认 profile/plugin 同步。详见该目录 README。
 
 仓库不管理 live `memories/MEMORY.md`、`model_reasoning_effort`、`service_tier`、
 `HOST_LOCAL.md`、连接合同、credentials、auth/session/history、trust、cache、
-plugin 安装或认证、MCP、sandbox、TUI、项目配置和其他未列出的 `config.toml`
+未明确受管的 plugin 安装或认证、MCP、sandbox、TUI、项目配置和其他未列出的 `config.toml`
 键。前三项是会在同步后继续变化的主机/产品运行时状态；已有值保持原样。
 同步器不覆盖或删除 `service_tier`，启动配置 API 时也不临时改成 `fast`。
 
@@ -56,6 +57,8 @@ PROFILE_PYTHON=/absolute/path/from/HOST_LOCAL
   `apply` 本身就是本机部署授权。
 - manifest 中的精确退役项会显示为 `DELETE`，并与普通变更一样先进入上述备份；
   仓库中普通文件或 skill 的缺失不会触发删除。
+
+默认 preview/apply/check 还会调用 `plugin_sync.py` 管理已明确受管的 `personal-long-job-supervisor`；`--profile-only` 仅检查或部署核心 profile。独立桥接组件不参与这一流程。
 
 脚本不提供 target override、active→repo export、Git 写操作、JSON 输出、备份清理
 或永久远程 fan-out。备份和部署锁文件不会自动删除。
