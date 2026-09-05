@@ -15,11 +15,20 @@ workflow_mode: one_shot
 
 ## 使用边界
 
-- Canonical paper 是唯一可写稿件；本项目不创建平行修改稿。
-- 所有 paper 修改先在本台账展示完整候选，并获得作者明确批准。
+- 每个文档有一个 canonical source；仅按作者明确要求建立新的修订目录。
+- 默认先展示完整候选并获得作者批准；已有明确授权不重复询问。
 - “确定”只批准当前 active package。
 - 讨论阶段不构建 PDF；仅在明确视觉检查或 final freeze 时构建。
 - Coverage inventory 只是覆盖目录，展开后必须由完整 package 替换。
+
+## 文档角色与作者约定
+
+- 当前对象：manuscript / Response（按实际保留）
+- 送审对照与历史参考：未指定
+- 授权同步目标：无
+- 审阅顺序：按当前对象的阅读顺序；作者另有要求时在此记录
+- 授权例外：无；若有，记录作者原话与精确范围，并将 approval_policy 改为 recorded_scope
+- 完整前后英中对照：台账与回复中均展示；修改标注至少精确到句子
 
 ## Coverage inventory（可选）
 
@@ -31,6 +40,7 @@ workflow_mode: one_shot
 
 - 目标文件：`TODO`
 - 完整原文锚点：`TODO（语义说明，不以行号作为唯一身份）`
+- 关联修改与依赖：无；涉及多文件时列明各自完整锚点与修改块
 - 修改动机：TODO
 - reviewer / evidence 追溯：TODO
 - workflow mode：`one_shot`
@@ -81,3 +91,5 @@ TODO：忠实、完整翻译候选，并保持与英文相同的蓝色语义范�
 ## Completed packages
 
 完成后将 package 保留在此处；不要复制出第二份完整条目。
+暂缓项使用 deferred；作者决定不修改的条目使用 closed_without_change；
+两者均不占用 active_package，保留完整条目及决定。

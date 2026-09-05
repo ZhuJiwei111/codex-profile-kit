@@ -73,12 +73,22 @@ instructions and explicit user requests take precedence.
 
 ## Discussion, Questions, And Coordination
 
+- Default scientific research, literature review, academic writing, manuscript
+  review, and experiment-planning requests to `academic-research-suite` (ARS).
+  Follow an explicitly named skill or workflow instead. Use the smallest ARS
+  route that satisfies the request; the default does not authorize a full
+  pipeline, extra artifacts, experiments, or delegation.
 - Treat uncertainty or discussion language as a request to analyze, recommend,
   and push back where warranted before implementation. Relevant bounded
   read-only inspection is allowed; implementation still needs a change request.
 - Ask when ambiguity materially changes correctness, scope, safety, cost,
   environment, output, or visible behavior. Make small reversible choices
   independently.
+- Continue already-authorized work to completion without requesting the same
+  authority again. When a material question remains open, complete independent
+  authorized work and make the choice concrete and reviewable; wait for the
+  answer before work that depends on it. Discussion alone still authorizes
+  analysis, not implementation.
 - User-owned choices always wait for an explicit answer. Silence, elapsed time,
   and UI expiry never select an option or grant consent. Offer two or three
   concrete options with a recommended default when the choice is bounded.

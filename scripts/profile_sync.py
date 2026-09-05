@@ -45,7 +45,6 @@ CONFIG_KEYS = (
     "apps.connector_76869538009648d5b282a4bb21c3d157.enabled",
     "apps.connector_76869538009648d5b282a4bb21c3d157.default_tools_approval_mode",
 )
-RETIRED_CONFIG_KEYS = ("service_tier",)
 
 
 class SyncError(RuntimeError):
@@ -102,19 +101,10 @@ def resolve_codex_executable() -> str:
     return executable
 
 
-def app_server_command(executable: str, codex_home: Path | None = None) -> list[str]:
+def app_server_command(executable: str) -> list[str]:
     # Current Codex versions use stdio by default; the removed --stdio flag is
     # rejected by the Windows Desktop runtime.
-    command = [executable]
-    if codex_home is not None:
-        active = load_toml(codex_home / "config.toml", missing_ok=True)
-        present, value = value_at(active, "service_tier")
-        if present and value == "default":
-            # Bootstrap the official config API past a legacy value that newer
-            # Codex versions reject. The writer then removes this retired key.
-            command.extend(["-c", 'service_tier="fast"'])
-    command.append("app-server")
-    return command
+    return [executable, "app-server"]
 
 
 def app_server_request(
@@ -127,7 +117,7 @@ def app_server_request(
     environment["CODEX_HOME"] = str(codex_home)
     try:
         process = subprocess.Popen(
-            app_server_command(executable, codex_home),
+            app_server_command(executable),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -599,20 +589,15 @@ def portable_config_values() -> dict[str, Any]:
 
 
 def config_edits(values: dict[str, Any]) -> list[dict[str, Any]]:
-    edits = [
+    return [
         {"keyPath": key, "value": values[key], "mergeStrategy": "replace"}
         for key in CONFIG_KEYS
     ]
-    edits.extend(
-        {"keyPath": key, "value": None, "mergeStrategy": "replace"}
-        for key in RETIRED_CONFIG_KEYS
-    )
-    return edits
 
 
 def restore_config_edits(active: dict[str, Any]) -> list[dict[str, Any]]:
     edits: list[dict[str, Any]] = []
-    for key in CONFIG_KEYS + RETIRED_CONFIG_KEYS:
+    for key in CONFIG_KEYS:
         present, value = value_at(active, key)
         edits.append(
             {
@@ -676,10 +661,6 @@ def compare(codex_home: Path) -> State:
             changes.append(
                 Change("ADD" if not present else "CHANGE", f"config.toml:{key}", None, None)
             )
-    for key in RETIRED_CONFIG_KEYS:
-        present, _ = value_at(active, key)
-        if present:
-            changes.append(Change("DELETE", f"config.toml:{key}", None, None))
     return State(codex_home, tuple(changes), expected)
 
 
@@ -830,10 +811,6 @@ def managed_config_matches(path: Path, expected: dict[str, Any]) -> bool:
         present, value = value_at(active, key)
         expected_present, expected_value = value_at(expected, key)
         if present != expected_present or (present and value != expected_value):
-            return False
-    for key in RETIRED_CONFIG_KEYS:
-        present, _ = value_at(active, key)
-        if present:
             return False
     return True
 

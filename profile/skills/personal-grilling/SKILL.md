@@ -1,66 +1,43 @@
 ---
 name: personal-grilling
-description: Manual only. Use only when the user explicitly invokes $personal-grilling for exhaustive, multi-round requirement clarification that resolves one material decision at a time, persists current decisions across turns, and stops for explicit closure before any implementation.
+description: Manual core for pressure-testing plans and decisions. Use on explicit personal-grilling requests, or read as a reference within an already-authorized clarification workflow. Ordinary discussion does not trigger formal grilling.
 ---
 
 # Personal Grilling
 
-Pressure-test a consequential requirement before planning or implementation.
-Run only after explicit invocation.
+Standalone use stays in conversation. For requested documented discussion, read
+`../personal-grill-with-docs/SKILL.md`. Reading this core does not expand authority.
 
-## Establish Scope And Memory
+## Question Loop
 
-State the question being clarified, existing locks, material non-goals, evidence
-cutoff, and the fact that implementation is outside this workflow.
+1. Establish scope, non-goals, and existing decisions. Reuse settled answers.
+2. Investigate discoverable facts with bounded read-only checks. Distinguish
+   observations, recommendations, assumptions, and user-owned decisions.
+   Delegate only with user or applicable repository authority.
+3. Resolve the highest-impact unresolved parent decision first. Recommend an
+   option and offer two or three materially different choices when known;
+   use an open question when the option space is unknown.
+4. Keep each round easy to answer. Bundle independent simple choices when useful;
+   wait for parent answers before dependent questions. Neither exactly one
+   question nor every open question is a fixed requirement.
+5. Wait for explicit user-owned choices. Silence and timeouts never choose a
+   default. Bind concise answers to the complete options actually presented.
+   Continue useful independent work within existing authority while waiting.
+6. Reconcile answers with prior decisions and affected branches. Later explicit
+   answers may supersede earlier decisions; retain enough context to explain
+   the replacement. Report the delta rather than repeating the discussion.
 
-Use the user's named plan or decision file when one exists. Otherwise, before
-the first material question, create one exact task-owned Markdown record and
-report its path. Invocation authorizes only this continuity record, not product
-or project implementation.
+## Finish
 
-Keep the record as compact current state:
+When material questions appear resolved, read `references/coverage-model.md`
+for one silent gap scan. Ask only about gaps that could change the result;
+do not exhaust imaginary branches or turn the lenses into a checklist.
 
-- scope, existing locks, and non-goals;
-- observed facts with evidence anchors and cutoff;
-- material decisions or open branches with stable IDs and status
-  `proposed`, `locked`, `superseded`, `deferred`, or `open`;
-- the exact user answer or evidence that supports each state;
-- only consequential dependencies, assumptions, risks, or acceptance effects;
-  and
-- the next material question.
+Summarize conclusions, remaining assumptions or deferred choices, and the next
+concrete action. No separate closure confirmation is required. Discussion does
+not itself authorize implementation; reuse existing implementation authority
+when it covers the next action, without another permission gate.
 
-Separate facts, Codex recommendations, and user-owned decisions. A later
-explicit answer may supersede an earlier lock; preserve only the shortest link
-needed to understand that replacement. Do not keep a transcript.
-
-## Resolve One Decision Per Turn
-
-1. Select the unresolved parent decision with the largest effect on safety,
-   scope, acceptance, or rework.
-2. Investigate discoverable facts with bounded read-only checks instead of
-   asking the user to supply them.
-3. When real options are known, give Codex's recommendation and two or three
-   materially different options. Use an open question only when the option
-   space is genuinely unknown, and provide examples or candidate hypotheses.
-4. Ask exactly one material decision. Do not bundle dependent subquestions.
-5. Wait for the explicit answer without a timeout or automatic default. Bind a
-   concise answer such as `1` to the complete option that was presented.
-6. Update the record first, check direct conflicts and affected branches, then
-   report only the delta and ask the next question.
-
-On `continue`, compaction recovery, or handoff, reread the record rather than
-reconstructing decisions from recent chat.
-
-## Close
-
-When no material branch is visibly open, read
-`references/coverage-model.md` and perform one silent, risk-scaled gap scan.
-Open only a gap that could change the result.
-
-Then give a short settled/open/assumption summary and ask separately whether
-grilling is complete. On confirmation, update the record and stop. Do not
-combine closure with authorization to plan or implement.
-
-Do not create a PRD, spec, ADR, tickets, tracker, evaluation platform, or
-downstream workflow. Read `references/source-notes.md` only when maintaining
-provenance.
+Do not create files, specs, ADRs, tickets, or downstream workflows by default.
+The caller owns authorized persistence. Read `references/source-notes.md` only
+when maintaining provenance.

@@ -1,35 +1,56 @@
 ---
 name: code-review
-description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/spec asked for?). Runs both reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to "review since X".
+description: Review uncommitted changes, a commit range, a branch, or a PR against documented standards and the requested behavior. Use for code review or review since a named base; report actionable findings with source evidence.
 ---
 
-Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
+Review the user's selected changes along two axes:
 
 - **Standards** — does the code conform to this repo's documented coding standards?
 - **Spec** — does the code faithfully implement the originating issue / spec?
 
-Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
-
-The issue tracker should have been provided to you — run `/setup-matt-pocock-skills` if `docs/agents/issue-tracker.md` is missing.
+The main agent owns scope, synthesis, and the final verdict. Review is read-only;
+it does not authorize fixes, tracker setup, Git writes, or external comments.
+Use independent subagents only when the user or applicable repository
+instructions authorize delegation and it materially helps this review. Otherwise
+perform both axes in the main task.
 
 ## Process
 
-### 1. Pin the fixed point
+### 1. Resolve the review surface
 
-Whatever the user said is the fixed point — a commit SHA, branch name, tag, `main`, `HEAD~5`, etc. If they didn't specify one, ask for it.
+Use the request and `git status --short` to identify the target:
 
-Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
+- **Uncommitted work:** inspect both `git diff --cached` and `git diff` so staged
+  and unstaged changes are covered. When HEAD exists, `git diff HEAD` also shows
+  their net effect. List untracked paths with `git ls-files --others
+  --exclude-standard` and read relevant new source files separately; ordinary
+  diffs omit them. Respect credential and unrelated-file boundaries.
+- **Commit or explicit range:** resolve the named revisions and compare the
+  requested endpoints. For one commit, inspect its patch with `git show`.
+- **Branch relative to a base:** use `git diff <base>...HEAD` against the
+  merge-base and `git log <base>..HEAD --oneline` for intent. This excludes local
+  uncommitted work; include that work only when it belongs to the request.
+- **PR:** use its verified base and head or the current PR diff through the
+  available read interface. A local checkout must match those revisions before
+  it can stand in for the PR.
 
-Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here — not inside two parallel sub-agents.
+Ask only when unresolved scope changes which work will be reviewed. If the
+request clearly targets local edits, do not require a separate base choice.
+Report invalid references or an empty selected surface directly; do not expand
+to unrelated changes just to produce findings.
 
 ### 2. Identify the spec source
 
 Look for the originating spec, in this order:
 
-1. Issue references in the commit messages (`#123`, `Closes #45`, GitLab `!67`, etc.) — fetch via the workflow in `docs/agents/issue-tracker.md`.
-2. A path the user passed as an argument.
+1. The user's current requirements, linked issue, or supplied spec path. Use an
+   existing tracker workflow when available; a missing tracker file does not
+   require setup.
+2. Issue references in relevant commit messages (`#123`, `Closes #45`, etc.).
 3. A spec file under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
-4. If nothing is found, ask the user where the spec is. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
+4. If no spec is available, continue correctness and standards review. Label
+   requirement coverage as unverified; ask only when a missing requirement
+   prevents judging a material behavior. Do not invent requirements.
 
 ### 3. Identify the standards sources
 
@@ -55,7 +76,11 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 - **Middle Man** — a class or function that mostly just delegates onward. → cut it, call the real target direct.
 - **Refused Bequest** — a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
 
-### 4. Spawn both sub-agents in parallel
+### 4. Review the evidence
+
+Use the following briefs inline or, when delegation is authorized, give each
+bounded worker the selected diff, relevant new files, scope, and evidence.
+Follow `personal-subagent-boundaries` for any workers.
 
 **Standards sub-agent prompt** — include:
 
@@ -69,13 +94,19 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 - The path or fetched contents of the spec.
 - The brief: "Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Under 400 words."
 
-If the spec is missing, skip the Spec sub-agent and note this in the final report.
+If the spec is missing, skip that requirements comparison and note the limit.
 
 ### 5. Aggregate
 
-Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings — the two axes are deliberately separate (see _Why two axes_).
+Verify candidate findings against the actual selected changes, remove duplicate
+or unsupported findings, and prioritize by consequence. Keep standards and
+requirements provenance visible where it explains the issue, but produce one
+coherent verdict. Each actionable finding needs a location, realistic trigger,
+impact, and supporting evidence. Separate optional design preferences from bugs.
 
-End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
+Report what was reviewed and material verification limits. If no actionable
+issue remains, say so without inventing findings or treating missing evidence
+as proof of correctness.
 
 ## Why two axes
 
@@ -84,4 +115,5 @@ A change can pass one axis and fail the other:
 - Code that follows every standard but implements the wrong thing → **Standards pass, Spec fail.**
 - Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
 
-Reporting them separately stops one axis from masking the other.
+Preserving both sources of evidence prevents one axis from masking the other;
+the main agent still owns prioritization and the final verdict.

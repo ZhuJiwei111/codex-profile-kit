@@ -9,7 +9,14 @@ A **wizard** is a bash script that walks a human, step by step, through a manual
 
 The delightful UX is already solved by [template.sh](template.sh) — stage-by-stage progress, confirmation gates, cross-platform URL opening (including WSL), hidden secret entry, idempotent `.env` upserts, `gh secret`/`gh variable` writes, and a closing summary. **Your job is only to scope the procedure and author its stages.** The library above the `STAGES` marker is identical in every wizard; that consistency is the point — never hand-edit it.
 
-A wizard is ephemeral by default — built for one run, saved to a scratch or `scripts/` path, deleted when the job's done. Commit it only when the user wants a repeatable setup path that should live in the repo.
+A wizard is temporary by default: save it to the project's scratch location
+for the user to run. A requested repeatable setup path can live in `scripts/`;
+the requested lifetime does not grant Git or cleanup authority.
+
+Creating a wizard does not authorize credential access, external writes, or
+Git actions. Describe the required actions and let the user enter secrets
+through the script's hidden input. A request for a reusable script is not by
+itself permission to commit it. Honor any matching authority already granted.
 
 ## Process
 
@@ -17,10 +24,16 @@ A wizard is ephemeral by default — built for one run, saved to a scratch or `s
 
 Work out every manual step the human must take and every value that gets captured along the way. Read the repo first — don't ask cold:
 
-- For setup: `.env`, `.env.example`, `.env.*`, `README`, `docker-compose*`, framework config, and `.github/workflows/*` (every `secrets.*` / `vars.*` reference is a value the wizard must produce).
+- For setup: safe `.env.example` placeholders, README instructions, variable
+  names referenced by code, and `.github/workflows/*` secret/variable names.
+  Inspect other configuration only where needed, without reading credential
+  values or secret-bearing `.env` files. Ask for a missing variable name or
+  destination only when it cannot be established from safe sources.
 - For a migration or transition: the current state, the target state, and the irreversible actions between them.
 
-Then show the user the ordered list of stages and the values each produces, and confirm — they may add, drop, or reorder.
+Show the ordered stages and the variable names or outputs each produces. Ask
+only about unresolved scope, user choices, or missing authority; proceed with
+authoring when the requested stages are already clear and authorized.
 
 **Done when:** every stage is named in order, and for each captured value you know (a) where the human gets it, (b) where it's written (`.env`, a GitHub secret, both, or nowhere — some stages are pure actions), and (c) whether it's secret (hidden entry) or public.
 
@@ -41,4 +54,5 @@ Hold the bar the template sets: open the URL before asking for its value, use `a
 - `bash -n <script>`; run `shellcheck` if available.
 - `chmod +x <script>`.
 - Don't run it end-to-end yourself — it opens browsers and blocks on human input. Trace it statically instead: every value from step 1 is captured and lands where step 1 said, and every `set_secret` name exactly matches a `secrets.*` reference in CI.
-- Tell the user how to run it. If it's a repeatable setup path, commit it and link it from the README so the next person runs the script instead of asking an AI.
+- Tell the user how to run it. Add an existing README link when documentation
+  is within scope. Commit only with explicit Git authority.

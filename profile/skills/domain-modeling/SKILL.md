@@ -9,6 +9,11 @@ Actively build and sharpen the project's domain model as you design. This is the
 
 ## File structure
 
+Ordinary discussion produces terminology proposals inline. Create or update
+domain documents only when the user requests that output or existing task
+authority covers their maintenance. Agreement on a term alone is not permission
+to create a glossary or ADR. Reuse already-granted authority without asking again.
+
 Most repos have a single context:
 
 ```
@@ -37,7 +42,8 @@ If a `CONTEXT-MAP.md` exists at the root, the repo has multiple contexts. The ma
 │       └── docs/adr/
 ```
 
-Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
+Within authorized documentation work, create files only when there is a real
+term or decision to record. Reuse the project's existing owners and format.
 
 ## During the session
 
@@ -59,7 +65,9 @@ When the user states how something works, check whether the code agrees. If you 
 
 ### Update CONTEXT.md inline
 
-When a term is resolved, update `CONTEXT.md` right there. Don't batch these up — capture them as they happen. Use the format in [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md).
+When a term is resolved and glossary maintenance is authorized, update its
+existing owner. For a newly authorized `CONTEXT.md`, use
+[CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md). Otherwise keep the proposed term inline.
 
 `CONTEXT.md` should be totally devoid of implementation details. Do not treat `CONTEXT.md` as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
 

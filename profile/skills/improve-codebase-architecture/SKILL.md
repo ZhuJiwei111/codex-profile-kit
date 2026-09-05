@@ -61,11 +61,13 @@ Do NOT propose interfaces yet. After the file is written, ask the user: "Which o
 
 ### 3. Grilling loop
 
-Once the user picks a candidate, run the `/grilling` skill to walk the decision tree with them — constraints, dependencies, the shape of the deepened module, what sits behind the seam, what tests survive.
+Once the user picks a candidate, read `../personal-grilling/SKILL.md` for the
+agreed discussion: constraints, dependencies, module boundaries, and useful tests.
 
-Side effects happen inline as decisions crystallize — run the `/domain-modeling` skill to keep the domain model current as you go:
+Use `../personal-grill-with-docs/SKILL.md` when documenting that discussion is
+requested or already authorized. Reuse glossary and ADR owners; do not create
+documents merely because a term or a rejected candidate came up. Record only
+consequential durable decisions within the authorized write scope.
 
-- **Naming a deepened module after a concept not in `CONTEXT.md`?** Add the term to `CONTEXT.md`. Create the file lazily if it doesn't exist.
-- **Sharpening a fuzzy term during the conversation?** Update `CONTEXT.md` right there.
-- **User rejects the candidate with a load-bearing reason?** Offer an ADR, framed as: _"Want me to record this as an ADR so future architecture reviews don't re-suggest it?"_ Only offer when the reason would actually be needed by a future explorer to avoid re-suggesting the same thing — skip ephemeral reasons ("not worth it right now") and self-evident ones.
-- **Want to explore alternative interfaces for the deepened module?** Run the `/codebase-design` skill and use its design-it-twice parallel sub-agent pattern.
+For alternative interfaces, use `/codebase-design` as design vocabulary;
+parallel subagents require user or applicable repository authority.

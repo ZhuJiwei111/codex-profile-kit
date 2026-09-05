@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mechanical validator for review-and-revise-paper Markdown ledgers."""
+"""Mechanical validator for personal-review-and-revise-paper Markdown ledgers."""
 
 from __future__ import annotations
 
@@ -41,6 +41,8 @@ VALID_STATUSES = {
     "applied_source_verified",
     "final_render_verified",
     "author_locked_risk",
+    "deferred",
+    "closed_without_change",
 }
 ACTIVE_STATUSES = {"drafting", "pending_author_decision", "approved"}
 ALLOWED_COLORS = {"c62828", "1565c0"}
@@ -140,8 +142,8 @@ def validate_text(text: str, source: str = "<memory>") -> list[str]:
         errors.append("canonical_source_type must be latex or markdown")
     if fields.get("build_policy") not in {None, "explicit_or_final_freeze"}:
         errors.append("build_policy must be explicit_or_final_freeze")
-    if fields.get("approval_policy") not in {None, "active_package_only"}:
-        errors.append("approval_policy must be active_package_only")
+    if fields.get("approval_policy") not in {None, "active_package_only", "recorded_scope"}:
+        errors.append("approval_policy must be active_package_only or recorded_scope")
     if fields.get("workflow_mode") not in {
         None,
         "one_shot",
@@ -169,6 +171,14 @@ def validate_text(text: str, source: str = "<memory>") -> list[str]:
             if section not in sections or not sections[section].strip():
                 errors.append(f"{package.package_id} section is empty: {section}")
 
+        if package.status in {
+            "pending_author_decision", "approved", "applied_source_verified",
+            "final_render_verified",
+        }:
+            for section in REQUIRED_SECTIONS[:5]:
+                if not meaningful(sections.get(section, "")):
+                    errors.append(f"{package.package_id} proposal is incomplete: {section}")
+
         for original_name in ("原文英文", "原文中文"):
             if "color:#1565c0" in sections.get(original_name, ""):
                 errors.append(f"{package.package_id} {original_name} contains proposed blue")
@@ -176,11 +186,14 @@ def validate_text(text: str, source: str = "<memory>") -> list[str]:
             if "color:#c62828" in sections.get(proposed_name, ""):
                 errors.append(f"{package.package_id} {proposed_name} contains original red")
 
-        if package.status in {"approved", "applied_source_verified", "final_render_verified"}:
+        if package.status in {
+            "approved", "applied_source_verified", "final_render_verified",
+            "closed_without_change", "author_locked_risk",
+        }:
             if not meaningful(sections.get("作者决定", "")) or "待决定" in sections.get(
                 "作者决定", ""
             ):
-                errors.append(f"{package.package_id} approved/applied status lacks an author decision")
+                errors.append(f"{package.package_id} decided status lacks an author decision")
         if package.status in {"applied_source_verified", "final_render_verified"}:
             application = sections.get("应用与验证记录", "")
             if not meaningful(application) or "未应用" in application:
@@ -332,6 +345,47 @@ def run_self_test() -> int:
     cases.append(("approved without decision", approved_without_decision, False))
     malformed_heading = valid.replace("### PKG-001 —", "### PKG-1 -", 1)
     cases.append(("malformed package heading", malformed_heading, False))
+
+    deferred = valid.replace("pending_author_decision", "deferred").replace(
+        "active_package: PKG-001", "active_package: none"
+    )
+    cases.append(("deferred package is inactive", deferred, True))
+    next_package = package_block.replace("PKG-001", "PKG-002")
+    cases.append((
+        "deferred package alongside next proposal",
+        deferred.replace("active_package: none", "active_package: PKG-002")
+        + "\n" + next_package,
+        True,
+    ))
+    cases.append((
+        "deferred package cannot own active pointer",
+        deferred.replace("active_package: none", "active_package: PKG-001"),
+        False,
+    ))
+    closed = deferred.replace("deferred", "closed_without_change").replace(
+        "- 决定：`待决定`", "- 决定：`作者确认保留原文`"
+    ).replace("- application：`未应用`", "- application：`未应用（保留原文）`")
+    cases.append(("author accepts no change", closed, True))
+    cases.append((
+        "no-change closure needs author decision",
+        closed.replace("作者确认保留原文", "待决定"),
+        False,
+    ))
+    cases.append((
+        "recorded explicit scope policy",
+        valid.replace("approval_policy: active_package_only", "approval_policy: recorded_scope"),
+        True,
+    ))
+    incomplete = valid.replace(
+        'The model has <span style="color:#1565c0">higher MCC on the evaluated tasks</span>.',
+        "TODO",
+    )
+    cases.append(("pending proposal cannot contain unfinished candidate", incomplete, False))
+    cases.append((
+        "draft may contain unfinished candidate",
+        incomplete.replace("pending_author_decision", "drafting"),
+        True,
+    ))
 
     failures: list[str] = []
     with tempfile.TemporaryDirectory(prefix="review-ledger-selftest-") as tmp:

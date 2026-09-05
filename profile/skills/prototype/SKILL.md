@@ -7,6 +7,10 @@ description: Build a throwaway prototype to answer a design question. Use when t
 
 A prototype is **throwaway code that answers a question**. The question decides the shape.
 
+Build within the user's requested prototype scope. A discussion of a design
+alone permits analysis, not code creation. Prototype authority does not extend
+to production edits, Git actions, or external issue updates.
+
 ## Pick a branch
 
 Identify which question is being answered — from the user's prompt, the surrounding code, or by asking if the user is around:
@@ -23,4 +27,8 @@ The two branches produce very different artifacts — getting this wrong wastes 
 3. **No persistence by default.** State lives in memory. Persistence is the thing the prototype is _checking_, not something it should depend on. If the question explicitly involves a database, hit a scratch DB or a local file with a clear "PROTOTYPE — wipe me" name.
 4. **Skip the polish.** No tests, no error handling beyond what makes the prototype _runnable_, no abstractions. The point is to learn something fast.
 5. **Surface the state.** After every action (logic) or on every variant switch (UI), print or render the full relevant state so the user can see what changed.
-6. **Capture it when done.** Fold any validated decision into the real code, then capture the prototype itself as a **primary source**: commit it to a throwaway branch, out of main, and leave a context pointer to that branch on the implementation issue. Capture the answer too — the verdict and the question it settled — in the issue or a commit. The main branch keeps only the validated decision.
+6. **Deliver the answer.** Return the prototype, the question it tested, the
+   supported conclusion, and remaining uncertainty. Preserve the task-created
+   artifact for review. Production changes, branch creation, commits, and issue
+   updates require their matching authority; reuse authority already granted
+   for those exact actions rather than asking again.
