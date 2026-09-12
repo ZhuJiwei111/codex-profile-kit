@@ -8,6 +8,19 @@ description: Coordinate persistent Codex App tasks, isolated Git worktrees, and 
 Coordinate product-visible tasks that have their own persistent context and may
 interact with the user. Do not treat them as managed subagents.
 
+## Discover Task Creation
+
+When the user authorizes a new App task, discover the native `create_thread`
+tool first. On a host with a documented Desktop bridge, also search for
+`remote_tasks.create_thread` / `mcp__remote_tasks__create_thread` before
+concluding that creation is unavailable. Read `HOST_LOCAL.md` for that host's
+scope and connection prerequisites; documentation alone does not establish a
+loaded tool. Use the tool's actual schema and native approval flow. Do not
+substitute a shell/socket call or a managed subagent for an App task without
+explaining the difference. If absent, report the missing capability and check
+the Desktop instance, host/project assignment, and whether a fresh turn is
+needed. Treat `clientThreadId` as queued setup, not a resolved `threadId`.
+
 ## Establish Identity And Ownership
 
 For each active line, keep only the facts needed to prevent collision:

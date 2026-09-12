@@ -8,7 +8,8 @@ and shell syntax may differ.
 
 - Derive the current host identity from the calling task or a product surface
   that identifies it before returning task data.
-- Use that same exact identity for every product query and mutation in the run.
+- Use that same exact identity for scoped queries and every mutation. The
+  bounded auxiliary lookup below is the only global-query exception.
 - Treat an unknown host identity as a mutation blocker.
 - Do not accept another host's ID, filesystem path, index content, or task list
   into this inventory. Manage another host from a task executing there.
@@ -23,7 +24,8 @@ Use the first available source that is both host-local and complete:
    page `thread/list` with `archived=false`, `useStateDbOnly=true`, a bounded
    page size, every supported source kind, and each returned cursor until no
    cursor remains. Project only task ID, title, update time, status, source or
-   parent metadata, and hard-protection signals. Do not request turns.
+   parent metadata, and hard-protection signals, including section metadata
+   when exposed. Do not request turns.
 3. If neither source is available, use the current host's metadata index only
    as incomplete discovery:
 
@@ -54,7 +56,13 @@ explicit completeness gap rather than evidence that no more subAgents exist.
 
 ## Product Reconciliation
 
-- Avoid an unfiltered global task list while multiple hosts are connected.
+- Prefer host-filtered queries. When a necessary signal is available only from
+  an app-wide list, make a bounded auxiliary lookup for already selected IDs
+  whose host has been confirmed. Project only those IDs with the exact frozen
+  host; discard other entries without reading, reporting, or acting on them.
+  Use this solely for protection evidence, never for host totals or discovering
+  additional archive targets. A missing target in a capped list proves nothing;
+  an explicitly complete pinned list can establish pin absence for a known ID.
 - Record the raw unarchived main-task and subAgent totals before applying the
   exclusions in `SKILL.md`; keep total, protected, eligible, read, and
   deferred counts distinct.
@@ -62,6 +70,14 @@ explicit completeness gap rather than evidence that no more subAgents exist.
   exact-read no more than the current run's bounded batch.
 - Classify `No Codex thread found` once as index-only, stale, or unsupported;
   do not retry it as an archive operation.
+
+Use an exact product read for the latest outcome and a product runtime snapshot
+(such as `wait_threads` with `timeoutMs: 0`) for current execution status when
+needed. A separate local app-server knows which tasks it has loaded, not which
+tasks another instance is executing. Preserve unknown fields as unknown; do not
+infer Goal or automation absence from a completed turn. Interpret section/pin
+fields only after checking their schema. If signals remain unavailable, apply
+the automatic-versus-confirmed-target rules in `SKILL.md` and report the gap once.
 
 After execution, verify only each actual archive target on the frozen host. Do
 not re-read protected or main tasks merely to prove they were preserved. Do not
