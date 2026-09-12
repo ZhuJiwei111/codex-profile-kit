@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Task Archive"
-  short_description: "Safely archive tasks on the current host"
-  default_prompt: "Use $personal-task-archive to safely organize and archive eligible tasks on this task's current host."
+  short_description: "Safely archive tasks on a selected local or remote host"
+  default_prompt: "Use $personal-task-archive to safely organize and archive eligible tasks on the user-selected host, defaulting to this task's host when none is specified."
 policy:
   allow_implicit_invocation: true

@@ -1,18 +1,19 @@
-# Current-Host Task Inventory
+# Target-Host Task Inventory
 
-Use this reference only for the host where the calling Codex task is executing.
-The procedure is the same on Windows, macOS, and Linux; only host-native path
-and shell syntax may differ.
+Use this reference for the frozen target selected under `SKILL.md`. The App
+may control that host remotely; filesystem operations run on the target with
+its native paths and shell.
 
 ## Freeze The Host Scope
 
-- Derive the current host identity from the calling task or a product surface
-  that identifies it before returning task data.
+- Resolve the selected host through product host/project metadata, or use the
+  calling task's host when the user did not specify one. Freeze its exact `hostId`.
 - Use that same exact identity for scoped queries and every mutation. The
   bounded auxiliary lookup below is the only global-query exception.
 - Treat an unknown host identity as a mutation blocker.
-- Do not accept another host's ID, filesystem path, index content, or task list
-  into this inventory. Manage another host from a task executing there.
+- Keep every candidate and evidence source tied to that target. A remote target
+  does not require moving or creating the calling task. Use host-scoped product
+  tools from the App; if unavailable, report the specific capability gap.
 
 ## Complete Metadata Source
 
@@ -20,17 +21,17 @@ Use the first available source that is both host-local and complete:
 
 1. Prefer a product query that applies the frozen host filter before returning
    data, exposes source or parent metadata, and pages to exhaustion.
-2. Otherwise initialize a local app-server on the current execution host and
+2. Otherwise initialize an app-server on the target host and
    page `thread/list` with `archived=false`, `useStateDbOnly=true`, a bounded
    page size, every supported source kind, and each returned cursor until no
    cursor remains. Project only task ID, title, update time, status, source or
    parent metadata, and hard-protection signals, including section metadata
    when exposed. Do not request turns.
-3. If neither source is available, use the current host's metadata index only
+3. If neither source is available, use the target host's metadata index only
    as incomplete discovery:
 
-   1. Resolve `CODEX_HOME` from the current process or current-host contract;
-      otherwise use the current user's standard `~/.codex` directory.
+   1. Resolve `CODEX_HOME` from the target process or target-host contract;
+      otherwise use that host user's standard `~/.codex` directory.
    2. Read `session_index.jsonl` explicitly as UTF-8 with an already-available
    host-native JSON parser. Project only task ID, title, and update time.
    3. Read filenames under `archived_sessions/` only to identify archived task
@@ -50,7 +51,7 @@ paths from the index or transfer the index to another host for processing.
 
 An app-wide list that accepts only a global limit, mixes hosts, or omits
 delegated children is a navigation surface. Do not filter it after retrieval
-and present the remainder as a complete current-host inventory. A full page,
+and present the remainder as a complete target-host inventory. A full page,
 an unexhausted cursor, missing host identity, or missing source metadata is an
 explicit completeness gap rather than evidence that no more subAgents exist.
 

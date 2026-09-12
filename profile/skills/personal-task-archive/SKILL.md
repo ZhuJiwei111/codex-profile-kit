@@ -5,20 +5,24 @@ description: Use when Codex tasks accumulate on one host, completed or supersede
 
 # Personal Task Archive
 
-Organize tasks on the execution host. Archive clear cases automatically when
+Organize tasks on one selected host. Archive clear cases automatically when
 the request authorizes archival, and leave recent or ambiguous work to the
 user.
 
-## Current-Host Boundary
+## Target-Host Boundary
 
-- Identify the calling task's current host before any task query. Use that same
-  exact host identity for scoped queries and mutations. The bounded global
-  metadata lookup described in the inventory reference is the only query exception.
-- Scope the entire run to the current execution host. A user naming another
-  host does not expand this run; manage that host from a task executing there.
-- Use the current host's native shell and filesystem conventions. Resolve its
-  own `CODEX_HOME`; never reuse a path, index, or shell command from another
-  platform.
+- Resolve the user's selected host to an exact product `hostId` before task
+  inventory; default to the calling task's host only when none is specified.
+  Freeze that target for the run. If a host name is ambiguous, resolve it before
+  selecting tasks.
+- The local App may manage a remote target through host-scoped product tools;
+  a task running on that server is not required. Pass the frozen `hostId` to
+  every scoped list, read, runtime snapshot, message, archive, and verification.
+  The bounded global metadata lookup in the inventory reference is the only
+  task-query exception. If a tool cannot address the target, report the gap
+  rather than falling back to its default host.
+- For filesystem inventory, execute on the target host using its own shell,
+  paths, and resolved `CODEX_HOME`. A local index cannot represent a remote host.
 - Derive mutation authority from the request. Treat audit, review, inventory,
   and recommendation requests as read-only. Treat an explicit request to
   archive eligible tasks as authority to archive clear cases without another
@@ -37,7 +41,7 @@ user.
 
 - For explicitly named tasks, or confirmation of a previously linked candidate
   list, use the confirmed-target route below; reuse the inventory already acquired.
-- For accumulated tasks or a periodic review, run the bounded current-host
+- For accumulated tasks or a periodic review, run the bounded target-host
   inventory below.
 - For unexpected ongoing traffic, identify whether a command, Goal,
   automation, retry loop, or host runtime is still active. Treat archival as
@@ -107,13 +111,13 @@ A task that the user unarchives during the current cleanup is protected for the
 rest of that run. Use pinning for durable protection across later cleanups; do
 not create a hidden archive-exclusion list.
 
-## Build A Bounded Current-Host Inventory
+## Build A Bounded Target-Host Inventory
 
-1. Resolve the current host identity and freeze it as the scope for this run.
+1. Resolve the target host identity and freeze it as the scope for this run.
 2. Acquire a complete host-local metadata list. Prefer a product query that
    applies the frozen host filter before returning data, exposes source or
-   parent metadata, and pages to exhaustion. Otherwise use the local app-server
-   metadata path in [current-host inventory](references/session-inventory.md).
+   parent metadata, and pages to exhaustion. Otherwise use the target's app-server
+   metadata path in [target-host inventory](references/session-inventory.md).
 3. Verify that pagination completed and record the inventory source. Treat an
    app-wide, capped, cross-host, or child-omitting list as navigation only, not
    as the inventory. A host filter applied after such results arrive does not
@@ -136,14 +140,14 @@ not create a hidden archive-exclusion list.
    user review. Report whether more candidates remain beyond the 50-task cap.
 
 An incomplete, unfiltered, or cross-host product API is not archive authority.
-If the current-host identity or a material safety signal cannot be resolved,
+If the target-host identity or a material safety signal cannot be resolved,
 keep that candidate out of automatic execution.
 
 ## Evidence Gaps And Confirmed Targets
 
 Record protection signals as present, absent, or unknown, with their source.
 A missing field is unknown, not evidence of protection or its absence. Use the
-product runtime surface for current execution status and the local metadata
+product runtime surface for current execution status and the target's metadata
 surface for persistent inventory; `notLoaded` from a separate app-server does
 not establish that execution stopped. See the inventory reference for lookup rules.
 
@@ -192,7 +196,8 @@ corrections by title or ID.
 
 ## Memory Hygiene
 
-Ordinary archival does not modify memory. Read
+Ordinary archival does not modify memory. Remote task control does not expand
+this branch beyond the calling task's execution host. Read
 [memory hygiene](references/memory-hygiene.md) only when the user explicitly
 asks to audit or change memory.
 
@@ -207,8 +212,8 @@ asks to audit or change memory.
 
 ## Completion Report
 
-Report the current-host identity, automatically archived task links with
-individual reasons, raw unarchived main-task and subAgent totals, protection
+Report the target-host identity (and execution host when different), automatic
+archive links with individual reasons, raw unarchived main-task and subAgent totals, protection
 exclusions, eligible and deferred candidate counts, linked review items with
 one-sentence summaries, missing records, and any product-tool limitation.
 Report memory work only when that branch was explicitly requested.
