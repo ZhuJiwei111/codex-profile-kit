@@ -41,8 +41,8 @@ Use the first available source that is both host-local and complete:
 The index fallback cannot establish a raw main-task/subAgent split because its
 safe projection lacks source and parent metadata. Report that split as unknown,
 identify the fallback as incomplete, and require exact product reads to confirm
-host identity and every protection signal before any candidate can become an
-automatic archive.
+host identity, source type, and the evidence required by the applicable
+decision route in `SKILL.md` before archival.
 
 Use `pwsh` on Windows and available POSIX-native tooling on macOS or Linux. Do
 not install a parser merely for inventory. If safe parsing is unavailable,
@@ -78,7 +78,8 @@ needed. A separate local app-server knows which tasks it has loaded, not which
 tasks another instance is executing. Preserve unknown fields as unknown; do not
 infer Goal or automation absence from a completed turn. Interpret section/pin
 fields only after checking their schema. If signals remain unavailable, apply
-the automatic-versus-confirmed-target rules in `SKILL.md` and report the gap once.
+the decision route in `SKILL.md` (ordinary, parentless, or user-confirmed) and
+report the gap once.
 
 After execution, verify only each actual archive target on the frozen host. Do
 not re-read protected or main tasks merely to prove they were preserved. Do not
