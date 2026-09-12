@@ -12,7 +12,8 @@ user.
 ## Current-Host Boundary
 
 - Identify the calling task's current host before any task query. Use that same
-  exact host identity for every list, read, message, and archive operation.
+  exact host identity for scoped queries and mutations. The bounded global
+  metadata lookup described in the inventory reference is the only query exception.
 - Scope the entire run to the current execution host. A user naming another
   host does not expand this run; manage that host from a task executing there.
 - Use the current host's native shell and filesystem conventions. Resolve its
@@ -34,6 +35,8 @@ user.
 
 ## Choose The Operation
 
+- For explicitly named tasks, or confirmation of a previously linked candidate
+  list, use the confirmed-target route below; reuse the inventory already acquired.
 - For accumulated tasks or a periodic review, run the bounded current-host
   inventory below.
 - For unexpected ongoing traffic, identify whether a command, Goal,
@@ -136,6 +139,30 @@ An incomplete, unfiltered, or cross-host product API is not archive authority.
 If the current-host identity or a material safety signal cannot be resolved,
 keep that candidate out of automatic execution.
 
+## Evidence Gaps And Confirmed Targets
+
+Record protection signals as present, absent, or unknown, with their source.
+A missing field is unknown, not evidence of protection or its absence. Use the
+product runtime surface for current execution status and the local metadata
+surface for persistent inventory; `notLoaded` from a separate app-server does
+not establish that execution stopped. See the inventory reference for lookup rules.
+
+Automatic selection requires resolved protection signals. For exact targets
+explicitly confirmed by the user after the relevant gaps were disclosed, check
+the latest outcome and product runtime status, then proceed despite still-missing
+pin, unread, Goal, or automation fields. Do not ask again about the same disclosed
+gap. This exception does not override known protection, unresolved host or target
+identity, running or indeterminate execution, material unfinished work, or
+ambiguous ownership. A newly discovered protection or changed outcome requires
+reclassification, not silent execution.
+
+Report a capability gap once and exhaust the available bounded complementary
+lookups. Repeat discovery only when tools or relevant state change. If the
+confirmed-target route still cannot establish identity and non-running status,
+stop those targets with the exact missing evidence rather than repeating the
+inventory or requesting the same authority. Approval to revise this skill does
+not itself authorize archiving an unspecified set of tasks.
+
 ## Review With Links
 
 Do the classification work for the user. For each review item, provide a
@@ -151,8 +178,9 @@ corrections by title or ID.
 ## Execute Authorized Archives
 
 1. Re-read every eligible target with the frozen host identity immediately
-   before mutation. If its status, pin, unread state, automation role, material
-   next action, or ownership changed, move it to protection or user review.
+   before mutation and obtain a product runtime snapshot when the read does not
+   establish current execution status. Apply the evidence route above; changed
+   protection, material next action, or ownership moves it to protection or review.
 2. Do not copy a summary by default. Task archival preserves the task history.
    Send a minimal handoff only when an explicit successor already owns the work
    and lacks information required to continue; verify delivery before archival.
