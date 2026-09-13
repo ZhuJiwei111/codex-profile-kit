@@ -1,11 +1,13 @@
 ---
 name: tdd
-description: Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions "red-green-refactor", or wants integration tests.
+description: Implement features or fixes test-first with a red-green-refactor loop. Use when the user requests TDD or test-first development.
 ---
 
 # Test-Driven Development
 
-TDD is the red → green loop. This skill is the reference that makes that loop produce tests worth keeping: what a good test is, where tests go, the anti-patterns, and the rules of the loop. Every section applies on every cycle — consult them before and during the loop, not after.
+Use a red → green → refactor loop to verify the requested behavior. Reuse the
+project's test harness and consult supporting examples when they resolve a
+test-design question.
 
 When exploring the codebase, read `CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching.
 
@@ -19,9 +21,10 @@ See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking g
 
 A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
 
-**Test only at pre-agreed seams.** Before writing any test, write down the seams under test and confirm them with the user. No test is written at an unconfirmed seam. You can't test everything — agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case.
-
-Ask: "What's the public interface, and which seams should we test?"
+Use the public interface established by the request, code, and existing tests.
+Choose a focused test there without another approval step. Ask only when an
+unresolved interface choice materially changes behavior or task scope; continue
+independent authorized work while it is open.
 
 When the shape of that interface is itself in question — how deep the module is, where the seam belongs, what the interface should expose — use the `/codebase-design` skill for the vocabulary. It is the shared source of the module, interface, depth, seam, adapter, leverage and locality terms, and it is a reference to consult, not a session to run.
 
@@ -35,4 +38,8 @@ When the shape of that interface is itself in question — how deep the module i
 
 - **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
-- **Refactoring is not part of the loop.** It belongs to the review stage (see the `code-review` skill), not the red → green implementation cycle.
+- **Refactor when it clarifies the implemented slice.** Keep tests green and
+  stay within the requested scope. A separate review is useful when requested
+  or when a material concern needs it, not a required phase of every cycle.
+- Finish after the requested behavior and applicable checks pass. Add tests
+  for meaningful uncovered behavior, not to mirror implementation or fill a quota.

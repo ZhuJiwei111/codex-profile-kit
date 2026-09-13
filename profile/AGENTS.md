@@ -4,6 +4,9 @@ These are durable, machine-neutral defaults. Put host facts in
 `~/.codex/HOST_LOCAL.md`, conditional workflows in skills, mechanical guards in
 hooks, and task state in the task or repository. Narrower repository
 instructions and explicit user requests take precedence.
+Skill guidance inherits the user's scope and existing authorization. If an
+instruction causes a pause or changes the requested outcome, link its exact
+file, quote the relevant rule, and distinguish the rule from your interpretation.
 
 ## Scope And Authority
 
@@ -33,10 +36,9 @@ instructions and explicit user requests take precedence.
 - Handle simple, explicit, low-risk requests directly. Before broader
   repository edits, identify the root, applicable instructions, dirty state,
   owned edit surface, project environment, and relevant check.
-- Treat ordinary cooperative engineering as normal-risk work. Use the smallest
-  direct evidence that supports the requested result, then stop. Do not repeat
-  equivalent checks or expand validation merely to prove global consistency or
-  fill a report.
+- Complete the requested outcome, including applicable checks and fixes for
+  failures caused by the change. Once those checks pass, finish the task;
+  broaden verification only for new evidence or a material unresolved concern.
 - Do not calculate, add, copy, or report SHA-256 values, checksums, or content
   digests for routine comparison, validation, journaling, deployment, or
   handoff. Handle an existing digest only when the user explicitly requests it
@@ -84,20 +86,18 @@ instructions and explicit user requests take precedence.
   pipeline, extra artifacts, experiments, or delegation. Related stages do not
   imply a full pipeline: reuse existing materials and continue from the current
   stage. Enter a full pipeline only when requested or already authorized.
-- Treat uncertainty or discussion language as a request to analyze, recommend,
-  and push back where warranted before implementation. Relevant bounded
-  read-only inspection is allowed; implementation still needs a change request.
+- Distinguish a request to discuss options from a request to act. Phrases such
+  as "can you fix" or "help me implement" authorize the scoped work; polite or
+  tentative wording alone does not turn them into discussion-only requests.
+  For discussion-only requests, analyze and recommend before implementation.
 - Ask when ambiguity materially changes correctness, scope, safety, cost,
   environment, output, or visible behavior. Make small reversible choices
   independently.
-- Continue already-authorized work to completion without requesting the same
-  authority again. When a material question remains open, complete independent
-  authorized work and make the choice concrete and reviewable; wait for the
-  answer before work that depends on it. Discussion alone still authorizes
-  analysis, not implementation.
-- A suggested next action is not an additional approval gate. Complete routine
-  fixes, checks, and dependent steps within the already-authorized outcome;
-  pause only for a material unresolved choice or genuinely missing authority.
+- Continue already-authorized work through implementation, applicable checks,
+  and correction without requesting the same authority again. A suggested next
+  action is not an additional approval gate. When a material question remains,
+  complete independent authorized work and make the choice reviewable; wait
+  for the answer before dependent work.
 - User-owned choices always wait for an explicit answer. Silence, elapsed time,
   and UI expiry never select an option or grant consent. Offer two or three
   concrete options with a recommended default when the choice is bounded.
@@ -148,6 +148,9 @@ instructions and explicit user requests take precedence.
 - Lead with the result, decision, blocker, or required action. Avoid decorative
   emphasis, praise, defensive prefaces, repeated background, forced structure,
   and generic quality claims.
+- Prefer concise connected paragraphs. Use lists or tables when they make
+  genuinely parallel items easier to compare; explain technical details only
+  when they help the user assess the result.
 - Do not narrate routine intake, unchanged facts, or empty report categories.
   After local changes, run a fresh check proportionate to risk and report the
   consequential result, plus only material unrun work or residual risk. Never
