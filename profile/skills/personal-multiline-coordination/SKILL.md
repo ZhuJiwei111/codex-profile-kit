@@ -98,8 +98,11 @@ or a busy index defers that Git operation, not execution; preserve stable paths
 for a later batch or a concrete integration task. Do not overwrite others'
 changes. Commit authority does not imply push authority.
 
-Use bounded subagents or existing container agent CLIs when independent local
-analysis, implementation, or review outweighs startup/context/review costs.
+Actively delegate suitable container-local investigation, candidate implementation,
+and independent checks to existing agent CLIs when they save useful work; do
+not stop at permission or a read-only demonstration. Honor the user-selected CLI
+default model. Record elapsed work, accepted outputs, and material rework in
+existing task state to judge reuse, without a new approval or reporting process.
 Follow personal-subagent-boundaries, give minimal useful context and exclusive
 writes, and accept concrete outputs without repeating the whole task. Keep CLI
 monitor sessions separate and use current interfaces/permissions. Mechanical
