@@ -1,6 +1,6 @@
 ---
 name: nature-shared
-description: Internal shared-reference support package for installed nature-writing, nature-polishing, nature-reader, and nature-paper2ppt skills. Do not invoke it as a standalone user workflow. Load only the specific core or journal-format file requested by another Nature skill.
+description: "Internal shared-reference support package for installed Nature Skills, including nature-writing, nature-polishing, nature-response, nature-reader, and nature-paper2ppt. Do not invoke it as a standalone user workflow. Load only the specific core or journal-format file requested by another Nature skill."
 ---
 
 # Nature Shared References

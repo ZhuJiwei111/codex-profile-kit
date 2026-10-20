@@ -1,17 +1,6 @@
 ---
 name: nature-citation
-description: >-
-  Add strict Nature/CNS citations to manuscript text by splitting long passages into citable
-  segments, searching only accepted flagship and subjournal titles from Nature Portfolio, the
-  AAAS Science family, and Cell Press, filtering by publication time range, and exporting one
-  reference-manager-ready output by default. Use this skill whenever the user asks to input text and
-  automatically get references, add citations to a paragraph/manuscript, find Nature-series or CNS
-  support for statements, create text-to-reference correspondence, "分段引用", "自动给出引用",
-  "Nature系列引用", "CNS及子刊", "支撑文献", "补引用", "找引用", or export EndNote/RIS/ENW/Zotero RDF.
-  Also trigger on general academic-writing citation needs even without the word "Nature", such as
-  adding references while writing a paper, finding sources/literature for a claim, building a
-  reference list, citation/referencing for academic writing, and Chinese phrasings like
-  学术写作引用、写论文加引用、写paper找文献、加参考文献、配文献、引用文献、文献支撑.
+description: "Find and verify Nature/CNS-family literature supporting manuscript claims, with claim-to-source mapping and reference-manager export. Use for Nature系列引用、CNS支撑文献、分段补引用 when this journal scope is requested; use broader literature search for unrestricted sources."
 metadata:
   version: "2.0.0"
   author: "Yuan1z skill, refactored into static/dynamic layers"
@@ -27,6 +16,11 @@ This skill is split into two layers:
 Do not try to apply the citation logic from memory or from this router. Always load fragments from disk as described below.
 
 ## Routing protocol
+
+This is a journal-scoped literature workflow. For unrestricted claims or general
+citation checks, use broader literature search or ARS instead of silently
+filtering evidence by publisher prestige. Apply the workflow below when the
+user requests the Nature/CNS journal scope.
 
 Follow these four steps every time the skill is invoked.
 

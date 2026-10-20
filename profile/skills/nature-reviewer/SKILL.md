@@ -1,16 +1,6 @@
 ---
 name: nature-reviewer
-description: >-
-  Simulate a Nature-style reviewer assessment from the referee perspective rather than
-  an author rebuttal. Use when the user wants a pre-submission review, reviewer report,
-  peer-review style critique, novelty/significance/technical soundness assessment,
-  reviewer-style manuscript evaluation, 审稿人视角评估, 预审稿意见, or Nature reviewer
-  report. Return 3 reviewer reports plus a cross-review synthesis, grounded only in the
-  local Nature reviewer source basis.
-  Also trigger on general pre-submission review requests during academic writing even without the
-  word "Nature", such as getting a mock peer review for any journal, critiquing a draft as a
-  reviewer would, assessing novelty/rigor before submission, and Chinese phrasings like
-  审稿人视角、模拟审稿、预审、帮我审一下论文、投稿前自审、审稿意见模拟、找论文问题.
+description: "Provide evidence-grounded mock peer review of scientific manuscripts or excerpts, covering significance, validity, and major/minor concerns. Use for 模拟审稿、投稿前自审、审稿人视角评估; not author rebuttal drafting."
 ---
 
 # Nature Reviewer Assessment Skill
@@ -26,13 +16,13 @@ response. If the user wants rebuttal writing, route to `nature-response`.
 - Ground the review only in the local source basis plus manuscript facts supplied by the user.
 - Evaluate the manuscript against source-grounded axes: `originality`, `scientific importance`, `interdisciplinary readership`, `technical soundness`, and `readability for nonspecialists`.
 - Use the 12-axis technical concern taxonomy only as an internal coverage checklist; it supplements but never replaces the five source-grounded axes.
-- Return exactly `3 reviewer reports + 1 cross-review synthesis` unless the user explicitly asks for another structure.
+- Match the requested scope: default to one bounded, evidence-grounded assessment. Use `3 reviewer reports + 1 cross-review synthesis` only for a requested multi-reviewer simulation. Label inline simulated perspectives honestly; they are not independent agents.
 - The three reviewers may differ only in `emphasis`; do not invent reviewer identities, specialties, institutions, or biographies.
 - Identify who would be interested in the results and why.
 - Identify technical failings that must be addressed before the authors' case is established.
 - Give every substantive concern a stable ID, a faithful `claim_pointer`, and a verifiable `evidence_pointer`; mark missing locations instead of inventing them.
 - Distinguish clearly between what is supported, what is weak, and what is not assessable from the provided material.
-- When the manuscript has a clear technical domain, use claim-dependent domain gates as supporting checks, but keep the output inside the same 3-reviewer `nature-reviewer` structure.
+- When the manuscript has a clear technical domain, use claim-dependent domain gates as supporting checks, and keep the output within the requested review depth.
 - Do not claim the editor's final decision or certainty about fit to `Nature`.
 
 ## Accepted inputs
@@ -56,13 +46,13 @@ If the provided material is partial, perform a bounded review and mark the asses
 4. Assess the manuscript using the source-grounded axes.
 5. Build an internal concern ledger using `references/technical-concern-taxonomy.md`; record applicability, claim/evidence pointers, severity, and the resolution test for each supported concern.
 6. If the manuscript clearly falls into a technical domain covered by `references/domain-specific-review-gates.md`, load only the relevant domain section and use it to sharpen the technical-soundness critique.
-7. Generate `Reviewer 1`, `Reviewer 2`, and `Reviewer 3` using shared facts but different emphasis. Reuse ledger issue keys internally so repeated concerns can be measured and cross-referenced.
-8. Generate a `Cross-review synthesis` that captures consensus and weighting differences. Label an issue as consensus only when at least two reviewer reports raise the same underlying concern.
+7. For a requested multi-reviewer simulation, generate `Reviewer 1`, `Reviewer 2`, and `Reviewer 3` using shared facts but different emphasis. Reuse ledger issue keys internally so repeated concerns can be measured and cross-referenced.
+8. For that simulation, generate a `Cross-review synthesis` that captures consensus and weighting differences. Label an issue as consensus only when at least two reviewer reports raise the same underlying concern.
 9. Run QA for evidence anchoring, overlap, groundedness, coverage, role boundaries, and non-invention.
 
 ## Output format
 
-Unless the user asks for another format, return:
+For a requested three-reviewer simulation, use the following structure. Otherwise return a concise assessment with supported concerns, evidence pointers, and the scope or missing materials that limit the conclusion:
 
 ```text
 Review setup

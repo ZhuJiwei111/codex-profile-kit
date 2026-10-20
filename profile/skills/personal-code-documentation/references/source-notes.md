@@ -46,7 +46,7 @@ versus unshipped behavior, and source-based example verification. SDK-specific
 directories, release machinery, and verification stacks are not portable.
 Retain this local manual workflow; no external executable is installed.
 
-`wshobson/agents` HEAD was checked at
-`0874a27b17a22e2b7c2e2bcd725768e0803cad06`; a guessed modern skill path returned
-404, so no claim is made that its current documentation subtree was reviewed.
-The original pinned provenance remains the design baseline.
+Also reviewed `wshobson/agents@0874a27b17a22e2b7c2e2bcd725768e0803cad06`
+`plugins/code-documentation/agents/docs-architect.md`. Its proactive long-form
+manual/ebook role is not imported: local documentation should match the named
+reader and contract rather than default to comprehensive discovery or 10-100 pages.

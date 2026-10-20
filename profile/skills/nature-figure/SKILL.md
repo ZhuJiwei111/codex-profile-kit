@@ -1,7 +1,6 @@
 ---
 name: nature-figure
-description: >-
-  Create, revise, audit, and export submission-grade scientific figures for Nature-family and other high-impact venues in Python (matplotlib/seaborn) or R (ggplot2/patchwork/ComplexHeatmap), including multi-panel plots, figures4papers-style work, and journal-ready SVG/PDF/TIFF outputs. Use for paper or scientific plots, manuscript data visualization, 论文配图、学术写作配图、科研绘图、科研作图、画图、作图、出图、论文图表、可视化. Define the conclusion, evidence logic, data integrity, template compatibility, export needs, and reviewer risks before plotting; honor or persist the Python/R backend choice. Also use the separate OpenRouter GPT Image 2 route for explicit AI-generated graphical abstracts, mechanism diagrams, concept schematics, 论文示意图、机制示意图、图形摘要; this route skips backend choice and treats outputs as drafts. Do not use for interactive dashboards, statistics-only analysis, data cleaning, literature review, code debugging, pure photo editing, or Illustrator/Figma-first infographics without manuscript-figure intent.
+description: "Create, revise, audit, and export manuscript scientific figures in Python or R. Use for 论文配图、科研绘图、多面板图 and submission-ready plots, or explicitly requested AI-generated graphical abstracts and mechanism schematics. Not for interactive dashboards, data cleaning, or statistics-only analysis."
 ---
 
 # Nature Figure Making — Router
@@ -19,7 +18,7 @@ Follow these steps every time the skill is invoked.
 
 ### 0. Check for the OpenRouter AI-schematic route
 
-If the user explicitly asks to generate a manuscript schematic, graphical abstract, mechanism diagram, concept illustration, or paper schematic with OpenRouter, GPT Image 2, an image-generation API, or similar wording, do **not** ask "Python or R?". This is a non-plotting AI-schematic route.
+For a generic AI-generated illustration or graphical abstract, use the installed native imagegen workflow when available; do not switch providers implicitly. The OpenRouter route below applies only when the user explicitly names OpenRouter and authorizes that provider request or asks for its reproducible payload. Do **not** ask "Python or R?" for this non-plotting route.
 
 For this route:
 
@@ -36,19 +35,17 @@ Read [manifest.yaml](manifest.yaml). It declares the `backend` axis, the allowed
 
 Also read every file listed under `always_load` (`static/core/contract.md` and `static/core/stance.md`). These hold the figure contract, the backend gate, the missing-runtime rule, the privacy rule, and the default operating stance that apply to every figure job.
 
-### 2. Resolve the backend — a blocking gate
+### 2. Resolve the plotting backend
 
-Backend selection blocks plotting tasks, but it should not annoy the same user forever. Decide the `backend` value in this order:
-
-1. If the current request explicitly chooses Python or R, use that backend and save it with `scripts/nature_figure_backend.py set python` or `scripts/nature_figure_backend.py set r`.
-2. If the request provides a clearly language-specific input file/workflow, use that backend and save it.
-3. Otherwise run `scripts/nature_figure_backend.py get`. If it returns `python` or `r`, use the saved preference.
-4. If no saved preference exists, ask exactly one concise question — **Python or R? I will remember this as your default.** — and stop. After the user answers, save the answer before proceeding.
-
-- `python` — matplotlib / seaborn.
-- `r` — ggplot2 / patchwork / ComplexHeatmap.
-
-Do not guess or choose a backend by aesthetics alone. Only recommend a backend when the user explicitly asks you to choose; then use `references/backend-selection.md`, state the reason, save the selected backend, and proceed. Once selected, the backend is **exclusive** for all drawing, previewing, exporting, and visual QA (see `core/contract.md`). This gate does not apply to the explicit OpenRouter AI-schematic route above.
+Honor an explicit Python/R choice, language-specific input, or established
+project workflow. Otherwise read an already-saved preference with
+`scripts/nature_figure_backend.py get`; reading it does not authorize changing it.
+If no preference exists, use the project's installed plotting stack, normally
+Python/matplotlib when it is already available. Ask only when the choice changes
+compatibility, reproducibility, requested editability, or dependency cost.
+Save a new persistent preference with the helper only when the user asks to
+remember it. Keep the scientific drawing source in the selected backend;
+normal image/PDF viewers and renderers may inspect its outputs.
 
 ### 3. Load the matching backend fragment
 

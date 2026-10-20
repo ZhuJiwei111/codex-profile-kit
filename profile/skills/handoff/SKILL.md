@@ -1,11 +1,9 @@
 ---
 name: handoff
 description: Compact the current conversation into a handoff document for another agent to pick up.
-argument-hint: "What will the next session be used for?"
-disable-model-invocation: true
 ---
 
-Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save to the temporary directory of the user's OS - not the current workspace.
+Write a handoff document summarising the current conversation so a fresh agent can continue the work. Use the user's named destination or an existing project handoff owner. Choose a stable task-owned location when another session must resume from it; avoid duplicating an active plan. Do not force a new chat for related work that can continue here.
 
 Include a "suggested skills" section in the document, which suggests skills that the agent should invoke.
 

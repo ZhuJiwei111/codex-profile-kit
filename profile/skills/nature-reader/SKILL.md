@@ -1,6 +1,6 @@
 ---
 name: nature-reader
-description: Build full-paper Chinese-English side-by-side, figure/table-aware, source-grounded Markdown readers for journal or conference papers from PDF, DOI, arXiv, publisher HTML, or pasted text. Use whenever the user asks to translate or read a paper, make 中英文对照/原文对照/全文翻译解读, extract figures or tables into the right positions, preserve figure/table placement near relevant prose, or keep exact source anchors for every block. This skill must not degrade into a summary-only output unless the user explicitly asks for a summary. Also trigger on general paper-reading and translation requests even without the word "Nature", such as reading/translating an academic paper, literature reading, understanding a paper, and Chinese phrasings like 读论文、精读论文、论文翻译、文献翻译、文献阅读、学术阅读、帮我读这篇文章、翻译这篇paper.
+description: "Create source-grounded Chinese-English paper readers with aligned text, figures, tables, and equations. Use for 全文翻译、中英文对照、论文精读 or source-linked questions about a paper; respect a requested excerpt or question without generating a full reader."
 metadata:
   version: "2.0.0"
   author: "Community contribution, refactored into static/dynamic layers"
@@ -16,6 +16,13 @@ This skill is split into two layers:
 Do not try to apply the reading logic from memory or from this router. Always load fragments from disk as described below.
 
 ## Routing protocol
+
+First distinguish a full bilingual reader from a source-linked question or a
+requested excerpt. For a question, read `references/grounding-rules.md` and the
+relevant source only; reuse existing source-map IDs without requiring a new
+reader. Apply extraction and translation rules only to the requested range.
+The full-artifact workflow below applies only to a requested reader or full
+translation. A user's chosen scope overrides the full-reader defaults.
 
 Follow these five steps every time the skill is invoked.
 

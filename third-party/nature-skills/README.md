@@ -30,24 +30,19 @@ the retained local integration changes, replace the complete imported trees,
 reapply only reviewed integration metadata, update this record and license if
 needed, then run the repository contract tests and profile preview.
 
-## 上游核对：2026-10-20
+## 上游复核与本地适配：2026-10-20
 
-当前安装基线不变。核对上游 HEAD
-`c8599197e7d2a22c2a091bbf8c14efcb3625cfa0` 的 README 及四个入口：
-`nature-reader`、`nature-polishing`、`nature-figure`、`nature-paper2ppt`。
+完整 vendored 基线仍为上述 revision；对上游
+`c8599197e7d2a22c2a091bbf8c14efcb3625cfa0` 的 19 个 child/proposal
+入口逐一比较，更新 16 个更短、更明确的触发描述；三个语义未变的描述
+保持原样，避免纯格式改动。详细取舍见
+[逐项复核记录](../skill-review-20261020.toml)。
 
-- `nature-reader` 入口版本为 2.1.1，允许按用户指定范围回答或生成节选，
-  不再将普通单篇论文问题强制扩展为完整双语 reader；这是值得优先吸收的修正。
-- polishing、figure、paper2ppt 的触发描述更短、更清晰；
-  polishing 明确区分已有文字润色与新章节/论证重建。
-- figure 仍是有独立价值的科学绘图工作流；PPT 和双语阅读仍各有产物契约，
-  不能仅因与官方文档/PPT 工具相邻就删除。共享包应随实际调用者保留。
-- 上游支持选择性安装；其可选 SessionStart 自动更新与本仓库固定版本和
-  本地适配所有权不兼容，本轮不启用。
+选择性适配 reader 的节选/问答范围、citation 的 Nature/CNS 适用边界、
+researchwrite 的 proposal 定位、figure 的现有后端与显式 provider 选择、
+reviewer 的按需多视角输出。保留已有脚本、静态参考和全部 explicit-only 策略；
+未宣称完整升级到各 child 最新版或运行时已验证。共享依赖仍按原树保留。
 
-本次只核对上述入口与安装建议，未审阅全量脚本/引用/资产差异，
-因此不声称整套已审查或可直接升级。下次优先比较 reader 及其 shared 依赖，
-保留所有 explicit-only policy，再决定定向更新；无需全量新增 skills。
-
-来源：[上游 README](https://github.com/Yuan1z0825/nature-skills)、
-[reader 入口](https://github.com/Yuan1z0825/nature-skills/blob/c8599197e7d2a22c2a091bbf8c14efcb3625cfa0/skills/nature-reader/SKILL.md)。
+不启用 SessionStart 自动更新，不隐式安装依赖或注册外部 MCP/provider，
+不把巡检、浏览器授权或定期投递当成内容请求的默认步骤。官方产物工具仍负责
+其原生文档/演示生命周期，专门的论文叙事、证据和版式指导不应取代工具契约。
