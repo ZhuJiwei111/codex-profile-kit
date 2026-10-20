@@ -47,10 +47,16 @@ of acceptance is not a requirement to send an acknowledgment. A real transfer
 of maintenance responsibility still needs an actual accepting owner, which can
 be established from durable evidence without negotiation loops.
 
-Allocate enough existing capacity for useful parallel work. ETA is a forecast,
-not an invented minute cap or retry quota. Continuing allocation spans related
-repairs/checks; do not return and re-request it at each stage. Return capacity
-when substantially idle or only CPU wrap-up remains. Preserve needed protection
+Size allocations to actual ready parallel work, not a fixed quota per task.
+Use extra capacity for ready generation shards, collection, independent branches,
+and evaluation while preserving frozen training/scientific configurations.
+Overlap CPU preparation with GPU work. Return GPUs at safe phase boundaries
+during substantial CPU-only work or dependency waits; do not reserve an idle
+node merely for a later phase. Existing executors that retain a node need a
+natural-boundary version change before another task may use it. Short loading
+gaps do not require churn. ETA is a forecast, not an invented cap or retry quota.
+Continuing allocation spans related repairs/checks; do not return and re-request
+it at each stage. Preserve needed protection
 until its receiving owner takes responsibility. Returning GPUs does not itself
 authorize deleting data, terminating containers, or buying external resources.
 
@@ -100,9 +106,11 @@ changes. Commit authority does not imply push authority.
 
 Actively delegate suitable container-local investigation, candidate implementation,
 and independent checks to existing agent CLIs when they save useful work; do
-not stop at permission or a read-only demonstration. Honor the user-selected CLI
-default model. Record elapsed work, accepted outputs, and material rework in
-existing task state to judge reuse, without a new approval or reporting process.
+not stop at permission or a read-only demonstration. Run independent read-only
+or exclusive-write work in parallel when useful. Use the configured fast default
+for routine work and explicitly select the user-authorized stronger model for
+complex problems or demonstrated capability gaps, without an approval round.
+Record elapsed work, accepted outputs, and material rework in existing task state to judge reuse, without a new approval or reporting process.
 Follow personal-subagent-boundaries, give minimal useful context and exclusive
 writes, and accept concrete outputs without repeating the whole task. Keep CLI
 monitor sessions separate and use current interfaces/permissions. Mechanical
