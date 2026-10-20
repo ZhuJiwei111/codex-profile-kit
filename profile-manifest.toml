@@ -90,6 +90,7 @@ retired_files = [
 ]
 
 retired_trees = [
+  "skills/hatch-pet",
   "skills/personal-brainstorms",
   "skills/personal-branch-finish",
   "skills/personal-codex-audit",

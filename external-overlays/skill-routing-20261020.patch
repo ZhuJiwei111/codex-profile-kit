@@ -1,0 +1,43 @@
+--- a/clarify-before-action/agents/openai.yaml
++++ b/clarify-before-action/agents/openai.yaml
+@@ -2,3 +2,6 @@
+   display_name: "Clarify Before Action"
+   short_description: "Clarify needs before taking action"
+   default_prompt: "Use $clarify-before-action to clarify my request before taking action."
++
++policy:
++  allow_implicit_invocation: false
+--- a/paper-spine/agents/openai.yaml
++++ b/paper-spine/agents/openai.yaml
+@@ -5,4 +5,4 @@
+   default_prompt: "Use $paper-spine to configure, research, rewrite or build, integrate LaTeX, and audit my paper/report."
+ 
+ policy:
+-  allow_implicit_invocation: true
++  allow_implicit_invocation: false
+--- a/academic-research-suite/SKILL.md
++++ b/academic-research-suite/SKILL.md
+@@ -1,19 +1,10 @@
+ ---
+ name: academic-research-suite
+ description: >
+-  ARS-Codex workflows for research, academic writing, manuscript review,
+-  research-to-paper pipelines, and experiment planning. Use when the user asks for deep research, literature
+-  review, systematic review, meta-analysis, research question refinement,
+-  academic paper drafting, paper revision, citation or integrity checks,
+-  reviewer simulation, peer review, editorial decision letters, research-to-paper
+-  workflows, experiment execution planning, statistical interpretation, or human
+-  study protocol support. Korean triggers: 논문 심사, 논문 수정, 초록 작성,
+-  체계적 문헌고찰, 연구부터 논문까지. Also use for Claude-style ARS command aliases such as
+-  /ars-plan, ars-plan, /ars-outline, /ars-abstract, /ars-lit-review,
+-  /ars-citation-check, /ars-disclosure, /ars-format-convert, /ars-3w,
+-  /ars-revision-coach, /ars-revision, /ars-reviewer, /ars-mark-read,
+-  /ars-unmark-read, /ars-cache-invalidate, /ars-rebuttal-audit, and /ars-full. This skill vendors ARS role prompts,
+-  references, templates, and shared handoff schemas under ars/.
++  Apply ARS workflows to literature or systematic reviews, academic drafting
++  and revision, manuscript review, citation and integrity audits, statistical
++  interpretation, study protocols, experiment planning, or research-to-paper
++  pipelines. Also use for explicit ars-* commands.
+ metadata:
+   version: "0.1.22"
+   upstream_suite: "academic-research-skills"

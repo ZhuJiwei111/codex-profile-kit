@@ -29,3 +29,25 @@ To update the snapshot, inspect a new exact upstream revision, compare it with
 the retained local integration changes, replace the complete imported trees,
 reapply only reviewed integration metadata, update this record and license if
 needed, then run the repository contract tests and profile preview.
+
+## 上游核对：2026-10-20
+
+当前安装基线不变。核对上游 HEAD
+`c8599197e7d2a22c2a091bbf8c14efcb3625cfa0` 的 README 及四个入口：
+`nature-reader`、`nature-polishing`、`nature-figure`、`nature-paper2ppt`。
+
+- `nature-reader` 入口版本为 2.1.1，允许按用户指定范围回答或生成节选，
+  不再将普通单篇论文问题强制扩展为完整双语 reader；这是值得优先吸收的修正。
+- polishing、figure、paper2ppt 的触发描述更短、更清晰；
+  polishing 明确区分已有文字润色与新章节/论证重建。
+- figure 仍是有独立价值的科学绘图工作流；PPT 和双语阅读仍各有产物契约，
+  不能仅因与官方文档/PPT 工具相邻就删除。共享包应随实际调用者保留。
+- 上游支持选择性安装；其可选 SessionStart 自动更新与本仓库固定版本和
+  本地适配所有权不兼容，本轮不启用。
+
+本次只核对上述入口与安装建议，未审阅全量脚本/引用/资产差异，
+因此不声称整套已审查或可直接升级。下次优先比较 reader 及其 shared 依赖，
+保留所有 explicit-only policy，再决定定向更新；无需全量新增 skills。
+
+来源：[上游 README](https://github.com/Yuan1z0825/nature-skills)、
+[reader 入口](https://github.com/Yuan1z0825/nature-skills/blob/c8599197e7d2a22c2a091bbf8c14efcb3625cfa0/skills/nature-reader/SKILL.md)。
