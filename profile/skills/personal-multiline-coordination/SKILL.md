@@ -85,7 +85,10 @@ preserve the pending change and do independent work. Separate SSH endpoints may
 share one filesystem. Preserve others' increments.
 
 Authorized commits use one project-defined transaction mechanism spanning index
-checks, explicit-path staging, and commit. Git's individual index locks alone
+checks, explicit-path staging, and commit. Review all existing changes in selected
+shared files: path ownership does not imply authorship or batch authority for
+every hunk. Include reviewed, already-authorized integration or defer unrelated
+changes without resetting them. Git's individual index locks alone
 do not establish ownership of that transaction. Busy/staged work defers Git,
 not execution; do not steal locks, reset/stash others' work, or negotiate each
 turn in chat. Commit authority does not imply push authority.
