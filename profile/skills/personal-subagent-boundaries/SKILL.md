@@ -8,6 +8,13 @@ description: Use for bounded one-shot subagents that independently explore, edit
 Delegate only when an independent bounded line materially improves speed,
 isolation, or review quality.
 
+Prefer an available, suitable CodeBuddy CLI worker for bounded delegated work,
+using the project's task-tier model routing. Use Codex managed subagents as a
+supplement when the CLI lacks a required capability or they offer a concrete
+advantage for this task. This preference adds no trial, approval, or reporting
+step; perform small mechanical work directly. The same scope and evidence
+boundaries below apply to either worker type.
+
 Give the worker the smallest useful context: goal, concrete deliverable, actual
 `cwd`, stable input or revision, read boundary, exclusive write boundary, stop
 condition, and expected evidence. Use the minimum useful `fork_turns` or a

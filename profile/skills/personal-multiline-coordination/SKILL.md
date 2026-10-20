@@ -93,11 +93,17 @@ do not establish ownership of that transaction. Busy/staged work defers Git,
 not execution; do not steal locks, reset/stash others' work, or negotiate each
 turn in chat. Commit authority does not imply push authority.
 
-Actively delegate useful container-local investigation, candidate implementation,
-and independent checks to existing agent CLIs; do not stop at permission or a
-demo. Run independent read-only or exclusive-write work in parallel when useful.
-Use the configured fast default and explicitly select a user-authorized stronger
-model for complex work or demonstrated gaps without an approval round.
+Prefer existing CodeBuddy CLI workers for useful bounded investigation,
+candidate implementation, analysis, planning, and independent checks. Use Codex
+managed subagents sparingly, when a needed capability is unavailable through the
+CLI or the specific task benefits materially from them. Do not require trying a
+CLI first for mechanical probes or work faster to do directly.
+Run independent read-only or exclusive-write work in parallel when useful.
+Select the user's configured task tier explicitly: simple work uses the fast
+default, medium work the implementation/reasoning model, and complex work or
+planning the strongest planning model. Project instructions own exact model IDs.
+Move directly to the suitable tier; do not require failure at every lower tier,
+new approval, or an extra comparison report. Do not stop at permission or a demo.
 Follow personal-subagent-boundaries: minimal context, exclusive writes, bounded
 deliverable. Accept actual edits/results and proportionate checks without doing
 the whole task again or mandating a second reviewer/report. Native structured
