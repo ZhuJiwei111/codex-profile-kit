@@ -49,6 +49,12 @@ bounded closeout batches, and preservation of unfinished requirements and
 latest authority before compaction. Related changes are completed and checked
 before one delivery to root.
 
+A later resource-request audit found that multi-document preparation delayed
+dispatch despite a short live resource check. The user requested one allocation
+ledger and immediate dispatch after necessary checks, with logs, replicas, and
+commits deferred to later batches. Existing container agent CLIs may be useful
+bounded workers when delegation has a net benefit, not another scheduling hop.
+
 These lessons inform the workflow, not blanket permissions. User authorization
 must cover actual chat actions and execution. Specific task IDs, GPU counts,
 host paths, budgets, and monitoring mechanisms remain project state. Managed

@@ -68,7 +68,13 @@ When the user authorizes root and task coordinators to use subagents, each may
 delegate without asking root or the user for each worker. Use them when
 independent investigation, implementation, review, or validation helps the task.
 Follow `personal-subagent-boundaries`: give bounded deliverables and exclusive
-write surfaces, then accept the evidence and stop completed workers. The
+write surfaces, then accept the evidence and stop completed workers. An existing
+container agent CLI can serve as a one-shot worker when local code/log access
+or independent work saves more effort than startup, context, and review cost.
+Use its current interface and permissions with an independent invocation; keep
+monitor sessions and shared writers separate. Prefer ordinary commands for
+mechanical probes. Do not add a CLI approval hop to simple resource decisions.
+Accept real outputs, not exit status or an acknowledgment alone. The
 dispatching coordinator retains decisions, user interaction, resource
 accountability, and final acceptance; a worker does not become another
 persistent coordinator. Subagent work uses the task's existing authority and
@@ -86,7 +92,9 @@ changes promptly in the maintained repository; do not wait for the whole task
 or another user confirmation. This can cover local commits in remote working
 copies when authorized. In a shared checkout, the designated index owner
 integrates ready task-owned paths in timely batches; independent worktree owners
-commit their own work. Commit authority does not imply push authority.
+commit their own work. Logs, replica synchronization, and commits belong to a
+later integration batch and must not delay a resource decision or authorized
+execution. Commit authority does not imply push authority.
 
 ## Communicate For A Decision Or Material Event
 
@@ -186,10 +194,15 @@ expected to remain idle for a substantial interval, return them to root; do not
 retain them merely because CPU analysis or writeup remains unfinished. Use the
 task's next real demand, not an invented universal idle-time threshold.
 
-State the exact resource scope, remaining processes/services, relevant state
-and expiry, and next likely need. Preserve required monitoring/protection until
-the receiving owner actually accepts responsibility. Update allocation once;
-idle capacity alone is not proof of a completed transfer.
+For a resource request within existing authority, check ownership conflicts and
+only the necessary live facts, update the existing single allocation ledger,
+and notify the task owner immediately. Reuse valid task acceptance and resource
+evidence; investigate contradictions rather than repeat the task gate. Record
+the resource scope, owner, and relevant limits in that ledger; other summaries
+point to it. Do not require multiple TODOs, logs, encoded full-file baselines, or
+a separate receipt before dispatch. The task owner verifies launch conditions
+and records actual acceptance/execution. Preserve needed protection until its
+receiving owner takes responsibility; idle capacity alone is not a transfer.
 
 Root may reassign accepted resources to already-authorized tasks or create an
 authorized new task chat. Returning capacity to root is distinct from deleting
