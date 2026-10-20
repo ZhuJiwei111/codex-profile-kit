@@ -62,6 +62,13 @@ helper described a lock in prose but did not implement that CLI option, so the
 project uses a shared short mkdir lock around the operation. Document editing
 and shared Git-index serialization remain separate responsibilities.
 
+The user requested a full consolidation: root only assigns tasks/resources and
+resolves cross-task conflicts, while task owners execute, document, validate,
+commit, and close independently. Routine adoption/launch/commit reports and
+root reacceptance are removed; locking is limited to real concurrent writes
+and must not stall independent work. The entrypoint was rewritten around
+these boundaries rather than retaining accumulated incident checklists.
+
 These lessons inform the workflow, not blanket permissions. User authorization
 must cover actual chat actions and execution. Specific task IDs, GPU counts,
 host paths, budgets, and monitoring mechanisms remain project state. Managed
