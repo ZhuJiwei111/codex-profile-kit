@@ -80,12 +80,21 @@ accountability, and final acceptance; a worker does not become another
 persistent coordinator. Subagent work uses the task's existing authority and
 resources rather than creating an additional approval round.
 
-Use one writer per intersecting surface. With a shared checkout, designate one
-owner for shared documents and Git index operations; task owners save their
-own code, cards, and evidence without repeatedly borrowing the index. Use a
-suitable existing worktree or an authorized isolated worktree when concurrent
-code changes need isolation. Separate chats or SSH endpoints do not establish
-separate filesystems. Preserve unrelated and uncommitted work.
+Separate document editing from Git-index ownership. When the user authorizes
+shared TODO/journal editing, coordinators directly maintain their task entries
+and sourced events without asking root to write for them. Root retains global
+priority and cross-task allocation decisions. Use the existing shared per-file
+short lock around reread, anchored patch, atomic save, and readback; release it
+before computation or remote waits. Atomic rename alone does not prevent lost
+updates. Ordinary lock contention is handled locally, not through chat; only
+conflicting facts or decisions need coordination. Check actual helper support
+rather than assuming a documented lock exists.
+
+Keep assigned code/card write surfaces and serialize the shared Git index
+separately. Commit integration does not require a message for every edit or
+milestone: preserve stable paths in existing task state for the next integration
+batch, and message only for a real recipient action. Separate chats or SSH
+endpoints do not establish separate filesystems. Preserve unrelated work.
 
 When the user authorizes coordinator commits, commit checked, task-owned stage
 changes promptly in the maintained repository; do not wait for the whole task

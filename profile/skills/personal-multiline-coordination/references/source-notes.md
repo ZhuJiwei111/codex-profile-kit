@@ -55,6 +55,13 @@ ledger and immediate dispatch after necessary checks, with logs, replicas, and
 commits deferred to later batches. Existing container agent CLIs may be useful
 bounded workers when delegation has a net benefit, not another scheduling hop.
 
+The user then authorized coordinators to edit their own TODO/journal entries
+directly, rather than message root for routine document updates. Existing
+anchored atomic-write tooling and historical use were verified. The installed
+helper described a lock in prose but did not implement that CLI option, so the
+project uses a shared short mkdir lock around the operation. Document editing
+and shared Git-index serialization remain separate responsibilities.
+
 These lessons inform the workflow, not blanket permissions. User authorization
 must cover actual chat actions and execution. Specific task IDs, GPU counts,
 host paths, budgets, and monitoring mechanisms remain project state. Managed
