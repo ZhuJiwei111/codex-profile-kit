@@ -7,6 +7,8 @@ description: Manual only. Create, audit, or synchronize durable technical docume
 
 Write the smallest durable document that lets its intended reader complete the
 requested task. Conversational explanation does not need a documentation file.
+For skills, AGENTS instructions, or model-facing workflow rules, use
+`writing-for-agents`; this entry owns human-facing technical documentation.
 
 1. Resolve the requested audience, topic, destination, and existing document
    owner. Edit the source of generated documentation, not the generated copy.

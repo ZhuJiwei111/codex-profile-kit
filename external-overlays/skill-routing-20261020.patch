@@ -25,10 +25,49 @@
 -  /ars-revision-coach, /ars-revision, /ars-reviewer, /ars-mark-read,
 -  /ars-unmark-read, /ars-cache-invalidate, /ars-rebuttal-audit, and /ars-full. This skill vendors ARS role prompts,
 -  references, templates, and shared handoff schemas under ars/.
-+  Apply ARS workflows to literature or systematic reviews, academic drafting
-+  and revision, manuscript review, citation and integrity audits, statistical
-+  interpretation, study protocols, experiment planning, or research-to-paper
-+  pipelines. Also use for explicit ars-* commands.
++  Conduct systematic reviews, meta-analysis, research-question refinement,
++  study protocols, or reproducibility-focused experiment planning. Also use
++  for explicit ARS or ars-* workflow requests. Ordinary paper translation,
++  prose edits, figures, or mock review use their focused skills.
  metadata:
    version: "0.1.22"
    upstream_suite: "academic-research-skills"
+@@ -32,6 +23,16 @@
+ `SKILL.md` metadata version, and `manifest.json` `adapter_version` must match.
+ Vendored ARS suite versions are tracked separately by source repository commit
+ in `manifest.json`.
++
++## Scope among installed research skills
++
++Use one workflow for the requested outcome. General literature discovery belongs
++to `nature-academic-search`; manuscript drafting, polishing, mock review and
++reviewer replies have focused `nature-*` entries. PDF bilingual translation uses
++`personal-translate-paper-zh`. Use the corresponding ARS writing/review workflow
++when the user explicitly requests ARS or an existing ARS project needs it; do not
++run both suites for the same deliverable. PaperSpine remains an explicit
++end-to-end alternative, not another automatic stage.
+ 
+ ## First Rule
+ 
+@@ -55,8 +56,8 @@
+ | End-to-end research-to-paper pipeline, integrity gate, staged review/revision/finalization workflow | `ars/academic-pipeline/WORKFLOW.md` |
+ | Experiment planning, code experiment execution plan, human study protocol, statistical interpretation, reproducibility validation | `ars/experiment-agent/WORKFLOW.md` |
+ 
+-If the request spans multiple workflows, start with `ars/academic-pipeline/WORKFLOW.md`
+-unless the user clearly asked for a single phase.
++Use `ars/academic-pipeline/WORKFLOW.md` only for a requested end-to-end pipeline.
++Several related requests can use their focused workflows without pipeline setup.
+ 
+ ### Paper Topic Scoping Override
+ 
+@@ -87,8 +88,8 @@
+ 
+ 1. State that the request is being routed to `deep-research` `socratic` mode
+    because the research question is not yet precise.
+-2. Ask 3-5 Socratic narrowing questions using `socratic_mentor_agent` and
+-   `research_question_agent` guidance.
++2. Propose a concrete candidate research question and ask the next material
++   scoping question using the relevant workflow guidance; preserve settled answers.
+ 3. Do not produce an outline, draft, literature review, or full pipeline
+    dashboard until the user has converged on at least one candidate RQ.
+ 

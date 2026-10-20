@@ -1,6 +1,6 @@
 ---
 name: nature-reader
-description: "Create source-grounded Chinese-English paper readers with aligned text, figures, tables, and equations. Use for 全文翻译、中英文对照、论文精读 or source-linked questions about a paper; respect a requested excerpt or question without generating a full reader."
+description: "Answer source-linked paper questions or build an explicitly requested source-mapped reader package (paper.md and source_map.json), including HTML and DOI inputs. Use personal-translate-paper-zh for ordinary PDF paragraph-aligned bilingual translation."
 metadata:
   version: "2.0.0"
   author: "Community contribution, refactored into static/dynamic layers"
@@ -17,14 +17,21 @@ Do not try to apply the reading logic from memory or from this router. Always lo
 
 ## Routing protocol
 
-First distinguish a full bilingual reader from a source-linked question or a
+First resolve the requested output. For a PDF or extracted paper text whose
+main output is paragraph-aligned English-Chinese Markdown with local figure
+screenshots, use `../personal-translate-paper-zh/SKILL.md` and stop this reader
+workflow. Keep this entry for source-linked questions, HTML/DOI reading, or an
+explicit source-mapped reader package. Do not build both artifact formats unless
+the user requests both. Existing source-map consumers remain supported.
+
+Distinguish a source-mapped reader package from a source-linked question or a
 requested excerpt. For a question, read `references/grounding-rules.md` and the
 relevant source only; reuse existing source-map IDs without requiring a new
 reader. Apply extraction and translation rules only to the requested range.
-The full-artifact workflow below applies only to a requested reader or full
-translation. A user's chosen scope overrides the full-reader defaults.
+The full-artifact workflow below applies only to a requested source-mapped
+reader package. A user's chosen scope overrides the full-reader defaults.
 
-Follow these five steps every time the skill is invoked.
+For the full source-mapped package, follow the workflow below.
 
 ### 1. Load the manifest and the core layer
 

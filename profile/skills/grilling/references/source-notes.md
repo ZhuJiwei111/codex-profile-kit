@@ -29,3 +29,10 @@ https://github.com/mattpocock/skills/issues/797 discusses question burden and
 concrete proposals; https://github.com/mattpocock/skills/issues/893 distinguishes
 an empty question frontier from an explained design. They support bounded
 questions and a final agreed-design summary, not universal interviewing.
+
+## Consolidated entry
+
+The canonical `grilling` entry combines the reviewed Matt interview with the
+local one-decision continuity rules. Chat remains the default; persistent notes
+need a requested record or an existing authorized owner. Domain documents use
+`domain-modeling` within the requested scope.

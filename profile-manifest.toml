@@ -9,10 +9,7 @@ trees = [
   "skills/ask-matt",
   "skills/code-review",
   "skills/codebase-design",
-  "skills/diagnosing-bugs",
   "skills/domain-modeling",
-  "skills/grill-me",
-  "skills/grill-with-docs",
   "skills/grilling",
   "skills/handoff",
   "skills/implement",
@@ -39,9 +36,7 @@ trees = [
   "skills/personal-code-documentation",
   "skills/personal-code-simplifier",
   "skills/personal-codex-hook-rules",
-  "skills/personal-discussion",
   "skills/personal-evidence-debugging",
-  "skills/personal-grilling",
   "skills/personal-multiline-coordination",
   "skills/personal-planning-with-files-zh",
   "skills/personal-profile-sync",
@@ -62,7 +57,6 @@ trees = [
   "skills/to-spec",
   "skills/to-tickets",
   "skills/triage",
-  "skills/wait-what",
   "skills/wayfinder",
   "skills/wizard",
   "skills/writing-for-agents",
@@ -86,6 +80,13 @@ retired_files = [
 ]
 
 retired_trees = [
+  "skills/wait-what",
+  "skills/personal-grilling",
+  "skills/grill-me",
+  "skills/grill-with-docs",
+  "skills/diagnosing-bugs",
+  "skills/personal-discussion",
+
   "skills/clarify-before-action",
   "skills/personal-triad-discussion",
   "skills/personal-prompt-optimizer",

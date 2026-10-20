@@ -214,7 +214,7 @@ class ProfileSyncCliTest(unittest.TestCase):
             (codex_home / "config.toml").write_bytes(
                 (ROOT / "personal.config.toml").read_bytes()
             )
-            extra = codex_home / "skills" / "personal-grilling" / "obsolete.md"
+            extra = codex_home / "skills" / "grilling" / "obsolete.md"
             extra.parent.mkdir(parents=True)
             extra.write_text("retired", encoding="utf-8")
             unmanaged = codex_home / "skills" / "external-skill" / "SKILL.md"

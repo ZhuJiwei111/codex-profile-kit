@@ -5,7 +5,7 @@
 - Imported: 2026-08-08
 - License: MIT; see [LICENSE](./LICENSE).
 
-The portable profile retains 24 of the promoted skills listed by the upstream
+The portable profile retains 20 of the promoted skills listed by the upstream
 `.claude-plugin/plugin.json` at this version; `resolving-merge-conflicts` is
 archived under `archive/20261020-skill-cleanup/`. They are stored as independent
 managed trees under `profile/skills/` so `profile_sync.py` can deploy them to
@@ -23,8 +23,8 @@ Invocation policy is owned by `agents/openai.yaml`. Claude-only
 manual skills remain `allow_implicit_invocation: false`. Local Git, external
 write, credential and resource authority continues to govern every workflow.
 
-To update them, review a new exact upstream tag, replace the complete promoted
-set from that tag, update this version record and license if needed, then run
+To update them, review a new exact upstream tag, compare the selected retained
+workflows with that tag; preserve consolidation decisions instead of restoring retired aliases, update this version record and license if needed, then run
 the repository contract tests and profile preview before committing.
 
 ## 上游核对：2026-10-20
@@ -40,4 +40,4 @@ the repository contract tests and profile preview before committing.
 其余内容不整包升级：新增整规格并行实现、PR 和复盘流程不属于本次精简目标；
 已选择性吸收适用的入口更新，清理原有固定编排和宿主假设。保留 `tdd`、`codebase-design`、
 `domain-modeling`、`writing-for-agents` 的专用价值；普通任务不必套用完整编排。
-`diagnosing-bugs` 保持手动；完整逐项取舍和社区问题依据见上述 review。
+访谈统一为 grilling，吸收本地连续决策规则；移除 personal-grilling、grill-me、grill-with-docs 重复入口。调试统一为 personal-evidence-debugging；wait-what 由普通对话承担。原内容可从 Git 历史恢复，不保留活跃兼容别名。职责分组与取舍见上述 review。

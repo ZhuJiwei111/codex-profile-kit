@@ -14,6 +14,18 @@ user cannot meaningfully answer. Stop once no open choice could materially
 change the outcome, scope, or acceptance; do not explore a hypothetical tree to
 exhaustion. Summarize the agreed design, evidence, and remaining assumptions.
 
+For multi-turn continuity, reuse the existing plan or decision owner. Bind a
+short answer to the complete option shown. Reread settled decisions after
+compaction or handoff. If the user requests a durable record and none exists,
+keep one compact task-owned note with scope, settled choices and their evidence,
+open questions, and the next material decision. Do not create another ledger
+beside an existing owner.
+
+If the request also includes glossary or ADR maintenance, use
+`../domain-modeling/SKILL.md` for that document scope; an interview by itself
+does not create domain documents.
+
 This interview alone does not authorize implementation, new files, or external
-actions. Respect authority already given for a next step. For a persistent
-one-decision record, use personal-grilling only when that workflow is requested.
+actions. Respect authority already given for a next step.
+
+Read `references/source-notes.md` only when maintaining provenance.

@@ -1,9 +1,9 @@
 ---
 name: teach
-description: Teach the user a new skill or concept, within this workspace.
+description: Maintain a requested multi-session learning workspace with lessons, resources, and learning records. Ordinary explanations and one-off questions need no teaching workspace.
 ---
 
-The user has asked you to teach them something. This is a stateful request - they intend to learn the topic over multiple sessions.
+Use this workflow when the user requests a persistent multi-session learning workspace. A request to explain a concept alone does not authorize creating lesson files or a learning record. Reuse an existing workspace and its selected formats.
 
 ## Teaching Workspace
 

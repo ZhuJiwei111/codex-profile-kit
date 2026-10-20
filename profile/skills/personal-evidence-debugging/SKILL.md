@@ -22,6 +22,16 @@ Find the cause with the smallest observation that can change the diagnosis.
 With fix authority, make the smallest supported correction and rerun the same
 reproduction. Add a regression test when a repeatable behavior and an existing
 harness justify one; retain no one-off diagnostic program without a real owner.
+For a difficult reproduction, choose the cheapest useful signal: an existing
+test, CLI or request fixture, captured trace replay, or old/new comparison.
+For a regression with known good and bad revisions, a bounded bisection can
+narrow the cause. Performance work needs a baseline at the affected operation;
+measure the same workload after the change. Read code to find the right probe
+when needed; no runnable reproduction is a prerequisite for useful inspection.
+If direct reproduction is unavailable, work from the available evidence and
+state the confidence limit. Ask for access or captured material only when it
+blocks the next useful check.
+
 For flakes and hangs, inspect relevant ordering, resources, timing, and shared
 state rather than adding blind sleeps, retries, or fallbacks.
 

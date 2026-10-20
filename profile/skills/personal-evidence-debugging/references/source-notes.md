@@ -36,3 +36,11 @@ the causal model instead of counting attempts. Retain the local rewrite.
 Community issue https://github.com/obra/superpowers/issues/1120 reports review
 overhead on mechanical tasks. It concerns another Superpowers workflow and is
 context for avoiding universal orchestration, not proof this debug skill fails.
+
+## Consolidated debugging entry
+
+Reviewed Matt `diagnosing-bugs` at the installed v1.2.3 baseline (MIT;
+third-party/mattpocock-skills/LICENSE in the profile source). Retained feedback
+signals, trace/differential reproduction, bisection and performance baselines.
+No upstream helper is bundled here. Mandatory six phases, a fixed hypothesis
+count, and a runnable-loop gate were not retained.

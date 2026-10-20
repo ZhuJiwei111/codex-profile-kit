@@ -13,16 +13,15 @@ implementation, or a mandatory idea-to-shipping sequence.
 
 | User outcome | Entry |
 | --- | --- |
-| Stress-test an idea without saving domain documents | `grill-me` |
-| Stress-test an idea and maintain domain documents | `grill-with-docs` |
-| Use the interview primitive directly | `grilling` |
+| Stress-test a plan or consequential requirement | `grilling` |
+| Interview and maintain requested glossary/ADRs | `grilling` + `domain-modeling` |
 | Resolve a large, uncertain design across sessions | `wayfinder` |
 | Build an agreed specification | `to-spec` |
 | Split a specification into dependency-aware work items | `to-tickets` |
 | Implement an agreed work item | `implement` |
 | Develop a concrete behavior test-first | `tdd` |
 | Review a diff against requirements and standards | `code-review` |
-| Diagnose a difficult bug with a reproducible signal | `diagnosing-bugs` |
+| Diagnose a difficult bug with a reproducible signal | `personal-evidence-debugging` |
 | Prepare incoming reports for implementation | `triage` |
 | Explore structural improvements | `improve-codebase-architecture` |
 | Design a module interface or seam | `codebase-design` |
@@ -32,7 +31,6 @@ implementation, or a mandatory idea-to-shipping sequence.
 | Prepare questions that another person must answer | `to-questionnaire` |
 | Prepare a portable handoff for a real context or owner change | `handoff` |
 | Guide steps only a human can perform | `wizard` |
-| Re-explain something that did not land | `wait-what` |
 | Teach a concept over multiple sessions | `teach` |
 | Write instructions consumed by agents | `writing-for-agents` |
 | Configure an issue tracker and domain-doc conventions | `setup-matt-pocock-skills` |

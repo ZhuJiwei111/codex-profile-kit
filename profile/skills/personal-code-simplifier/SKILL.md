@@ -7,6 +7,9 @@ description: Manual only. Simplify named code or an explicitly scoped cleanup wh
 
 Improve clarity and maintainability within the named surface. Optimize total
 complexity rather than line count.
+A review-only request belongs to `code-review`; diagnosing module boundaries
+belongs to `improve-codebase-architecture`. Use this entry for the authorized
+behavior-preserving edit, without turning it into an architecture project.
 
 - Resolve the target files or symbols and preserve independently owned work.
   If scope comes from a diff, verify its actual base and changed paths; do not

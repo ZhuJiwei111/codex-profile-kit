@@ -27,15 +27,14 @@ the recorded base revision before rebasing the overlay.
 
 `skill-routing-20261020.patch` 仅修改两个外部 skill 的入口：
 `paper-spine` 改为手动调用，
-`academic-research-suite`（本机适配包 0.1.22，ARS 3.19.0）缩短触发描述。
+`academic-research-suite`（本机适配包 0.1.22，ARS 3.19.0）收窄自动路由；显式 ARS 请求保留其原有子工作流。
 `clarify-before-action` 已退役，由 manifest 精确移除，不再保留补丁。
 这些完整 skill 树不由 profile sync 管理；补丁不安装依赖、不替换脚本、
 不启用 hook。更新后须先核对补丁上下文，不能对新版本盲目重放。
 
 从本机 `~/.codex/skills` 检查补丁用 `git apply --check <补丁绝对路径>`；
 获授权后用 `git apply <补丁绝对路径>`，恢复用 `git apply -R <补丁绝对路径>`。
-不要在 profile 仓库根运行。`diagnosing-bugs` 的手动策略由受管源
-`profile/skills/diagnosing-bugs/agents/openai.yaml` 单独持有。
+不要在 profile 仓库根运行。受管调试已统一为 personal-evidence-debugging。
 
 旧 `hatch-pet` 保存于 `archive/20261020-skill-cleanup/hatch-pet/`，
 manifest 将其列为精确退役项；恢复时先撤销该 retirement，再独立审阅旧技能。
@@ -46,8 +45,8 @@ manifest 将其列为精确退役项；恢复时先撤销该 retirement，再独
   [academic-research-skills-codex](https://github.com/Imbad0202/academic-research-skills-codex)，
   而非把 Claude 版本直接覆盖到本机。2026-10-16 发布的 3.23.1
   相比本机适配包 0.1.22（ARS 3.19.0）增加 sr-screener，并修复 CSV 导入；
-  上游仍明确不声称已验证 Codex 模型效果。值得保留为主学术入口、
-  后续单独比较升级；本批只精简描述，不引入新流程、provider 或模型配置。
+  上游仍明确不声称已验证 Codex 模型效果。保留为系统综述、元分析和实验方案入口，
+  后续单独比较升级；本批收窄自动路由，不引入新流程、provider 或模型配置。
 - PaperSpine 的来源由本机 updater 中的
   `WUBING2023/PaperSpine` URL 取证确认；无法从本机目录确定完整包版本。
   [当前上游](https://github.com/WUBING2023/PaperSpine)

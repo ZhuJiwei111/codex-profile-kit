@@ -64,16 +64,18 @@ community_evidence = []
 name = "academic-research-suite"
 origin = "ars"
 invocation = "automatic"
-decision = "retain-pinned"
-reason = "Keep current Codex adapter after 3.23.1 review; screening and expanded runtime are not an implicit refresh requirement."
+decision = "narrow-routing"
+reason = "Systematic reviews, meta-analysis, research questions and protocols; explicit ARS keeps other workflows. Avoid duplicating focused Nature or translation deliverables."
+canonical_owner = "academic-research-suite"
 upstream_entrypoint_compared = false
 
 [[skill]]
 name = "ask-matt"
 origin = "matt"
 invocation = "manual"
-decision = "retain"
-reason = "Keep the scoped specialist workflow and existing invocation policy; no demonstrated reason for bulk replacement."
+decision = "update-routing"
+reason = "Use canonical interview/debug owners; remove retired aliases."
+canonical_owner = "ask-matt"
 upstream_entrypoint_compared = true
 
 [[skill]]
@@ -96,8 +98,9 @@ upstream_entrypoint_compared = true
 name = "diagnosing-bugs"
 origin = "matt"
 invocation = "manual"
-decision = "retain"
-reason = "Keep the scoped specialist workflow and existing invocation policy; no demonstrated reason for bulk replacement."
+decision = "merged"
+reason = "Retain useful reproduction and measurement techniques without six mandatory phases or a runnable-loop gate; retire the unused HITL template."
+canonical_owner = "personal-evidence-debugging"
 upstream_entrypoint_compared = true
 
 [[skill]]
@@ -112,32 +115,36 @@ upstream_entrypoint_compared = true
 name = "grill-me"
 origin = "matt"
 invocation = "manual"
-decision = "adapt-entrypoint"
-reason = "Keep the scoped specialist workflow and existing invocation policy; no demonstrated reason for bulk replacement."
+decision = "merged"
+reason = "Remove an alias-only interview wrapper."
+canonical_owner = "grilling"
 upstream_entrypoint_compared = true
 
 [[skill]]
 name = "grill-with-docs"
 origin = "matt"
 invocation = "manual"
-decision = "adapt-entrypoint"
-reason = "Keep the scoped specialist workflow and existing invocation policy; no demonstrated reason for bulk replacement."
+decision = "merged"
+reason = "Domain documents use the requested glossary/ADR owner; no separate interview entry."
+canonical_owner = "grilling + domain-modeling"
 upstream_entrypoint_compared = true
 
 [[skill]]
 name = "grilling"
 origin = "matt"
 invocation = "automatic"
-decision = "adapt-entrypoint"
-reason = "Ask one material decision; summarize the design; no whole-tree exhaustion or automatic workers."
+decision = "consolidate"
+reason = "One interview entry preserving decisions across turns; requested domain documents use domain-modeling."
+canonical_owner = "grilling"
 upstream_entrypoint_compared = true
 
 [[skill]]
 name = "handoff"
 origin = "matt"
 invocation = "manual"
-decision = "adapt-entrypoint"
-reason = "Use a stable existing owner rather than mandatory OS temp; no compulsory fresh session."
+decision = "clarify-boundary"
+reason = "Transfer unfinished work; no archive or mandatory suggested-skills section."
+canonical_owner = "handoff"
 upstream_entrypoint_compared = true
 
 [[skill]]
@@ -160,8 +167,9 @@ upstream_entrypoint_compared = true
 name = "nature"
 origin = "local"
 invocation = "manual"
-decision = "retain"
-reason = "Keep explicit suite router and separate citation, reading, drafting and peer-review outcomes."
+decision = "update-routing"
+reason = "Choose one output: PDF translation, source-map package or analytical card."
+canonical_owner = "nature"
 upstream_entrypoint_compared = false
 
 [[skill]]
@@ -200,8 +208,9 @@ upstream_entrypoint_compared = true
 name = "nature-experiment-log"
 origin = "nature"
 invocation = "manual"
-decision = "adapt-entrypoint"
-reason = "Keep optional specialist format; do not replace the project journal with Obsidian or Feishu."
+decision = "narrow-routing"
+reason = "Raw notebook records only; no generic JOURNAL or task status, mandatory Feishu, device IDs or vault scaffolding."
+canonical_owner = "nature-experiment-log"
 upstream_entrypoint_compared = true
 
 [[skill]]
@@ -256,8 +265,9 @@ upstream_entrypoint_compared = true
 name = "nature-reader"
 origin = "nature"
 invocation = "manual"
-decision = "adapt-entrypoint"
-reason = "Adopt shorter upstream trigger and question/excerpt routing; preserve full-reader artifact contract when requested."
+decision = "narrow-routing"
+reason = "Questions, HTML/DOI reading and requested source-map packages; ordinary PDF bilingual translation uses personal-translate-paper-zh."
+canonical_owner = "nature-reader"
 upstream_entrypoint_compared = true
 
 [[skill]]
@@ -321,8 +331,9 @@ name = "personal-code-documentation"
 design_source = "documentation, docs-sync"
 origin = "local-adapted"
 invocation = "manual"
-decision = "optimize-local"
-reason = "Keep manual durable documentation; adopt topic/diff scope and released/unshipped distinctions, not proactive manuals."
+decision = "clarify-boundary"
+reason = "Human-facing technical contracts; model instructions use writing-for-agents."
+canonical_owner = "personal-code-documentation"
 upstream_entrypoint_compared = false
 
 [[skill]]
@@ -330,8 +341,9 @@ name = "personal-code-simplifier"
 design_source = "simplifier"
 origin = "local-adapted"
 invocation = "manual"
-decision = "optimize-local"
-reason = "Keep manual behavior-preserving cleanup; verify actual diff base and protect prompts, configuration and literal content."
+decision = "clarify-boundary"
+reason = "Behavior-preserving edits; diff review and architecture diagnosis remain separate outcomes."
+canonical_owner = "personal-code-simplifier"
 upstream_entrypoint_compared = false
 
 [[skill]]
@@ -346,8 +358,9 @@ upstream_entrypoint_compared = false
 name = "personal-discussion"
 origin = "local"
 invocation = "manual"
-decision = "retain"
-reason = "Keep explicit discussion mode without files or implementation."
+decision = "remove"
+reason = "Discussion authority and independent judgment already belong to portable instructions."
+canonical_owner = "ordinary conversation"
 upstream_entrypoint_compared = false
 
 [[skill]]
@@ -355,8 +368,9 @@ name = "personal-evidence-debugging"
 design_source = "superpowers"
 origin = "local-adapted"
 invocation = "automatic"
-decision = "optimize-local"
-reason = "Keep causal fast path and targeted reproduction; no fixed phases, retry counts or universal test-first gate."
+decision = "consolidate"
+reason = "Canonical causal debugging, including hard-reproduction and performance techniques."
+canonical_owner = "personal-evidence-debugging"
 upstream_entrypoint_compared = false
 
 [[skill]]
@@ -364,8 +378,9 @@ name = "personal-grilling"
 design_source = "matt"
 origin = "local-adapted"
 invocation = "manual"
-decision = "optimize-local"
-reason = "Keep one-decision continuity; remove forced coverage model and extra closing approval."
+decision = "merged"
+reason = "Merge settled-choice continuity into one interview entry."
+canonical_owner = "grilling"
 upstream_entrypoint_compared = false
 
 [[skill]]
@@ -479,8 +494,9 @@ upstream_entrypoint_compared = true
 name = "setup-matt-pocock-skills"
 origin = "matt"
 invocation = "manual"
-decision = "adapt-entrypoint"
-reason = "Configure only requested missing conventions; reuse tracker and glossary; no assumed GitHub or plugin setup."
+decision = "update-reference"
+reason = "Remove retired grill-with-docs reference."
+canonical_owner = "setup-matt-pocock-skills"
 upstream_entrypoint_compared = true
 
 [[skill]]
@@ -495,8 +511,9 @@ upstream_entrypoint_compared = true
 name = "teach"
 origin = "matt"
 invocation = "manual"
-decision = "adapt-entrypoint"
-reason = "Keep the scoped specialist workflow and existing invocation policy; no demonstrated reason for bulk replacement."
+decision = "narrow-routing"
+reason = "Persistent multi-session workspace only; explanations need no lesson scaffolding."
+canonical_owner = "teach"
 upstream_entrypoint_compared = true
 
 [[skill]]
@@ -535,16 +552,18 @@ upstream_entrypoint_compared = true
 name = "wait-what"
 origin = "matt"
 invocation = "manual"
-decision = "retain"
-reason = "Keep the scoped specialist workflow and existing invocation policy; no demonstrated reason for bulk replacement."
+decision = "remove"
+reason = "No specialist workflow; obsolete forced English style and CONTEXT.md assumption."
+canonical_owner = "ordinary conversation"
 upstream_entrypoint_compared = true
 
 [[skill]]
 name = "wayfinder"
 origin = "matt"
 invocation = "manual"
-decision = "adapt-entrypoint"
-reason = "Resolve material design uncertainty in the existing owner; no compulsory issue tree or session handoff."
+decision = "retain"
+reason = "Explicit large-effort route discovery uses research/prototypes and decision dependencies; simple interviews use grilling."
+canonical_owner = "wayfinder"
 upstream_entrypoint_compared = true
 
 [[skill]]
@@ -587,3 +606,69 @@ reason = "Redundant two-confirmation workflow conflicts with proportionate clari
 system = ["imagegen", "openai-docs", "skill-creator", "skill-installer", "review-agent (internal, not exposed here)"]
 plugin_capabilities = ["documents", "pdf", "Presentations", "Spreadsheets", "excel-live-control", "template-creator", "visualize", "write-page", "maintain-space", "organize-space", "manage-schedules", "sites", "sites-remix", "create-pet", "pets", "update-pet", "plugin-management", "supervise-long-jobs"]
 review_level = "Capability and ownership boundaries; installed system/plugin caches and tool contracts remain product-managed."
+
+[[overlap_group]]
+name = "interview"
+retained = ["grilling", "domain-modeling", "wayfinder"]
+removed = ["personal-grilling", "grill-me", "grill-with-docs"]
+boundary = "Interview, requested glossary/ADR and explicit large-effort route discovery are separate outputs."
+
+[[overlap_group]]
+name = "debug"
+retained = ["personal-evidence-debugging", "tdd", "code-review"]
+removed = ["diagnosing-bugs"]
+boundary = "Causal diagnosis, requested test-first development and change review have different triggers."
+
+[[overlap_group]]
+name = "conversation"
+retained = ["teach"]
+removed = ["personal-discussion", "wait-what"]
+boundary = "Portable instructions cover discussion and re-explanation; teach is for requested persistent learning."
+
+[[overlap_group]]
+name = "documentation"
+retained = ["personal-code-documentation", "writing-for-agents", "personal-codex-hook-rules"]
+removed = []
+boundary = "Human technical docs, agent instructions and native hook mechanics have different contracts; system skill-creator owns packaging."
+
+[[overlap_group]]
+name = "code-quality"
+retained = ["personal-code-simplifier", "code-review", "improve-codebase-architecture", "codebase-design"]
+removed = []
+boundary = "Behavior-preserving edits, diff assessment, architectural diagnosis and shared module concepts remain distinct."
+
+[[overlap_group]]
+name = "state-history"
+retained = ["personal-project-journal", "personal-planning-with-files-zh", "nature-experiment-log"]
+removed = []
+boundary = "Event history, opt-in current task state and raw experiment notebooks use separate owners."
+
+[[overlap_group]]
+name = "coordination"
+retained = ["personal-subagent-boundaries", "personal-multiline-coordination", "personal-task-archive", "personal-thread-closeout", "handoff", "personal-reconcile-decisions"]
+removed = []
+boundary = "One-shot workers, persistent task ownership, batch archive triage, current-task close/archive, unfinished-work transfer and historical decision recovery have distinct actions and authority."
+
+[[overlap_group]]
+name = "paper-reading"
+retained = ["personal-translate-paper-zh", "nature-reader", "nature-paper-card"]
+removed = []
+boundary = "PDF bilingual Markdown, source questions/map packages and analytical cards are alternative outputs; reuse extraction without chaining all three."
+
+[[overlap_group]]
+name = "academic-writing"
+retained = ["academic-research-suite", "nature-writing", "nature-polishing", "nature-response", "nature-reviewer", "researchwrite", "paper-spine"]
+removed = []
+boundary = "ARS auto routing focuses on synthesis/protocols; Nature owns focused manuscript work and proposals; explicit ARS/PaperSpine projects retain their chosen suite, one per deliverable."
+
+[[overlap_group]]
+name = "research"
+retained = ["research", "nature-academic-search", "nature-citation", "nature-ref-verifier", "nature-literature-pipeline"]
+removed = []
+boundary = "Saved investigation, academic discovery, explicit CNS claim support, bibliography audit and requested recurring pipelines differ."
+
+[[overlap_group]]
+name = "host-and-products"
+retained = ["personal-profile-sync", "personal-temporary-work", "nature-paper2ppt", "nature-figure"]
+removed = []
+boundary = "Profile deployment and scratch lifecycle remain host workflows. Research slide/figure guidance supplies domain content; native product tools retain authoring contracts. Do not edit product caches to remove apparent overlap."
