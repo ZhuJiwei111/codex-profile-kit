@@ -1,12 +1,17 @@
 ---
 name: research
-description: Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.
+description: Produce a source-cited research note when the user requests a saved investigation or explicitly delegates reading legwork. Do not use for ordinary factual answers or quick documentation searches.
 ---
 
-Spin up a **background agent** to do the research, so you keep working while it reads.
+Investigate the named question against primary sources: official documentation,
+source code, specifications, and first-party data. Trace material claims to
+the source that owns them; distinguish findings, inference, and unresolved gaps.
 
-Its job:
+Save one concise cited note when the user requests it or the authorized workflow
+requires a durable research artifact. Use the repository's existing note owner
+and format. A request for an answer alone does not authorize creating a file.
 
-1. Investigate the question against **primary sources** — official docs, source code, specs, first-party APIs — not a secondary write-up of them. Follow every claim back to the source that owns it.
-2. Write the findings to a single Markdown file, citing each claim's source.
-3. Save it where the repo already keeps such notes; match the existing convention, and if there is none, put it somewhere sensible and say where.
+Use a bounded background agent when delegation is authorized and independent
+reading would help. Otherwise investigate directly. Keep the parent working on
+independent tasks while a delegated investigation runs; the parent synthesizes
+the result and owns the final conclusion.

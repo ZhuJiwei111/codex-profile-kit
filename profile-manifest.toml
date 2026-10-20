@@ -57,7 +57,6 @@ trees = [
   "skills/prototype",
   "skills/research",
   "skills/researchwrite",
-  "skills/resolving-merge-conflicts",
   "skills/setup-matt-pocock-skills",
   "skills/tdd",
   "skills/teach",
@@ -90,6 +89,7 @@ retired_files = [
 ]
 
 retired_trees = [
+  "skills/resolving-merge-conflicts",
   "skills/hatch-pet",
   "skills/personal-brainstorms",
   "skills/personal-branch-finish",

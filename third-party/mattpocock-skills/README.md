@@ -5,13 +5,16 @@
 - Imported: 2026-08-08
 - License: MIT; see [LICENSE](./LICENSE).
 
-The portable profile vendors the 25 promoted skills listed by the upstream
-`.claude-plugin/plugin.json` at this version. They are stored as independent
+The portable profile retains 24 of the promoted skills listed by the upstream
+`.claude-plugin/plugin.json` at this version; `resolving-merge-conflicts` is
+archived under `archive/20261020-skill-cleanup/`. They are stored as independent
 managed trees under `profile/skills/` so `profile_sync.py` can deploy them to
 Codex without installing the upstream Claude plugin or the experimental
 `in-progress` and `misc` buckets.
 
-The imported workflow content is retained from upstream. The local Codex policy
+Most imported workflow content is retained from upstream. Local adapters simplify
+`ask-matt`, scope `research` to saved or delegated investigations, and correct
+`writing-for-agents/SKILL-MECHANICS.md` for Codex invocation policy. The local Codex policy
 for `diagnosing-bugs` is explicit-only as of 2026-10-20;
 `personal-evidence-debugging` remains the automatic diagnosis entry. Local profile rules,
 including explicit authority for Git commits, external writes, credentials,
@@ -37,8 +40,8 @@ the repository contract tests and profile preview before committing.
 将术语文件约定从 `CONTEXT.md` 改为 `GLOSSARY.md`；
 以明确的 Skill tool 调用替换 slash 指令；新增 `implement-spec`、`pr`、`retro`。
 
-建议下一批归档 `resolving-merge-conflicts` 并同步修订 `ask-matt` 引用。
+`resolving-merge-conflicts` 已归档，`ask-matt` 已移除该引用并缩为按需路由。
 其余内容暂不整包升级：本机没有上游假设的 Skill tool，且新增整规格并行实现、
 PR 和复盘流程不属于本次精简目标。保留 `tdd`、`codebase-design`、
 `domain-modeling`、`writing-for-agents` 的专用价值；普通任务不必套用完整编排。
-本批仅把 `diagnosing-bugs` 改为手动，未替换上游工作流或导入新技能。
+`diagnosing-bugs` 保持手动；其余变化限于上述本地适配，未整包升级或导入新技能。
