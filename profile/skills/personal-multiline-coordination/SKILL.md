@@ -123,6 +123,42 @@ is ready, not as repeated reminders. Root handles priority and authorization,
 then delegates execution. Discussion does not allocate resources or dispatch
 workers; a scientific proposal does not itself authorize additional computation.
 
+## Receive Work In Batches And Preserve Context
+
+A message worth sending is not automatically urgent. Handle resource/data
+risk, an authority correction needed to prevent a current wrong action, or a
+truly blocking cross-task decision immediately. Preserve the current work and
+interrupt only the affected path; independent authorized work continues.
+
+For ordinary incoming requirements, record the source, unfinished action,
+owner, and next processing point/trigger in the existing TODO or task card at a
+safe operation boundary. Distinguish pending, active, blocked, and completed
+work; merge related follow-ups. Do not leave accepted requirements only in chat
+or invent a second inbox/status board. Receipt and notification are not proof
+of execution.
+
+Define the current batch's deliverable, write surface, and necessary checks.
+During closeout, put nonurgent arrivals in the next batch rather than expanding
+the current turn indefinitely. Save, check, commit when authorized, and deliver
+the bounded result. Keep a named owner and concrete continuation point for the
+next batch in the same chat; deferred work must not require the user to remind
+the coordinator again. After an urgent interruption, preserve the unfinished
+original work and where it resumes. A sender consolidates and checks related
+changes before one delivery instead of sending continual patch-up messages.
+
+Persist requirements when accepting them, not only when compaction is imminent.
+Before closeout, handoff, or foreseeable context compaction, refresh outstanding
+and partially completed requirements with source, owner, next action, and the
+latest effective user authority/resource/scientific boundaries. Retain evidence
+of which decision supersedes an older one without copying obsolete authority
+into current state. After automatic compaction or resumption, read these
+canonical records before acting; a summary must not revive an old approval,
+replay completed work, or erase a pending requirement.
+
+Reconcile accepted requirements at the batch boundary: completed items need
+results/evidence, and every remainder needs an explicit disposition and next
+owner/trigger. A broad final summary cannot substitute for that reconciliation.
+
 ## Allocate And Return Resources By Task
 
 When compute scheduling is delegated to root, root directly allocates the
@@ -172,8 +208,9 @@ Keep App follow-ups paused during active work. On a user/event/scheduled wake,
 pause the owned heartbeat before handling the work. Finish actionable basics,
 save state, and make authorized stage commits, then schedule only when entering
 a wait that needs a future check. Choose the next useful action point instead
-of leaving a fixed cadence running through ordinary work; coalesce an already
-queued reminder into the current pass. Existing completion events may make an
+of leaving a fixed cadence running through ordinary work; coalesce already queued
+duplicate triggers into the current pass; classify new requirements using the
+intake rules above. Existing completion events may make an
 App timer unnecessary. Container CLI event handling, watchdogs, resource
 monitoring, and deterministic continuation remain independently active.
 

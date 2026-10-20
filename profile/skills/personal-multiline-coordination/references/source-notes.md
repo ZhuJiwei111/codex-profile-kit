@@ -40,6 +40,15 @@ actively working, finish the current basics, and arm a useful future check only
 when waiting. Container CLI monitoring and handling continue independently.
 Shared-index serialization remains distinct from asking for commit permission.
 
+A further read-only audit found a long root turn with repeated incoming work
+and a context-compaction marker. The wording briefly returned to an older
+limited approval after broader authority had already been accepted; later
+execution did use the new authority. This does not prove that compaction lost
+requests. The user requested urgent intake, durable ordinary-work registration,
+bounded closeout batches, and preservation of unfinished requirements and
+latest authority before compaction. Related changes are completed and checked
+before one delivery to root.
+
 These lessons inform the workflow, not blanket permissions. User authorization
 must cover actual chat actions and execution. Specific task IDs, GPU counts,
 host paths, budgets, and monitoring mechanisms remain project state. Managed
