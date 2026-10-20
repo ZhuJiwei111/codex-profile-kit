@@ -1,45 +1,30 @@
 ---
 name: personal-code-documentation
-description: Manual only. Use only when the user explicitly invokes this skill to create, substantially rewrite, audit, or synchronize durable technical documentation derived from a codebase or an identified CLI, API, configuration, installation, or workflow contract.
+description: Manual only. Create, audit, or synchronize durable technical documentation for a named code, CLI, API, configuration, or workflow contract.
 ---
 
 # Personal Code Documentation
 
-Create the smallest durable document that lets its intended reader complete the
-requested task. Do not use this skill for conversational explanation, status,
-diagnosis, review, or expression-only polishing.
+Write the smallest durable document that lets its intended reader complete the
+requested task. Conversational explanation does not need a documentation file.
 
-## Establish The Contract
+1. Resolve the requested audience, topic, destination, and existing document
+   owner. Edit the source of generated documentation, not the generated copy.
+2. Inspect the implementation, tests, schemas, and examples relevant to that
+   contract. Use a branch diff only for a branch-scoped request; a topic-scoped
+   correction is not limited to recently changed files.
+3. Patch an identified stale statement in place. For new material, organize
+   around the reader's task and reuse existing information architecture.
+   Preserve exact commands, identifiers, defaults, version conditions, and
+   errors. Distinguish current released behavior from proposed or unshipped
+   behavior when that distinction affects the reader.
+4. Check the changed text in context and run relevant existing documentation
+   or example checks. State which examples were run and which remain illustrative.
 
-- Follow the requested audience, format, and path. Otherwise infer the narrowest
-  actual reader and canonical documentation owner.
-- Check whether the target is generated; edit its source or generator.
-- Identify the reader's goal, included boundary, and material non-goals. Ask
-  only when an unresolved public-contract or ownership choice changes the
-  result.
-
-## Build Bounded Evidence
-
-Inspect only the source, tests, schemas, and existing docs needed to establish
-the relevant entry points and contracts. Preserve exact identifiers, commands,
-paths, configuration keys, and error text.
-
-Do not infer deployed state, performance, security, reliability, or historical
-rationale from source alone. Label a material inference or omission; do not
-turn a documentation request into a broad diagnosis.
-
-## Write And Check
-
-- For an identified stale contract, patch the smallest factual surface.
-- For a new document, organize around the reader's task rather than repository
-  traversal. Include only sections needed for that outcome.
-- For a requested tutorial, state prerequisites, steps, observable checks, and
-  the expected result. Mark illustrative commands that were not run.
-- Avoid duplicate owners, exhaustive matrices, repeated background, fixed
-  templates, and tutorial expansion when a concise reference is enough.
-
-Read the edited text in context, inspect the scoped diff, and run the narrow
-existing documentation or example checks that matter. Report what was and was
-not verified.
+Audit-only requests return findings without edits. Source inspection alone
+cannot establish deployment state, performance, historical intent, or runtime
+success. Mark a material inference or evidence gap rather than filling it in.
+Do not expand a factual correction into a tutorial, repository map, or second
+documentation owner.
 
 Read `references/source-notes.md` only when maintaining provenance.

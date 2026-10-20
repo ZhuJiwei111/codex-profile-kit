@@ -15,3 +15,17 @@ Checked: 2026-07-25.
   user-owned choices to block without timeouts.
 
 The workflow is locally re-expressed; no upstream executable is bundled.
+
+## 2026-10-20 review
+
+Compared the installed `grilling` entry with Matt Pocock v1.3.1 at
+`24fe0ef7737efae15c87225755e9f6f5965e4888`. Upstream remains a whole-frontier
+interview; the user's portable rules retain explicit decisions and the local
+source notes explain one-decision continuity. Keep that distinction rather than
+replacing it with upstream. Remove the compulsory coverage-model load and
+extra closure gate; use a durable note when multi-turn continuity needs one.
+
+https://github.com/mattpocock/skills/issues/797 discusses question burden and
+concrete proposals; https://github.com/mattpocock/skills/issues/893 distinguishes
+an empty question frontier from an explained design. They support bounded
+questions and a final agreed-design summary, not universal interviewing.

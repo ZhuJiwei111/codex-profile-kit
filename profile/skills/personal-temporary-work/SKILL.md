@@ -1,29 +1,29 @@
 ---
 name: personal-temporary-work
-description: Use when one-off migration, conversion, repair, inspection, or artifact work might otherwise add permanent code; separate durable behavior from temporary transition work and manage only exact task-created scratch.
+description: Keep one-off conversion, migration, repair, and inspection work separate from maintained behavior, and manage only the task's own scratch.
 ---
 
 # Personal Temporary Work
 
-Keep one-time transition logic out of maintained code.
+Use existing tools or a direct command for one-time work. Add maintained code
+only when it serves a real future workflow, not merely because reuse is possible.
+For mixed work, keep the lasting behavior in its normal owner and handle the
+historical transition separately.
 
-- Durable behavior serves normal future use and belongs to the normal owner.
-- Temporary work handles only bounded existing state or artifacts.
-- Hybrid work makes the smallest durable future change and handles historical
-  state with a temporary helper or direct command.
+Follow the project's scratch convention. Keep source inputs, deliverables, and
+recovery evidence distinguishable from disposable intermediates. Use a stable
+project-local location when another session or process must resume the work;
+otherwise use the smallest isolated task directory. Do not create a framework,
+manifest, ignore rule, or persistent setup merely to organize scratch.
 
-Use the project's scratch convention or a task-specific temporary directory.
-Use a stable project-local scratch path only when recovery, reattachment, or
-handoff needs it. Do not add a permanent helper, dependency, ignore rule,
-ledger, or framework merely because reuse is possible.
+Before editing or removing an existing artifact, establish its owner and role.
+Use staging, a sample, or a dry run when it reduces a concrete transition risk;
+ordinary reversible work does not need all three.
 
-Treat canonical inputs as immutable by default. Define the actual properties to
-preserve and use staging, a sample, or a dry run only when it reduces real
-transition risk. Verify durable behavior and one-time transition separately.
-
-Delete only exact scratch created by this task after confirming it is
-noncanonical, unshared, unambiguous, and no longer useful for recovery. Retain
-it when retry or handoff still benefits, and report the path and purpose.
-Pre-existing, shared, ambiguous, or material cleanup needs explicit scope.
+At completion, remove only exact task-created scratch that is no longer used
+by a process, recovery path, or handoff. Retain useful unfinished work with a
+short purpose and next-use or delete condition. Pre-existing or shared cleanup
+needs explicit scope. A failed attempt is not permission to erase its only
+useful evidence or modify unrelated files.
 
 Read `references/source-notes.md` only when maintaining provenance.

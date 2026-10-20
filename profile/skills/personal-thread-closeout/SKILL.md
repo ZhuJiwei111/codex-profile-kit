@@ -24,7 +24,8 @@ ledger, transcript, generic retrospective, or fixed closeout template.
 Optionally curate a verified, non-obvious cross-task lesson only when it will
 change future work. Put it in the narrowest existing owner and remove
 duplicates. Do not preserve transient status, obvious results, unsupported
-inference, raw logs, or secrets.
+inference, raw logs, or secrets. Personal generated-memory updates still need
+an explicit user request; closing a chat alone does not authorize them.
 
 ## Archive Last
 

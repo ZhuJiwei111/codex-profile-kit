@@ -1,32 +1,32 @@
 ---
 name: personal-evidence-debugging
-description: Use for an unexpected local failure, wrong-reason check failure, flake, hang, or failed fix attempt before making another speculative change; not for an expected RED, ordinary status, or final verification.
+description: Diagnose an unexpected failure, hang, flake, or failed fix before another speculative change. Excludes expected test-first RED and routine completion checks.
 ---
 
 # Personal Evidence Debugging
 
-Find the strongest supported causal explanation with the smallest useful
-investigation.
+Find the cause with the smallest observation that can change the diagnosis.
 
-1. Reproduce with the narrowest command and separate target behavior from
-   setup, fixture, dependency, or unrelated baseline failure.
-2. Locate the first causally useful anomaly, not merely the final log line.
-3. State one hypothesis, its predicted observation, and a falsifier.
-4. Run one bounded check that distinguishes that hypothesis.
-5. If evidence supports it and fix authority exists, make the smallest
-   cause-backed correction and rerun the same reproduction.
+- Pin down expected versus observed behavior and use the narrowest practical
+  reproduction. Separate the target failure from setup, fixtures, and an
+  unrelated baseline failure.
+- Inspect the first causally useful anomaly and the affected boundary. When
+  the mechanism is already visible, explain it and check the direct fix; a
+  formal hypothesis sequence adds nothing.
+- Otherwise choose one hypothesis, predict an observable result, and run a
+  bounded check that distinguishes it from the alternatives.
+- After a failed fix, revise the causal model or inspected boundary before
+  making another change. There is no fixed retry count or automatic demand to
+  redesign the architecture.
 
-If direct evidence already exposes the mechanism, skip extra hypothesis
-ceremony. A failed fix is new evidence: change the causal model or inspected
-boundary instead of stacking a fallback, wrapper, or another guess.
+With fix authority, make the smallest supported correction and rerun the same
+reproduction. Add a regression test when a repeatable behavior and an existing
+harness justify one; retain no one-off diagnostic program without a real owner.
+For flakes and hangs, inspect relevant ordering, resources, timing, and shared
+state rather than adding blind sleeps, retries, or fallbacks.
 
-For flakes and hangs, inspect only relevant timing, ordering, shared state,
-resources, environment, and nearest trustworthy working path. There is no
-fixed attempt count.
-
-Label the conclusion `confirmed`, `likely`, or `unknown` in ordinary prose.
-Diagnosis alone does not authorize a fix, restart, relaunch, or ongoing
-monitoring. Report the mechanism, evidence, uncertainty, and smallest useful
-next action.
+Report the cause as confirmed, likely, or unknown, with the evidence and any
+remaining uncertainty. A diagnosis request does not authorize a restart,
+relaunch, monitoring, or unrelated fix.
 
 Read `references/source-notes.md` only when maintaining provenance.

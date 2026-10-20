@@ -37,3 +37,16 @@ baseline.
 - Verify examples when practical and label unrun examples.
 - Keep sync_existing to the smallest factual patch after an identified contract
   change.
+
+## 2026-10-20 review
+
+Reviewed `openai/openai-agents-js@9687b544c8c873080e6ff7e7d294c0b353cd9ab6`
+`.agents/skills/docs-sync/SKILL.md`. Adopted topic-versus-diff scope, released
+versus unshipped behavior, and source-based example verification. SDK-specific
+directories, release machinery, and verification stacks are not portable.
+Retain this local manual workflow; no external executable is installed.
+
+`wshobson/agents` HEAD was checked at
+`0874a27b17a22e2b7c2e2bcd725768e0803cad06`; a guessed modern skill path returned
+404, so no claim is made that its current documentation subtree was reviewed.
+The original pinned provenance remains the design baseline.

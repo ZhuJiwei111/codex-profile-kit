@@ -13,7 +13,7 @@ back into the repository.
 ## Choose The Explicit Intent
 
 - `preview`, `apply`, or `check`: run `scripts/profile_sync.py` with the same
-  `codex-tools` Python recorded in `HOST_LOCAL.md`. It must orchestrate both the
+  Python recorded in `HOST_LOCAL.md`. It must orchestrate both the
   core profile and `scripts/plugin_sync.py` in that single command; the
   interpreter is also rendered into the host's hook definition.
 - update from GitHub: inspect local state, fetch, and accept only a selected

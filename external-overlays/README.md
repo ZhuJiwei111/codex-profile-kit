@@ -25,9 +25,10 @@ the recorded base revision before rebasing the overlay.
 
 ## 本机 skill 路由精简（2026-10-20）
 
-`skill-routing-20261020.patch` 仅修改三个外部 skill 的入口：
-`clarify-before-action` 与 `paper-spine` 改为手动调用，
+`skill-routing-20261020.patch` 仅修改两个外部 skill 的入口：
+`paper-spine` 改为手动调用，
 `academic-research-suite`（本机适配包 0.1.22，ARS 3.19.0）缩短触发描述。
+`clarify-before-action` 已退役，由 manifest 精确移除，不再保留补丁。
 这些完整 skill 树不由 profile sync 管理；补丁不安装依赖、不替换脚本、
 不启用 hook。更新后须先核对补丁上下文，不能对新版本盲目重放。
 

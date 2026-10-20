@@ -1,9 +1,9 @@
 ---
-name: translate-paper-zh
-description: Manual only. Use only when the user explicitly invokes $translate-paper-zh to translate an English academic paper PDF or extracted paper text into paragraph-aligned English-Chinese Markdown with locally rendered figures and tables.
+name: personal-translate-paper-zh
+description: Manual only. Use only when the user explicitly invokes $personal-translate-paper-zh to translate an English academic paper PDF or extracted paper text into paragraph-aligned English-Chinese Markdown with locally rendered figures and tables.
 ---
 
-# Translate Paper ZH
+# Personal Translate Paper ZH
 
 ## Purpose
 

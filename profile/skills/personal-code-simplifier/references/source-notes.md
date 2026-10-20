@@ -24,3 +24,17 @@ not inherit Claude model, plugin, or autonomous post-edit cleanup behavior.
 - Do not infer dead code from missing direct calls.
 - Keep behavior changes, broad formatting, dependencies, configuration, Git,
   and publication outside cleanup.
+
+## 2026-10-20 review
+
+Reviewed current upstream agent at
+`anthropics/claude-plugins-official@a0b04d9ddccaabe1976645f68b0eda50f74e7022`,
+`plugins/code-simplifier/agents/code-simplifier.md`. Retain the local rewrite:
+its explicit scope and before/after checks are stronger matches for current
+portable preferences than upstream autonomous recent-code cleanup.
+
+Issue reports inform two concrete additions, without claiming consensus:
+- https://github.com/anthropics/claude-plugins-official/issues/297 reports prompt
+  and configuration rewording; treat literals and prompts as behavior.
+- https://github.com/anthropics/claude-plugins-official/issues/1304 reports a stale
+  main comparison broadening scope; verify the selected diff base and paths.
