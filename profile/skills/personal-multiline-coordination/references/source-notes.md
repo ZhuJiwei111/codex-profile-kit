@@ -1,16 +1,46 @@
 # Source Notes
 
-Checked: 2026-07-25.
+Updated: 2026-10-20.
 
-This local workflow comes from persistent Codex App tasks and Git worktrees.
-Historical failures involved ambiguous task/cwd/worktree identity, overlapping
-writers, inconsistent decisions across user-visible tasks, and several lines
-publishing competing final states.
+This is a local workflow derived from user-directed coordination of persistent
+Codex App chats and Git worktrees. Earlier experience established exact
+task/cwd/worktree identity, exclusive write surfaces, one integration owner,
+and evidence-bearing handoffs.
 
-Managed subagents were separately reviewed and are short-lived, main-task
-controlled workers rather than persistent user-facing lines. External-job
-monitoring was also split into its own strict manual-only skill.
+The October 20 multi-turn project restructuring exposed repeated root/task
+messages, unnecessary reauthorization, an overloaded root, shared-index
+negotiation, and schedules left active or stale after task changes. The user
+requested complete-task chats, autonomous task-local execution within assigned
+resources, resource returns before final completion when appropriate, and
+verified lifecycle closure including automations and archival.
 
-The retained preferences are exact identity, one writer per intersecting
-surface, bounded independent deliverables, minimal cross-line state, one
-integration owner, evidence-bearing handoff, and no task-count voting.
+The user also distinguished scientific discussion from scheduling: root may
+request result analysis, experiment design, and analysis design; discussion may
+send a restrained, concrete experiment-scheduling request back to root.
+Scientific evidence and constraints travel with the request, not operational
+timetables or routine resource traffic.
+
+The same user subsequently delegated existing-project GPU scheduling directly
+to root and authorized both root and task coordinators to use subagents.
+Compute should be allocated generously according to useful task work, with
+estimated duration rather than artificial minute caps or repeated diagnostic
+quota approvals. This supersedes micro-allocation gates for those authorized
+tasks; actual resource expiry, scientific criteria, and separately retained
+spending limits remain distinct.
+
+A follow-up audit found task-internal diagnostic milestones still sent to root
+with "no reply needed" despite autonomous continuation. The workflow now makes
+the recipient-action/resource/commitment boundary explicit and keeps related
+probes under one continuing allocation, with internal ETA changes saved to the
+task rather than driving extra root wakeups.
+
+The user then authorized coordinators to commit their own checked stage work
+promptly and requested waiting-phase App scheduling: pause reminders while
+actively working, finish the current basics, and arm a useful future check only
+when waiting. Container CLI monitoring and handling continue independently.
+Shared-index serialization remains distinct from asking for commit permission.
+
+These lessons inform the workflow, not blanket permissions. User authorization
+must cover actual chat actions and execution. Specific task IDs, GPU counts,
+host paths, budgets, and monitoring mechanisms remain project state. Managed
+subagents and external-job supervision retain their separate workflows.

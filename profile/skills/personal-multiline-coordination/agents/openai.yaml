@@ -1,4 +1,4 @@
 interface:
   display_name: "Multiline Coordination"
-  short_description: "Coordinate persistent App tasks and worktrees"
-  default_prompt: "Use $personal-multiline-coordination to reconcile ownership and coordinate these persistent App tasks or worktrees."
+  short_description: "Coordinate autonomous App tasks and their lifecycle"
+  default_prompt: "Use $personal-multiline-coordination to coordinate these persistent App tasks with clear ownership, task autonomy, necessary communication, and lifecycle closure."
