@@ -420,8 +420,8 @@ upstream_entrypoint_compared = false
 name = "personal-reconcile-decisions"
 origin = "local"
 invocation = "manual"
-decision = "retain"
-reason = "Keep named-history reconciliation and user locks; no unrelated history scans or implied writes."
+decision = "remove"
+reason = "User explicitly removed the unused entry; native archive or scoped history inspection needs no separate skill."
 upstream_entrypoint_compared = false
 
 [[skill]]
@@ -453,8 +453,8 @@ upstream_entrypoint_compared = false
 name = "personal-thread-closeout"
 origin = "local"
 invocation = "manual"
-decision = "optimize-local"
-reason = "Keep native task archival; generated-memory writes still require an explicit user request."
+decision = "remove"
+reason = "User explicitly removed the unused entry; native archive or scoped history inspection needs no separate skill."
 upstream_entrypoint_compared = false
 
 [[skill]]
@@ -645,9 +645,9 @@ boundary = "Event history, opt-in current task state and raw experiment notebook
 
 [[overlap_group]]
 name = "coordination"
-retained = ["personal-subagent-boundaries", "personal-multiline-coordination", "personal-task-archive", "personal-thread-closeout", "handoff", "personal-reconcile-decisions"]
-removed = []
-boundary = "One-shot workers, persistent task ownership, batch archive triage, current-task close/archive, unfinished-work transfer and historical decision recovery have distinct actions and authority."
+retained = ["personal-subagent-boundaries", "personal-multiline-coordination", "personal-task-archive", "handoff"]
+removed = ["personal-thread-closeout", "personal-reconcile-decisions"]
+boundary = "One-shot workers, persistent task ownership, batch archive triage and unfinished-work transfer retain separate owners. Native archival and scoped history inspection need no dedicated entry."
 
 [[overlap_group]]
 name = "paper-reading"

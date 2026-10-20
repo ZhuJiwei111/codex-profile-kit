@@ -7,9 +7,9 @@ Write a handoff document summarising the current conversation so a fresh agent c
 
 Include a skill reference only when the continuation needs a non-obvious workflow.
 This entry transfers unfinished work. It does not close or archive the current
-chat; an explicitly requested close-and-archive belongs to
-`personal-thread-closeout`, and reconstructing disputed historical decisions
-belongs to `personal-reconcile-decisions`.
+chat. An explicit archive request uses the product's native task archive action.
+Resolve disputed historical decisions from the named source turns and existing
+canonical document within the user's requested scope.
 
 Do not duplicate content already captured in other artifacts (specs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead.
 

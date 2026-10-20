@@ -41,11 +41,9 @@ trees = [
   "skills/personal-planning-with-files-zh",
   "skills/personal-profile-sync",
   "skills/personal-project-journal",
-  "skills/personal-reconcile-decisions",
   "skills/personal-subagent-boundaries",
   "skills/personal-task-archive",
   "skills/personal-temporary-work",
-  "skills/personal-thread-closeout",
   "skills/prototype",
   "skills/research",
   "skills/researchwrite",
@@ -80,6 +78,9 @@ retired_files = [
 ]
 
 retired_trees = [
+  "skills/personal-reconcile-decisions",
+  "skills/personal-thread-closeout",
+
   "skills/wait-what",
   "skills/personal-grilling",
   "skills/grill-me",

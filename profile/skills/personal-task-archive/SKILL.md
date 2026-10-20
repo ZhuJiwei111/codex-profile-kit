@@ -40,8 +40,9 @@ user.
   automation, retry loop, or host runtime is still active. Treat archival as
   organization, not evidence that execution or traffic stopped. Complete the
   relevant runtime diagnosis first, then return here for archival.
-- For only the calling task's final closeout, use
-  `personal-thread-closeout`; do not run a multi-task inventory.
+- For only the calling task's final closeout, summarize its actual result and
+  unresolved ownership, then use the native archive action only when explicitly
+  requested. Do not run a multi-task inventory.
 - For memory review or preservation, use the Memory Hygiene branch only after
   the user explicitly requests it.
 

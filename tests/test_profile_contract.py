@@ -180,7 +180,7 @@ class ProfileContractTest(unittest.TestCase):
             "current execution host",
             "same exact host identity",
             "manage that host from a task executing there",
-            "`personal-thread-closeout`",
+            "native archive action only when explicitly",
             "Treat archival as organization",
             "24 hours",
             "15 days",
