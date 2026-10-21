@@ -16,6 +16,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import mcp_server  # noqa: E402
 from supervisor import JobStore  # noqa: E402
+from process_identity import require_process_identity  # noqa: E402
 
 
 class FakeRuntime:
@@ -42,9 +43,9 @@ class McpObservationContractTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_exposes_only_observation_and_ack_tools(self):
+    def test_exposes_only_observation_wait_control_and_ack_tools(self):
         self.assertEqual(
-            {"wait_event", "inspect_job", "list_jobs", "ack_event", "get_capabilities"},
+            {"wait_event", "wait_any", "interrupt_wait", "inspect_job", "list_jobs", "ack_event", "get_capabilities"},
             set(mcp_server.TOOL_NAMES),
         )
 
@@ -69,6 +70,16 @@ class McpObservationContractTest(unittest.TestCase):
         self.assertEqual("completed", event["event_type"])
         self.assertTrue(ack["acknowledged"])
 
+    def test_wait_any_tool_returns_original_event(self):
+        first = self.store.start_job(name="first", cwd=self.cwd, command=["/bin/true"])
+        second = self.store.start_job(name="second", cwd=self.cwd, command=["/bin/true"])
+        self.store._atomic_write_json(self.store.job_dir(second["job_id"]) / "result.json", {"exit_code": 0})
+        reply = mcp_server.StdioMcpServer()._tool_call("wait_any", {"job_ids": [first["job_id"], second["job_id"]]}, None)
+        event = reply["structuredContent"]
+        self.assertEqual(second["job_id"], event["job_id"])
+        self.assertEqual("completed", event["event_type"])
+        self.assertEqual(event["event_id"], self.store.inspect_job(second["job_id"])["pending_event"]["event_id"])
+
 
 class McpStdioProtocolTest(unittest.TestCase):
     def setUp(self):
@@ -76,6 +87,8 @@ class McpStdioProtocolTest(unittest.TestCase):
         env = os.environ.copy()
         env["PLJS_STATE_ROOT"] = str(Path(self.tmp.name) / "state")
         env["PLJS_POLL_INTERVAL_SECONDS"] = "0.05"
+        self._responses = {}
+        self._buffer = b""
         self.process = subprocess.Popen(
             [sys.executable, str(SCRIPTS / "mcp_server.py")],
             stdin=subprocess.PIPE,
@@ -100,17 +113,24 @@ class McpStdioProtocolTest(unittest.TestCase):
             message["params"] = params
         self.process.stdin.write(json.dumps(message) + "\n")
         self.process.stdin.flush()
-        deadline = time.time() + 5
+        return self.receive(request_id)
+
+    def receive(self, request_id):
+        deadline = time.monotonic() + 5
         selector = selectors.DefaultSelector()
         selector.register(self.process.stdout, selectors.EVENT_READ)
         try:
-            while time.time() < deadline:
-                ready = selector.select(timeout=max(0, deadline - time.time()))
-                self.assertTrue(ready, self.process.stderr.read() if self.process.poll() is not None else "MCP response timeout")
-                response = json.loads(self.process.stdout.readline())
-                if response.get("id") == request_id:
-                    return response
-            self.fail("MCP response timeout")
+            while request_id not in self._responses:
+                ready = selector.select(timeout=max(0, deadline - time.monotonic()))
+                self.assertTrue(ready, "MCP response timeout")
+                data = os.read(self.process.stdout.fileno(), 65536)
+                self.assertTrue(data, "MCP server closed stdout")
+                self._buffer += data
+                while b"\n" in self._buffer:
+                    line, self._buffer = self._buffer.split(b"\n", 1)
+                    response = json.loads(line)
+                    self._responses[response.get("id")] = response
+            return self._responses.pop(request_id)
         finally:
             selector.close()
 
@@ -132,7 +152,7 @@ class McpStdioProtocolTest(unittest.TestCase):
         self.assertEqual([], listing["result"]["structuredContent"]["jobs"])
         self.assertFalse(listing["result"]["isError"])
 
-    def test_cancelled_wait_does_not_stop_server(self):
+    def make_wait_job(self):
         job_dir = Path(self.tmp.name) / "state" / "jobs" / "20260815000000-canceltest00"
         job_dir.mkdir(parents=True)
         registration = {
@@ -140,7 +160,7 @@ class McpStdioProtocolTest(unittest.TestCase):
             "job_id": job_dir.name,
             "name": "cancel",
             "cwd": self.tmp.name,
-            "process": {"pid": os.getpid(), "start_ticks": 0},
+            "process": require_process_identity(os.getpid()),
             "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "executable": "true",
             "argument_count": 1,
@@ -158,18 +178,55 @@ class McpStdioProtocolTest(unittest.TestCase):
         (job_dir / "job.json").write_text(json.dumps(registration))
         (job_dir / "events.json").write_text(json.dumps({"schema_version": 2, "next_event_id": 1, "events": [], "conditions": {}}))
         (job_dir / "combined.log").touch()
+        return job_dir
+
+    def start_wait(self, job_dir, tool="wait_event"):
         wait_request = {
             "jsonrpc": "2.0",
             "id": 10,
             "method": "tools/call",
-            "params": {"name": "wait_event", "arguments": {"job_id": job_dir.name}},
+            "params": {"name": tool, "arguments": {"job_ids": [job_dir.name]} if tool == "wait_any" else {"job_id": job_dir.name}},
         }
         self.process.stdin.write(json.dumps(wait_request) + "\n")
-        self.process.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/cancelled", "params": {"requestId": 10}}) + "\n")
         self.process.stdin.flush()
 
-        response = self.request(11, "ping")
-        self.assertEqual({}, response["result"])
+    def assert_job_unchanged(self, job_dir):
+        self.assertIsNone(self.process.poll())
+        self.assertFalse((job_dir / "result.json").exists())
+        self.assertEqual([], json.loads((job_dir / "events.json").read_text())["events"])
+        observed = self.request(12, "tools/call", {"name": "inspect_job", "arguments": {"job_id": job_dir.name}})
+        self.assertTrue(observed["result"]["structuredContent"]["process_state"]["active"])
+
+    def test_cancelled_wait_returns_and_preserves_job(self):
+        job_dir = self.make_wait_job()
+        self.start_wait(job_dir)
+        self.process.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/cancelled", "params": {"requestId": 10}}) + "\n")
+        self.process.stdin.flush()
+        response = self.receive(10)
+        self.assertTrue(response["result"]["isError"])
+        self.assertIn("wait cancelled", response["result"]["content"][0]["text"])
+        self.assert_job_unchanged(job_dir)
+        self.assertEqual({}, self.request(11, "ping")["result"])
+
+    def test_cross_process_interrupt_releases_multi_wait(self):
+        job_dir = self.make_wait_job()
+        self.start_wait(job_dir, "wait_any")
+        # Observe that this request is reading durable state before interrupting.
+        # A protocol ping alone would not establish that the wait has started.
+        deadline = time.monotonic() + 5
+        while not (job_dir / "events.lock").exists():
+            self.assertLess(time.monotonic(), deadline)
+            time.sleep(0.01)
+        interrupted = subprocess.run(
+            [sys.executable, str(SCRIPTS / "supervisor.py"), "--state-root", str(job_dir.parents[1]), "interrupt-wait", job_dir.name],
+            capture_output=True, text=True, timeout=5,
+        )
+        self.assertEqual(0, interrupted.returncode, interrupted.stderr)
+        self.assertTrue(json.loads(interrupted.stdout)["underlying_job_unchanged"])
+        response = self.receive(10)
+        self.assertTrue(response["result"]["isError"])
+        self.assertIn("wait interrupted", response["result"]["content"][0]["text"])
+        self.assert_job_unchanged(job_dir)
 
 
 if __name__ == "__main__":

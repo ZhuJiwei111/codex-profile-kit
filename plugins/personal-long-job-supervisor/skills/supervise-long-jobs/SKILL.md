@@ -42,22 +42,26 @@ The detached worker records its own identity, launches the target with `Popen`, 
 
 ## Wait And Resume
 
-Call `wait_event(job_id)` once. It blocks in the host process without model sampling until an unacknowledged `completed`, `failed`, `attention`, or `supervisor_error` exists. Do not wrap it in Goal polling, repeated waits, shell polling, a Scheduled task, or another monitor.
+Call `wait_event(job_id)` for one job or `wait_any(job_ids)` for several. The host waits without model sampling and returns one unacknowledged `completed`, `failed`, `attention`, or `supervisor_error`, preserving its original job and event IDs. No event is automatically acknowledged. In a multi-job wait, closed observations are skipped; when all are closed and no event is pending, waiting ends with an error instead of hanging.
+
+Do not supervise a waiting script or layer Goal polling, Scheduled tasks, shell polling, or another monitor around these waits. A finite command ends on its result. A resident public observer may wait indefinitely for a declared actionable condition: define what it observes, who handles events, and when its ownership ends. Normal waiting is not abandonment and does not justify a duplicate task.
 
 When an event arrives:
 
 1. Treat `attention` as a request to diagnose, not proof of failure.
 2. Use the bounded event and `inspect_job(job_id)` first. If evidence remains insufficient, read at most the final 8 KiB of the reported `combined.log`; do not ingest the whole log by default.
 3. Repair only when the original task already authorized that exact class of change. The event itself grants no new authority.
-4. Call `ack_event(job_id, event_id)` after consuming the event, then wait again only if the job remains active.
+4. Call `ack_event(job_id, event_id)` after consuming the event, then wait again only if observation remains viable (`inspect_job` reports `waitable`). A consumed `supervisor_error` with an inactive worker closes observation; inspect the target separately before deciding its outcome.
 
-No event or interface authorizes automatic cancellation, retry, restart, signaling, GPU reassignment, parameter change, resource reconfiguration, or a later pipeline stage.
+The plugin observes jobs and controls waits; it never controls workers, retries work, or schedules later stages. Events grant no new authority. The task owner may use other tools to act within existing task authorization; unrelated or expanded actions still need matching authority.
 
 ## Reconnect And Maintain
 
 After App or MCP restart, use `list_jobs()` or `inspect_job(job_id)`. Worker-side health sampling continues while MCP is disconnected, and an unacknowledged disk event returns immediately after reconnect.
 
-If a wait is steered or cancelled, the underlying job remains unchanged. If MCP reports `Transport closed`, move recovery to a fresh task instead of looping on the dead transport.
+MCP client cancellation releases only its request. When a wait must be released through another available caller, use `interrupt_wait(job_id)`: existing waits watching that job, including multi-job waits and other MCP instances sharing the state directory, exit at their next observation cycle. Later waits are unaffected. The response confirms an interruption request, not that a waiter existed. Workers, targets and pending events remain unchanged. Waits started by older plugin code do not observe this control; upgrade the waiting client at an idle boundary without restarting healthy workers. This does not guarantee that the App dispatches a new message while a tool is blocked.
+
+If MCP reports `Transport closed`, preserve the job IDs and use available inspection or CLI recovery. Reconnect when the host supports it; use a fresh task only when the current transport cannot recover and task creation is authorized. Do not repeatedly call a known-dead transport or relaunch a healthy job.
 
 CLI fallbacks are:
 
@@ -65,6 +69,7 @@ CLI fallbacks are:
 <plugin-root>/scripts/supervisor.py list
 <plugin-root>/scripts/supervisor.py status JOB_ID
 <plugin-root>/scripts/supervisor.py ack JOB_ID EVENT_ID
+<plugin-root>/scripts/supervisor.py interrupt-wait JOB_ID
 <plugin-root>/scripts/supervisor.py clean JOB_ID
 ```
 

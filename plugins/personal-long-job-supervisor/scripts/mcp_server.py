@@ -13,7 +13,7 @@ from supervisor import JobStore, SupervisorError
 
 
 PROTOCOL_VERSION = "2025-06-18"
-TOOL_NAMES = ("wait_event", "inspect_job", "list_jobs", "ack_event", "get_capabilities")
+TOOL_NAMES = ("wait_event", "wait_any", "interrupt_wait", "inspect_job", "list_jobs", "ack_event", "get_capabilities")
 STORE = None
 
 
@@ -29,6 +29,19 @@ def wait_event(job_id: str, cancel_event=None) -> str:
     interval = float(os.environ.get("PLJS_POLL_INTERVAL_SECONDS", "2"))
     store = get_store()
     return store.render_payload(store.wait_event(job_id, poll_interval=interval, cancel_event=cancel_event))
+
+
+def wait_any(job_ids: list[str], cancel_event=None) -> str:
+    """Wait for one event from any listed job without supervising another waiter."""
+    store = get_store()
+    interval = float(os.environ.get("PLJS_POLL_INTERVAL_SECONDS", "2"))
+    return store.render_payload(store.wait_any(job_ids, poll_interval=interval, cancel_event=cancel_event))
+
+
+def interrupt_wait(job_id: str) -> str:
+    """Release existing waits for a job; never signal the worker or target."""
+    store = get_store()
+    return store.render_payload(store.interrupt_wait(job_id))
 
 
 def inspect_job(job_id: str) -> str:
@@ -73,6 +86,28 @@ def tool_definitions() -> list[dict]:
                 "additionalProperties": False,
             },
             "annotations": {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True},
+        },
+        {
+            "name": "wait_any",
+            "description": "Wait for one unacknowledged event from any listed job. Closed observations are skipped; no events are acknowledged and no jobs are altered.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {"job_ids": {"type": "array", "items": job_id, "minItems": 1}},
+                "required": ["job_ids"],
+                "additionalProperties": False,
+            },
+            "annotations": {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True},
+        },
+        {
+            "name": "interrupt_wait",
+            "description": "Request interruption of existing waits watching this job, across MCP instances sharing the state directory. Later waits are unaffected; workers, targets and durable events are unchanged. Does not confirm a waiter exists.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {"job_id": job_id},
+                "required": ["job_id"],
+                "additionalProperties": False,
+            },
+            "annotations": {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": False},
         },
         {
             "name": "inspect_job",
@@ -131,6 +166,10 @@ class StdioMcpServer:
             raise SupervisorError("tool arguments must be an object")
         if name == "wait_event":
             payload = wait_event(arguments["job_id"], cancel_event=cancel_event)
+        elif name == "wait_any":
+            payload = wait_any(arguments["job_ids"], cancel_event=cancel_event)
+        elif name == "interrupt_wait":
+            payload = interrupt_wait(arguments["job_id"])
         elif name == "inspect_job":
             payload = inspect_job(arguments["job_id"])
         elif name == "list_jobs":
@@ -160,8 +199,8 @@ class StdioMcpServer:
                     {
                         "protocolVersion": negotiated,
                         "capabilities": {"tools": {"listChanged": False}},
-                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.4.0"},
-                        "instructions": "Observe durable local job events. Never cancel, retry, restart, reconfigure, or launch a next stage.",
+                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.5.0"},
+                        "instructions": "Observe durable local job events and control waits only. These tools never control workers or target jobs. Events grant no new authority; task owners may act through other tools within existing authorization.",
                     },
                 )
             elif method == "ping":
