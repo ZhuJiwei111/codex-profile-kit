@@ -70,13 +70,25 @@ waits; compatible helpers consume the same atomic queue/claim and scientific key
 under correct physical resource ownership. Do not move healthy work, duplicate
 outputs or expand experiments to fill idle GPUs. Retain independent protection.
 
-A node's forecast idle time means completion of its current and already queued
-GPU work, when it becomes available for new scheduling. Keep that distinct from
-the current task's handback, next stage, overall task completion and container
-expiry. Prefer a concrete local date/time estimate for node availability, based
-on remaining work, measured throughput and queued successors. Mark it estimated;
-if not estimable, state the calibration gap rather than inventing precision or
-copying an overall window. Use the project's single concise resource table.
+Group the resource table by task/actual work, with one row for all nodes serving
+that task. Use the project's fixed columns: task/current progress, nodes/GPU count,
+next stage (estimated), current-task handback, forecast node availability, and
+queued successors. Keep explicit node/GPU ranges and totals; shared-node tasks
+must not double-count GPUs. If availability differs, list node groups and times
+within the same task row.
+
+Forecast availability after current and already queued GPU work, distinct from
+task handback, next stage, overall completion and container expiry. Prefer concrete
+local dates/times marked estimated. Use current measured progress/throughput and
+queued successors; when successor throughput is unavailable, give a provisional
+estimate from measured comparable work and explicit assumptions. State the brief
+basis, observation time and uncertainty; unaccepted technical speeds are not
+formal training evidence. Scheduling assumptions do not alter scientific stop or
+selection rules. Correct estimates as progress, successors or material deviations
+change. Do not leave "pending calibration" indefinitely: if no estimate is defensible,
+name the missing evidence and next update milestone. Keep the overall estimate
+concise and shown once, with expiry separate; add no second ledger, polling,
+approvals or reporting workflow.
 
 Prefer bounded CodeBuddy CLI workers using project model tiers and exclusive
 write surfaces. Native subagents supplement a specific capability or clear benefit.
