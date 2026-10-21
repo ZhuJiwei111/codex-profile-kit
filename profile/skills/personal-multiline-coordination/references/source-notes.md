@@ -1,6 +1,6 @@
 # Source Notes
 
-Updated: 2026-10-21.
+Updated: 2026-10-22.
 
 This is a local workflow derived from user-directed coordination of persistent
 Codex App chats and Git worktrees. Earlier experience established exact
@@ -87,3 +87,10 @@ An approved October 21 follow-up separates common maintenance from scientific
 job ownership and resource scheduling. Supervisor waiting is not abandonment;
 native waits are not supervised jobs. Common checks filter ordinary advisories,
 and intake does not automatically create a permanent owner per container.
+
+The October 22 user-approved follow-up uses TCodex/GPT-6.1-sol for ordinary
+implementation and CPU checks, TClaude/Opus-5.5 for complex diagnosis/design,
+and CodeBuddy/DeepSeek Flash for simple tasks. Real CPU deliveries and owner
+acceptance support entrypoint use, not a controlled CLI ranking. Exact routed
+arguments belong to project operations. Apply to new work without duplicate
+dispatch, a new coordination layer or interruption of healthy workers.

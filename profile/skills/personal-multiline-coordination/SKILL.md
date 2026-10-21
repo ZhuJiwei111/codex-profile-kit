@@ -90,10 +90,17 @@ name the missing evidence and next update milestone. Keep the overall estimate
 concise and shown once, with expiry separate; add no second ledger, polling,
 approvals or reporting workflow.
 
-Prefer bounded CodeBuddy CLI workers using project model tiers and exclusive
-write surfaces. Native subagents supplement a specific capability or clear benefit.
-Mechanical work stays direct. The owner decides and accepts sufficient results
-without mandatory duplicate review; use personal-subagent-boundaries for workers.
+Default ordinary code implementation, changes and CPU checks to bounded TCodex
+workers with GPT-6.1-sol. Use TClaude with Opus-5.5 for complex diagnosis, design
+and planning; retain CodeBuddy with DeepSeek Flash for simple bounded tasks.
+Use the project operations guide for verified native arguments, installed paths
+and exact routed model IDs; do not transfer aliases between CLIs. Give minimal
+context and exclusive write surfaces. Native subagents supplement a specific
+capability or clear benefit; mechanical work stays direct. The task owner decides
+and accepts actual output with proportionate checks, without duplicate dispatch
+to compare tools, mandatory second review or a new coordination layer. Apply this
+choice to new work; preserve healthy workers. Use personal-subagent-boundaries
+for workers.
 
 ## Checks, Adoption And Saving
 
