@@ -82,3 +82,8 @@ is not a default editor/operator, and external reviewers never become runtime
 owners through messages. Rule publication and actual runtime adoption remain
 distinct. Node idle ETA includes that node's queued GPU work and is separate
 from overall task completion and container expiry.
+
+An approved October 21 follow-up separates common maintenance from scientific
+job ownership and resource scheduling. Supervisor waiting is not abandonment;
+native waits are not supervised jobs. Common checks filter ordinary advisories,
+and intake does not automatically create a permanent owner per container.

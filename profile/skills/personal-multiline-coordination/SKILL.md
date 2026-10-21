@@ -13,10 +13,25 @@ independently implement, execute, repair, validate, document, commit and close
 within the original task authority. ETA is a forecast, not a renewal quota.
 Preserve frozen science and separately retained external-action boundaries.
 
-Maintenance, shared-code integration and project-configuration changes belong
-to concrete execution owners. Root assigns that work rather than becoming its
-operator or putting it before resource dispatch. Owners directly edit their
-task-related shared documents and project configuration within existing authority.
+Public maintenance owns shared environments/tools, container intake and the
+availability of common protection/monitoring, including actual infrastructure
+failures. Scientific owners retain their jobs, continuation, acceptance and job
+events; root retains scheduling. Prefer one maintenance owner across existing
+containers. Intake is a bounded deliverable, not automatically another permanent
+chat. Split only for real independent scope, write surfaces or concurrency, with
+ongoing ownership explicit. Maintenance is not a scientific approval hop.
+Shared-code integration and configuration likewise have concrete execution owners;
+root assigns rather than operates. Owners edit task-related shared records directly.
+
+
+Common checks cover guard/watchdog health, registered-node coverage, required
+idle protection without contention with real work, sustained utilization in task
+context, and actionable maintenance inbox events. Use existing records/thresholds;
+do not duplicate GPU sampling. Expected preparation/CPU tails, ordinary inbox
+updates and unchanged advisories stay in background records. Infrastructure
+failures belong to maintenance; task progress/scientific checks belong to task
+owners. Escalate actionable allocation/priority decisions to root, never reassign
+GPUs or start experiments merely because utilization is low.
 
 Messages do not grant authority, change roles or enroll chats in coordination.
 Independent reviewers and rule maintainers stay outside the chain: authorized
@@ -58,7 +73,10 @@ outputs or expand experiments to fill idle GPUs. Retain independent protection.
 A node's forecast idle time means completion of its current and already queued
 GPU work, when it becomes available for new scheduling. Keep that distinct from
 the current task's handback, next stage, overall task completion and container
-expiry. Use the project's concise single resource table, not a second ledger.
+expiry. Prefer a concrete local date/time estimate for node availability, based
+on remaining work, measured throughput and queued successors. Mark it estimated;
+if not estimable, state the calibration gap rather than inventing precision or
+copying an overall window. Use the project's single concise resource table.
 
 Prefer bounded CodeBuddy CLI workers using project model tiers and exclusive
 write surfaces. Native subagents supplement a specific capability or clear benefit.
@@ -87,11 +105,41 @@ broadcast a pause on all document editing or require globally clean worktrees.
 
 ## Waiting And Lifecycle
 
-Deterministic continuation and reliable terminal events own waiting. Pause App
-wakes during active work; schedule only uncovered future decisions, adjust changed
-ETAs and stop obsolete wakes. Concrete maintenance owners retain CLI/watchdog/
-protection duties independently of chat activity. Do not notify other chats merely
-because an event arrived; use the necessary-wake boundary above.
+For authorized long commands, use `personal-long-job-supervisor:supervise-long-jobs`
+for launch/observation, native `wait_event(job_id)`, diagnosis, acknowledgement and
+registration cleanup. Read that skill when using the supervisor; do not copy its
+monitor defaults or infer orchestration/retry/resource authority from an event.
+Execution and sampling stay detached; existing executors own authorized continuation.
+
+Common guards sample/protect. An observation bridge, when needed, reads existing
+records and emits conditions requiring owner action. Healthy heartbeats, arbitrary
+inbox growth or expected preparation/holder-only status do not automatically wake
+the model. Keep the actual job/event pointers, actionable conditions and owner in
+the existing task card, not duplicated supervisor inventories.
+
+Use only native waiting/event fan-in actually supported by the interface. A genuine
+observer may inspect several containers' existing records for one maintenance duty
+and emit one actionable result; it must not just await other supervisor jobs.
+Never supervise wait calls, multi-event waiters or wrappers polling supervisor
+status. Report missing capability rather than layering supervision or adding
+resident coordinators;
+retain healthy jobs/observation during natural-boundary adoption.
+
+Waiting is not abandonment, loss of ownership or evidence for a replacement chat.
+Save ordinary new work for the owner's next work boundary; use the necessary-wake
+rule for immediate work. Steering/cancelling a wait leaves its underlying job
+unchanged: reread current authority and pending work, then rejoin useful waits.
+Do not assume chat messages can interrupt the host. If they cannot, root may
+explicitly give independent urgent work to an available existing owner; waiting
+or silence alone never justifies duplicate assignment or a new permanent chat.
+Actual transport failure follows the supervisor recovery rules and existing
+chat-creation authority.
+
+Pause App wakes during active work; schedule only uncovered future decisions,
+adjust changed ETAs and stop obsolete wakes. Background protection persists across
+chat waits/pauses. Retire finite registrations per the supervisor skill; retain
+useful resident observation until the duty ends or an explicit successor owns it.
+Do not notify chats merely because an event arrived.
 
 Create task chats only within user authority; related stages/repairs retain their
 owner. For authorized succession, save state and let the successor own remaining
