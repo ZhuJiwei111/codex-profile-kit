@@ -106,8 +106,11 @@ broadcast a pause on all document editing or require globally clean worktrees.
 ## Waiting And Lifecycle
 
 For authorized long commands, use `personal-long-job-supervisor:supervise-long-jobs`
-for launch/observation, native `wait_event(job_id)`, diagnosis, acknowledgement and
-registration cleanup. Read that skill when using the supervisor; do not copy its
+for launch/observation, `wait_event(job_id)` for one job or native `wait_any(job_ids)`
+for several, diagnosis, acknowledgement and registration cleanup. Returned events
+keep their original job/event IDs and are not automatically acknowledged. Root
+waits only for its own global decisions; scientific and maintenance owners consume
+their own events rather than routing everything through root. Read that skill when using the supervisor; do not copy its
 monitor defaults or infer orchestration/retry/resource authority from an event.
 Execution and sampling stay detached; existing executors own authorized continuation.
 
@@ -117,23 +120,27 @@ inbox growth or expected preparation/holder-only status do not automatically wak
 the model. Keep the actual job/event pointers, actionable conditions and owner in
 the existing task card, not duplicated supervisor inventories.
 
-Use only native waiting/event fan-in actually supported by the interface. A genuine
-observer may inspect several containers' existing records for one maintenance duty
-and emit one actionable result; it must not just await other supervisor jobs.
-Never supervise wait calls, multi-event waiters or wrappers polling supervisor
-status. Report missing capability rather than layering supervision or adding
-resident coordinators;
-retain healthy jobs/observation during natural-boundary adoption.
+Use native `wait_any` when several independent jobs need observation. Retain an
+existing genuine observer that reads several containers' records for one maintenance
+duty; do not split it just to adopt the API. Never supervise wait calls or wrappers
+polling supervisor status, add resident coordinators, or restart healthy observation
+and compute merely to upgrade the waiting client.
 
-Waiting is not abandonment, loss of ownership or evidence for a replacement chat.
-Save ordinary new work for the owner's next work boundary; use the necessary-wake
-rule for immediate work. Steering/cancelling a wait leaves its underlying job
-unchanged: reread current authority and pending work, then rejoin useful waits.
-Do not assume chat messages can interrupt the host. If they cannot, root may
-explicitly give independent urgent work to an available existing owner; waiting
-or silence alone never justifies duplicate assignment or a new permanent chat.
-Actual transport failure follows the supervisor recovery rules and existing
-chat-creation authority.
+Waiting is not abandonment, loss of ownership or grounds for a replacement chat.
+Ordinary new work waits for the owner's next boundary; immediate work follows the
+necessary-wake rule. Root or the responsible owner may use `interrupt_wait(job_id)`
+when a wait really must be released: it requests interruption of existing waits
+watching that job, including multi-job waits across MCP instances sharing state.
+It does not stop workers/targets, acknowledge events, confirm a waiter exists or
+affect later waits. Do not use it to chase ordinary progress; external reviewers
+do not take over waits. Older waiting code does not observe the new control;
+reload clients at idle boundaries without restarting background jobs.
+
+After handling current authority and pending work, rejoin only viable observation.
+If `waitable=false` and no event remains pending, stop waiting; supervisor loss
+alone does not establish target failure. Chat messages are not guaranteed to
+interrupt the host. On `Transport closed`, retain job IDs and follow the supervisor's
+inspection/recovery guidance; do not automatically recreate chats or relaunch jobs.
 
 Pause App wakes during active work; schedule only uncovered future decisions,
 adjust changed ETAs and stop obsolete wakes. Background protection persists across
