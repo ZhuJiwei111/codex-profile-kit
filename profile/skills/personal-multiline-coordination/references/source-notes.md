@@ -1,6 +1,6 @@
 # Source Notes
 
-Updated: 2026-10-20.
+Updated: 2026-10-21.
 
 This is a local workflow derived from user-directed coordination of persistent
 Codex App chats and Git worktrees. Earlier experience established exact
@@ -73,3 +73,12 @@ These lessons inform the workflow, not blanket permissions. User authorization
 must cover actual chat actions and execution. Specific task IDs, GPU counts,
 host paths, budgets, and monitoring mechanisms remain project state. Managed
 subagents and external-job supervision retain their separate workflows.
+
+The October 21 consolidation makes ordinary events document-only and permits a
+short wake only for a direct owner's immediate actionable dependency or danger.
+Completion, failure, ETA changes and no-reply wording do not independently
+justify messages. Project configuration/maintenance have execution owners; root
+is not a default editor/operator, and external reviewers never become runtime
+owners through messages. Rule publication and actual runtime adoption remain
+distinct. Node idle ETA includes that node's queued GPU work and is separate
+from overall task completion and container expiry.
