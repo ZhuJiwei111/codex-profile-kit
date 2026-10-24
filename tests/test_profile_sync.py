@@ -110,7 +110,8 @@ class ProfileSyncCliTest(unittest.TestCase):
 
     def test_preview_reports_target_and_exact_add(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            codex_home = Path(directory)
+            codex_home = Path(directory) / "配置"
+            codex_home.mkdir()
             (codex_home / "config.toml").write_text(
                 'model_reasoning_effort = "max"\n'
                 + (ROOT / "personal.config.toml").read_text(encoding="utf-8"),
@@ -121,12 +122,14 @@ class ProfileSyncCliTest(unittest.TestCase):
             live_memory.write_text("host-local memory\n", encoding="utf-8")
             env = os.environ.copy()
             env["CODEX_HOME"] = str(codex_home)
+            env["PYTHONIOENCODING"] = "cp1252"
 
             result = subprocess.run(
                 [sys.executable, str(SCRIPT), "preview", "--profile-only"],
                 cwd=ROOT,
                 env=env,
                 text=True,
+                encoding="utf-8",
                 capture_output=True,
             )
 
@@ -171,6 +174,7 @@ class ProfileSyncCliTest(unittest.TestCase):
                 cwd=ROOT,
                 env=env,
                 text=True,
+                encoding="utf-8",
                 capture_output=True,
             )
 

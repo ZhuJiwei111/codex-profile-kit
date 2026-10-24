@@ -99,7 +99,7 @@ class MonitorConfigTest(unittest.TestCase):
             self.cwd,
             self.adapter,
         )
-        self.assertEqual(str(future), monitors[0]["paths"][0])
+        self.assertEqual(str(future.resolve()), monitors[0]["paths"][0])
 
     @mock.patch("monitoring._run")
     def test_nvidia_process_sample_excludes_unrelated_pids(self, run):

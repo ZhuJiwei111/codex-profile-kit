@@ -125,6 +125,77 @@ class JobStoreTest(unittest.TestCase):
         with self.assertRaisesRegex(SupervisorError, "already terminal"):
             restarted.wait_event(job["job_id"], poll_interval=0.001)
 
+    def test_consumed_supervisor_error_does_not_wait_forever(self):
+        job = self.start()
+        path = self.store.job_dir(job["job_id"]) / "job.json"
+        registration = json.loads(path.read_text())
+        registration["created_at"] = "2020-01-01T00:00:00Z"
+        self.store._atomic_write_json(path, registration)
+        self.runtime.states.clear()
+        event = self.store.wait_event(job["job_id"])
+        self.assertEqual("supervisor_error", event["event_type"])
+        self.store.ack_event(job["job_id"], event["event_id"])
+        self.assertFalse(self.store.inspect_job(job["job_id"])["waitable"])
+        # Keep the regression bounded even if the wait closure regresses.
+        cancel = threading.Event()
+        timer = threading.Timer(0.5, cancel.set)
+        timer.start()
+        try:
+            with self.assertRaisesRegex(SupervisorError, "already terminal or inactive"):
+                self.store.wait_event(job["job_id"], poll_interval=0.01, cancel_event=cancel)
+        finally:
+            timer.cancel()
+            timer.join()
+
+    def test_wait_any_skips_closed_and_keeps_other_events_unacknowledged(self):
+        closed, running, done = self.start(), self.start(), self.start()
+        self.write_result(closed["job_id"], 0)
+        event = self.store.wait_event(closed["job_id"])
+        self.store.ack_event(closed["job_id"], event["event_id"])
+        self.write_result(done["job_id"], 0)
+        event = self.store.wait_any([closed["job_id"], running["job_id"], done["job_id"]])
+        self.assertEqual(done["job_id"], event["job_id"])
+        self.assertEqual(event["event_id"], self.store.inspect_job(done["job_id"])["pending_event"]["event_id"])
+        self.assertTrue(self.store.inspect_job(running["job_id"])["process_state"]["active"])
+
+    def test_interrupt_wait_cross_store_preserves_jobs_and_future_waits(self):
+        first, second = self.start(), self.start()
+        ready = threading.Event()
+        errors = []
+        original = self.store.inspect_job
+
+        def inspect(job_id):
+            ready.set()
+            return original(job_id)
+
+        def wait():
+            try:
+                self.store.wait_any([first["job_id"], second["job_id"]], poll_interval=0.01)
+            except SupervisorError as error:
+                errors.append(str(error))
+
+        with mock.patch.object(self.store, "inspect_job", side_effect=inspect):
+            thread = threading.Thread(target=wait, daemon=True)
+            thread.start()
+            self.assertTrue(ready.wait(1))
+            other = JobStore(self.root, runtime=self.runtime)
+            other.interrupt_wait(second["job_id"])
+            thread.join(timeout=1)
+        self.assertFalse(thread.is_alive())
+        self.assertIn("wait interrupted", errors[0])
+        for job in (first, second):
+            observed = self.store.inspect_job(job["job_id"])
+            self.assertTrue(observed["process_state"]["active"])
+            self.assertIsNone(observed["pending_event"])
+        self.write_result(second["job_id"], 0)
+        event = other.wait_any([first["job_id"], second["job_id"]])
+        self.assertEqual(second["job_id"], event["job_id"])
+
+    def test_wait_any_rejects_empty_or_invalid_job_list(self):
+        for value in ([], "job", [None]):
+            with self.subTest(value=value), self.assertRaises(SupervisorError):
+                self.store.wait_any(value)
+
     def test_restart_recovers_process_identity_written_by_worker(self):
         job = self.start()
         job_dir = self.store.job_dir(job["job_id"])

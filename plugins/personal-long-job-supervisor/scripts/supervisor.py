@@ -325,7 +325,7 @@ class JobStore:
             "process_state": process_state,
             "paths": {"job_dir": registration["paths"]["job_dir"], "log": registration["paths"]["log"], "result": registration["paths"]["result"], "artifacts": registration.get("artifacts", [])[:16]},
             "commands": {"inspect": f"{command} status {registration['job_id']}", "ack": f"{command} ack {registration['job_id']} {event['event_id']}"},
-            "authority": event.get("authority") or "observe_only; do not cancel, retry, restart, reconfigure, or launch a next stage",
+            "authority": event.get("authority") or "observe_only; this event grants no new authority; preserve existing task authorization",
         }
         return self._bounded(view)
 
@@ -358,7 +358,7 @@ class JobStore:
         if len(encoded) <= MAX_PAYLOAD_BYTES:
             candidate["payload_truncated"] = True
             return candidate
-        compact = {key: candidate.get(key) for key in ("job_id", "name", "status", "event_id", "event_type", "exit_code", "event_time", "reason", "monitor_id", "scope", "subject", "process", "target_process", "process_state", "commands", "authority") if key in candidate}
+        compact = {key: candidate.get(key) for key in ("job_id", "name", "status", "waitable", "event_id", "event_type", "exit_code", "event_time", "reason", "monitor_id", "scope", "subject", "process", "target_process", "process_state", "commands", "authority") if key in candidate}
         compact["paths"] = candidate.get("paths", {})
         compact["payload_truncated"] = True
         return compact
@@ -380,6 +380,9 @@ class JobStore:
                 "name": registration["name"],
                 "schema_version": registration.get("schema_version", 2),
                 "status": status,
+                "waitable": terminal is None and (process_state["active"] or not any(
+                    event["event_type"] == "supervisor_error" for event in data["events"]
+                )),
                 "process": registration["process"],
                 "target_process": self._target_identity(registration),
                 "process_state": process_state,
@@ -393,16 +396,43 @@ class JobStore:
             }
         )
 
+    def _wait_token(self, job_id: str):
+        path = self.job_dir(job_id) / "wait_control.json"
+        return self._read_json(path)["token"] if path.exists() else None
+
+    def interrupt_wait(self, job_id: str) -> dict:
+        """Interrupt existing waits watching this job, including other MCP instances."""
+        self._registration(job_id)
+        atomic_write_json(self.job_dir(job_id) / "wait_control.json", {"token": uuid.uuid4().hex})
+        return {"job_id": job_id, "interruption_requested": True, "underlying_job_unchanged": True}
+
     def wait_event(self, job_id: str, poll_interval: float = 2.0, cancel_event=None) -> dict:
+        return self.wait_any([job_id], poll_interval=poll_interval, cancel_event=cancel_event)
+
+    def wait_any(self, job_ids: list[str], poll_interval: float = 2.0, cancel_event=None) -> dict:
+        """Return one pending event; closed observations do not block other jobs."""
+        if not isinstance(job_ids, list) or not job_ids or not all(isinstance(item, str) for item in job_ids):
+            raise SupervisorError("job_ids must be a non-empty list of job IDs")
+        job_ids = list(dict.fromkeys(job_ids))
+        for job_id in job_ids:
+            self._registration(job_id)
+        tokens = {job_id: self._wait_token(job_id) for job_id in job_ids}
         while True:
-            observed = self.inspect_job(job_id)
-            if observed["pending_event"]:
-                return observed["pending_event"]
-            if observed["status"] in ("completed", "failed"):
-                raise SupervisorError(f"job {job_id} is already terminal and has no unacknowledged event")
+            if cancel_event is not None and cancel_event.is_set():
+                raise SupervisorError("wait cancelled by MCP client; underlying jobs are unchanged")
+            for job_id in job_ids:
+                if self._wait_token(job_id) != tokens[job_id]:
+                    raise SupervisorError(f"wait interrupted for {job_id}; underlying jobs are unchanged")
+            waitable = False
+            for job_id in job_ids:
+                observed = self.inspect_job(job_id)
+                if observed["pending_event"]:
+                    return observed["pending_event"]
+                waitable = waitable or observed["waitable"]
+            if not waitable:
+                raise SupervisorError("observations are already terminal or inactive and have no unacknowledged event; target outcome is unknown without a result record")
             if cancel_event is not None:
-                if cancel_event.wait(poll_interval):
-                    raise SupervisorError("wait cancelled by MCP client; underlying job is unchanged")
+                cancel_event.wait(poll_interval)
             else:
                 time.sleep(poll_interval)
 
@@ -468,6 +498,8 @@ def build_parser() -> argparse.ArgumentParser:
     ack = commands.add_parser("ack", help="acknowledge one event")
     ack.add_argument("job_id")
     ack.add_argument("event_id", type=int)
+    interrupt = commands.add_parser("interrupt-wait", help="release existing waits without signaling any job")
+    interrupt.add_argument("job_id")
     clean = commands.add_parser("clean", help="remove an acknowledged inactive job record")
     clean.add_argument("job_id")
     return parser
@@ -491,6 +523,8 @@ def main(argv: list[str] | None = None) -> int:
             output = store.list_jobs()
         elif args.subcommand == "ack":
             output = store.ack_event(args.job_id, args.event_id)
+        elif args.subcommand == "interrupt-wait":
+            output = store.interrupt_wait(args.job_id)
         elif args.subcommand == "clean":
             output = store.clean_job(args.job_id)
         else:
