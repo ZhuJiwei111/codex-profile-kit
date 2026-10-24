@@ -130,6 +130,16 @@ class MonitorConfigTest(unittest.TestCase):
         self.assertTrue(capabilities["monitors"]["disk_free"]["available"])
         self.assertTrue(capabilities["monitors"]["heartbeat_stale"]["available"])
 
+    @mock.patch("monitoring.linux_process_tree_available", return_value=False)
+    @mock.patch("monitoring.sys.platform", "win32")
+    def test_windows_capabilities_keep_filesystem_monitors_without_gpu(self, _available):
+        capabilities = discover_capabilities(self.adapter)
+
+        self.assertEqual("windows", capabilities["platform"])
+        self.assertFalse(capabilities["monitors"]["gpu_process_idle"]["available"])
+        self.assertTrue(capabilities["monitors"]["disk_free"]["available"])
+        self.assertTrue(capabilities["monitors"]["heartbeat_stale"]["available"])
+
 
 class MonitorEngineTest(unittest.TestCase):
     def setUp(self):

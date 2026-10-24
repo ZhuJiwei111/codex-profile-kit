@@ -9,6 +9,11 @@ Review the requested surface without editing it. Resolve its actual comparison
 base, staged/unstaged state, or PR scope before drawing conclusions; do not
 silently omit uncommitted work or assume a local main branch is current.
 
+For local edits, inspect staged and unstaged diffs and relevant untracked files;
+ordinary diffs omit new files. For branches, compare against the verified
+merge-base; for PRs, verify the selected base and head. An empty or invalid
+surface is a result, not a reason to review unrelated work.
+
 Inspect the affected flow and relevant callers, tests, repository standards,
 and originating user request, issue, or specification. A missing issue-tracker
 configuration is not a reason to install a workflow or block an ordinary review.

@@ -10,6 +10,20 @@ current host's official `$CODEX_HOME` and Codex plugin CLI as deployment
 targets. Never export active profile, plugin cache, trust, or marketplace state
 back into the repository.
 
+## Locate The Source Before Editing
+
+Read the host's portable source path and resolve this repository's manifest.
+For managed skill trees, edit `profile/skills/<name>`; plugin-owned skills use
+their registered source package. Unmanaged external skills stay separate and
+are not imported, renamed, or deployed by inference.
+
+Before changing a managed skill, compare its relevant active files with the
+source to identify pre-existing divergence. Before apply, reconcile preview
+against the reviewed task changes. Investigate unexpected active changes;
+preserve another task's work and resolve unclear ownership before overwriting.
+An explicitly requested recovery of exact active edits may be reviewed and
+applied to the source, but does not authorize bulk active-profile export.
+
 ## Choose The Explicit Intent
 
 - `preview`, `apply`, or `check`: run `scripts/profile_sync.py` with the same
@@ -53,8 +67,11 @@ Use a fresh task to review `/hooks` trust and dispatch before retiring that old
 runner.
 
 When plugin source, version, skills, or MCP wiring changes, validate the plugin,
-run its tests, and use a fresh task after installation so Codex reloads the
-skill and MCP catalog.
+run its tests, and install it. Finish the installing task before creating the
+reload-verification task. Verify the loaded skill and MCP catalog only in a
+task created after the installing task has ended. A task created while the
+installing task is still active can inherit its pre-install catalog and is not
+fresh reload evidence.
 
 ## Report The Update
 

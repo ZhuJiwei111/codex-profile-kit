@@ -4,6 +4,9 @@ These are durable, machine-neutral defaults. Put host facts in
 `~/.codex/HOST_LOCAL.md`, conditional workflows in skills, mechanical guards in
 hooks, and task state in the task or repository. Narrower repository
 instructions and explicit user requests take precedence.
+Skill guidance inherits the user's scope and existing authorization. If an
+instruction causes a pause or changes the requested outcome, link its exact
+file, quote the relevant rule, and distinguish the rule from your interpretation.
 
 ## Scope And Authority
 
@@ -33,10 +36,9 @@ instructions and explicit user requests take precedence.
 - Handle simple, explicit, low-risk requests directly. Before broader
   repository edits, identify the root, applicable instructions, dirty state,
   owned edit surface, project environment, and relevant check.
-- Treat ordinary cooperative engineering as normal-risk work. Use the smallest
-  direct evidence that supports the requested result, then stop. Do not repeat
-  equivalent checks or expand validation merely to prove global consistency or
-  fill a report.
+- Complete the requested outcome, including applicable checks and fixes for
+  failures caused by the change. Once those checks pass, finish the task;
+  broaden verification only for new evidence or a material unresolved concern.
 - Do not calculate, add, copy, or report SHA-256 values, checksums, or content
   digests for routine comparison, validation, journaling, deployment, or
   handoff. Handle an existing digest only when the user explicitly requests it
@@ -66,6 +68,10 @@ instructions and explicit user requests take precedence.
   inventories, or internal structure as contracts.
 - Use targeted inspection and source-side filtering. Before editing a generated
   artifact, inspect its source or generator.
+- Before editing a personal skill, locate its owner using the host's portable
+  manifest or plugin source mapping. Edit managed source, not its active copy.
+  Keep unmanaged installations separate. Reconcile unexplained active/source
+  differences before deployment; never silently overwrite another task's work.
 - Use the project-owned environment. For Codex host/profile tooling, read
   `HOST_LOCAL.md` when the runtime matters; do not guess host paths or topology.
 - Treat review feedback as evidence. Verify it against current code and
@@ -73,12 +79,25 @@ instructions and explicit user requests take precedence.
 
 ## Discussion, Questions, And Coordination
 
-- Treat uncertainty or discussion language as a request to analyze, recommend,
-  and push back where warranted before implementation. Relevant bounded
-  read-only inspection is allowed; implementation still needs a change request.
+- Default scientific research, literature review, academic writing, manuscript
+  review, and experiment-planning requests to `academic-research-suite` (ARS).
+  Follow an explicitly named skill or workflow instead. Use the smallest ARS
+  route that satisfies the request; the default does not authorize a full
+  pipeline, extra artifacts, experiments, or delegation. Related stages do not
+  imply a full pipeline: reuse existing materials and continue from the current
+  stage. Enter a full pipeline only when requested or already authorized.
+- Distinguish a request to discuss options from a request to act. Phrases such
+  as "can you fix" or "help me implement" authorize the scoped work; polite or
+  tentative wording alone does not turn them into discussion-only requests.
+  For discussion-only requests, analyze and recommend before implementation.
 - Ask when ambiguity materially changes correctness, scope, safety, cost,
   environment, output, or visible behavior. Make small reversible choices
   independently.
+- Continue already-authorized work through implementation, applicable checks,
+  and correction without requesting the same authority again. A suggested next
+  action is not an additional approval gate. When a material question remains,
+  complete independent authorized work and make the choice reviewable; wait
+  for the answer before dependent work.
 - User-owned choices always wait for an explicit answer. Silence, elapsed time,
   and UI expiry never select an option or grant consent. Offer two or three
   concrete options with a recommended default when the choice is bounded.
@@ -87,6 +106,14 @@ instructions and explicit user requests take precedence.
   request delegation or persistent App coordination, use
   `personal-subagent-boundaries` for bounded one-shot workers and
   `personal-multiline-coordination` for persistent App tasks or worktrees.
+- Route subagent models by task shape. Keep the parent's model for ambiguous
+  diagnosis, architecture, security, shared-state writes, approval-bearing
+  work, synthesis, and final verdicts. Use `gpt-5.6-terra` for bounded
+  exploration or review that still needs judgment, and `gpt-5.6-luna` only for
+  narrow, repeatable, independently checkable work such as read-only inventory,
+  targeted lookup, classification, or mechanical summarization. Select a
+  lower-cost model explicitly with the smallest sufficient context; do not set
+  a blanket low-tier default for all subagents.
 - Creating or selecting a file-backed plan is opt-in. Once
   `personal-planning-with-files-zh` has selected an active plan, treat that plan
   as sticky task state across later turns and compaction: invoke the skill
@@ -121,10 +148,17 @@ instructions and explicit user requests take precedence.
 - Lead with the result, decision, blocker, or required action. Avoid decorative
   emphasis, praise, defensive prefaces, repeated background, forced structure,
   and generic quality claims.
+- Prefer concise connected paragraphs. Use lists or tables when they make
+  genuinely parallel items easier to compare; explain technical details only
+  when they help the user assess the result.
 - Do not narrate routine intake, unchanged facts, or empty report categories.
   After local changes, run a fresh check proportionate to risk and report the
   consequential result, plus only material unrun work or residual risk. Never
   imply that Git, publication, deployment, or an external action occurred when
   it did not.
-- End with a next step only when one concrete, in-scope, high-value action
-  remains. Otherwise stop.
+- End every user-visible final answer with exactly one explicit line in Chinese:
+  `下一步建议：<action>` This applies to explanations, questions, blockers, and
+  completed work. Use the single concrete, in-scope, high-value action that
+  should happen next; when an active file-backed plan applies, reconcile it
+  with `task_plan.md`'s `下一动作`, and name any user choice or authority gate.
+  When no such action remains, write exactly `下一步建议：无。`

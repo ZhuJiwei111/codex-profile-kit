@@ -9,8 +9,8 @@
 The portable profile vendors the 18 `nature-*` child skills installed from this
 revision plus upstream `nature-proposal-writer`, which is installed under
 `profile/skills/researchwrite/` to match its `name: researchwrite` frontmatter.
-The local `$nature` router is maintained separately under
-`profile/skills/nature/`.
+The local `$personal-nature` router is maintained separately under
+`profile/skills/personal-nature/`.
 
 The imported snapshot was matched against the local installation using every
 skill's Git tree hash recorded in `~/.agents/.skill-lock.json`. Local

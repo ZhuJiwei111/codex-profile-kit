@@ -1,0 +1,6 @@
+interface:
+  display_name: "Personal Review and Revise Paper"
+  short_description: "Review paper and response edits with bilingual comparisons"
+  default_prompt: "Use $personal-review-and-revise-paper to review my manuscript or reviewer response in coherent packages, show complete bilingual before/after text in the ledger and reply, and apply edits within my explicit approval scope."
+policy:
+  allow_implicit_invocation: false

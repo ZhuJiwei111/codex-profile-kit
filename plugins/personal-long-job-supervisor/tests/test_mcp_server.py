@@ -2,10 +2,11 @@ import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-import selectors
+import queue
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 
@@ -88,7 +89,6 @@ class McpStdioProtocolTest(unittest.TestCase):
         env["PLJS_STATE_ROOT"] = str(Path(self.tmp.name) / "state")
         env["PLJS_POLL_INTERVAL_SECONDS"] = "0.05"
         self._responses = {}
-        self._buffer = b""
         self.process = subprocess.Popen(
             [sys.executable, str(SCRIPTS / "mcp_server.py")],
             stdin=subprocess.PIPE,
@@ -98,6 +98,13 @@ class McpStdioProtocolTest(unittest.TestCase):
             bufsize=1,
             env=env,
         )
+        self.responses = queue.Queue()
+        self.reader = threading.Thread(target=self._read_responses, daemon=True)
+        self.reader.start()
+
+    def _read_responses(self):
+        for line in self.process.stdout:
+            self.responses.put(json.loads(line))
 
     def tearDown(self):
         if self.process.poll() is None:
@@ -117,22 +124,14 @@ class McpStdioProtocolTest(unittest.TestCase):
 
     def receive(self, request_id):
         deadline = time.monotonic() + 5
-        selector = selectors.DefaultSelector()
-        selector.register(self.process.stdout, selectors.EVENT_READ)
-        try:
-            while request_id not in self._responses:
-                ready = selector.select(timeout=max(0, deadline - time.monotonic()))
-                self.assertTrue(ready, "MCP response timeout")
-                data = os.read(self.process.stdout.fileno(), 65536)
-                self.assertTrue(data, "MCP server closed stdout")
-                self._buffer += data
-                while b"\n" in self._buffer:
-                    line, self._buffer = self._buffer.split(b"\n", 1)
-                    response = json.loads(line)
-                    self._responses[response.get("id")] = response
-            return self._responses.pop(request_id)
-        finally:
-            selector.close()
+        while request_id not in self._responses:
+            try:
+                response = self.responses.get(timeout=max(0, deadline - time.monotonic()))
+            except queue.Empty:
+                detail = self.process.stderr.read() if self.process.poll() is not None else "MCP response timeout"
+                self.fail(detail)
+            self._responses[response.get("id")] = response
+        return self._responses.pop(request_id)
 
     def test_initialize_list_and_call(self):
         initialized = self.request(
@@ -151,6 +150,14 @@ class McpStdioProtocolTest(unittest.TestCase):
         self.assertEqual(set(mcp_server.TOOL_NAMES), {tool["name"] for tool in tools["result"]["tools"]})
         self.assertEqual([], listing["result"]["structuredContent"]["jobs"])
         self.assertFalse(listing["result"]["isError"])
+
+    def test_receives_concurrent_responses_in_requested_order(self):
+        for request_id in (20, 21):
+            self.process.stdin.write(json.dumps({"jsonrpc": "2.0", "id": request_id, "method": "ping"}) + "\n")
+        self.process.stdin.flush()
+
+        self.assertEqual({}, self.receive(21)["result"])
+        self.assertEqual({}, self.receive(20)["result"])
 
     def make_wait_job(self):
         job_dir = Path(self.tmp.name) / "state" / "jobs" / "20260815000000-canceltest00"

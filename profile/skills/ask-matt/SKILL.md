@@ -9,6 +9,10 @@ Recommend the smallest useful entry for the user's requested outcome. A focused
 question or change may need no skill. Do not turn routing into an interview,
 implementation, or a mandatory idea-to-shipping sequence.
 
+Read the selected skill's current entrypoint before acting; routing does not
+grant implementation, documentation, delegation, Git, or external-action authority.
+Reuse matching authority already granted.
+
 ## Choose an entry
 
 | User outcome | Entry |

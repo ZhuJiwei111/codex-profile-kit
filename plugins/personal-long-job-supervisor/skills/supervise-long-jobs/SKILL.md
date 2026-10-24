@@ -1,6 +1,6 @@
 ---
 name: supervise-long-jobs
-description: Launch and supervise an already-authorized non-interactive Linux or macOS command expected to run longer than about ten minutes when the current Codex task should resume after completion, failure, or a declared health condition. Use detached worker-side observation instead of model polling, Scheduled tasks, Stop hooks, or ad hoc terminals. Also use to discover monitor capabilities, reconnect to, acknowledge, or clean registrations created by this supervisor. Do not use for interactive commands, short commands, unauthorized resource use, experiment orchestration, or automatic cancellation, retry, restart, signaling, or reconfiguration.
+description: Launch and supervise an already-authorized non-interactive Linux, macOS, or Windows command expected to run longer than about ten minutes when the current Codex task should resume after completion, failure, or a declared health condition. Use detached worker-side observation instead of model polling, Scheduled tasks, Stop hooks, or ad hoc terminals. Also use to discover monitor capabilities, reconnect to, acknowledge, or clean registrations created by this supervisor. Do not use for interactive commands, short commands, unauthorized resource use, experiment orchestration, or automatic cancellation, retry, restart, signaling, or reconfiguration.
 ---
 
 # Supervise Long Jobs
@@ -11,15 +11,21 @@ Keep execution, sampling, and logs in the detached worker. Return to the model o
 
 Resolve `<plugin-root>` as the directory two levels above this `SKILL.md`. Do not assume a home directory, clone path, mount, container layout, GPU index, or marketplace cache path.
 
-Call `get_capabilities()` before selecting health monitors. When MCP is unavailable, run:
+Call `get_capabilities()` before selecting health monitors. When MCP is unavailable,
+run the following with the current host's absolute Python runtime:
 
 ```text
-python3 <plugin-root>/scripts/supervisor.py capabilities
+<absolute-python-runtime> <plugin-root>/scripts/supervisor.py capabilities
 ```
 
-State one concise line before launch: `Observation contract: baseline + <monitors>`.
+Before launch, give the user two concise lines:
 
-- Baseline PID/start identity and atomic terminal result are always active on Linux and macOS.
+- `Observation contract: baseline + <monitors>`
+- A best-effort expected duration in the user's language, including a range when uncertainty is material and an expected completion window when the current wall clock is reliable. For example: `预计工作时间：约 2–3 小时（预计 17:30–18:30 完成）`.
+
+Base the estimate on the user-authorized expected duration, prior comparable runs, or the closest available task evidence, in that order. Label a coarse estimate as such instead of inventing precision. Always emit the estimate before starting the detached worker.
+
+- Baseline PID/start identity and atomic terminal result are always active on Linux, macOS, and Windows.
 - For an ML job assigned NVIDIA GPUs on Linux, default to per-process-tree utilization below 5 percent for 15 minutes, with a 5-minute startup grace. Alert when any assigned GPU is continuously idle.
 - For an ML output or artifact filesystem, default to available space below 5 percent or 20 GiB for 60 seconds.
 - Add heartbeat only when the launched job explicitly owns and updates that path.
@@ -31,7 +37,7 @@ Derive GPU scope and filesystem paths from the authorized task and current capab
 Confirm the command, working directory, resource use, and expected duration are already authorized. Use an absolute executable path and keep credentials out of command arguments.
 
 ```text
-python3 <plugin-root>/scripts/supervisor.py \
+<absolute-python-runtime> <plugin-root>/scripts/supervisor.py \
   start --name <name> --cwd <absolute-cwd> \
   [--artifact <absolute-path>]... \
   [--monitor '<strict-json-object>']... \
@@ -51,7 +57,8 @@ When an event arrives:
 1. Treat `attention` as a request to diagnose, not proof of failure.
 2. Use the bounded event and `inspect_job(job_id)` first. If evidence remains insufficient, read at most the final 8 KiB of the reported `combined.log`; do not ingest the whole log by default.
 3. Repair only when the original task already authorized that exact class of change. The event itself grants no new authority.
-4. Call `ack_event(job_id, event_id)` after consuming the event, then wait again only if observation remains viable (`inspect_job` reports `waitable`). A consumed `supervisor_error` with an inactive worker closes observation; inspect the target separately before deciding its outcome.
+4. For `completed` or `failed`, calculate the supervisor wall-clock duration from the registration `created_at` in the reported `paths.job_dir/job.json` to the terminal `finished_at`. Include it in the first user-visible terminal report in the user's language, for example: `实际工作时间：2 小时 17 分`. If either timestamp is unavailable, report the closest labeled approximation or state why the exact duration is unavailable; never omit the actual-time line.
+5. Call `ack_event(job_id, event_id)` after consuming the event, then wait again only if observation remains viable (`inspect_job` reports `waitable`). A consumed `supervisor_error` with an inactive worker closes observation; inspect the target separately before deciding its outcome.
 
 The plugin observes jobs and controls waits; it never controls workers, retries work, or schedules later stages. Events grant no new authority. The task owner may use other tools to act within existing task authorization; unrelated or expanded actions still need matching authority.
 

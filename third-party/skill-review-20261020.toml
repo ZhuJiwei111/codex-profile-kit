@@ -164,12 +164,12 @@ reason = "Keep observed module-boundary assessment; no mandatory HTML, subagent,
 upstream_entrypoint_compared = true
 
 [[skill]]
-name = "nature"
+name = "personal-nature"
 origin = "local"
 invocation = "manual"
 decision = "update-routing"
 reason = "Choose one output: PDF translation, source-map package or analytical card."
-canonical_owner = "nature"
+canonical_owner = "personal-nature"
 upstream_entrypoint_compared = false
 
 [[skill]]

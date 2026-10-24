@@ -7,6 +7,10 @@ description: Build a throwaway prototype to answer a design question. Use when t
 
 A prototype is **throwaway code that answers a question**. The question decides the shape.
 
+Build within the user's requested prototype scope. A discussion of a design
+alone permits analysis, not code creation. Prototype authority does not extend
+to production edits, Git actions, or external issue updates.
+
 ## Pick a branch
 
 Identify which question is being answered — from the user's prompt, the surrounding code, or by asking if the user is around:

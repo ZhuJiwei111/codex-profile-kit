@@ -14,6 +14,7 @@ from scripts import profile_sync
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "profile_sync.py"
+PORTABLE_CONFIG = ROOT / "personal.config.toml"
 
 
 def symlink_or_skip(
@@ -38,43 +39,45 @@ class ProfileSyncCliTest(unittest.TestCase):
             ["codex", "app-server"],
         )
 
-    def test_app_server_command_bootstraps_legacy_default_service_tier(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            codex_home = Path(directory)
-            (codex_home / "config.toml").write_text(
-                'service_tier = "default"\n',
-                encoding="utf-8",
-            )
+    def test_service_tier_is_unmanaged_during_preview_write_and_rollback(self) -> None:
+        for tier in (None, "default", "fast", "flex"):
+            with self.subTest(tier=tier), tempfile.TemporaryDirectory() as directory:
+                codex_home = Path(directory)
+                config_path = codex_home / "config.toml"
+                prefix = f'service_tier = "{tier}"\n' if tier is not None else ""
+                config_path.write_text(
+                    prefix + PORTABLE_CONFIG.read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+                state = profile_sync.compare(codex_home)
+                self.assertNotIn(
+                    "config.toml:service_tier",
+                    [change.path for change in state.changes],
+                )
+                for edits in (
+                    profile_sync.config_edits(state.config_values),
+                    profile_sync.restore_config_edits(profile_sync.load_toml(config_path)),
+                ):
+                    self.assertNotIn("service_tier", [edit["keyPath"] for edit in edits])
+                self.assertTrue(profile_sync.managed_config_matches(
+                    config_path, profile_sync.load_toml(PORTABLE_CONFIG)
+                ))
 
-            command = profile_sync.app_server_command("codex", codex_home)
-
-        self.assertEqual(
-            command,
-            ["codex", "-c", 'service_tier="fast"', "app-server"],
-        )
-
-    def test_preview_retires_legacy_default_service_tier(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            codex_home = Path(directory)
-            (codex_home / "config.toml").write_text(
-                'service_tier = "default"\n'
-                + (ROOT / "personal.config.toml").read_text(encoding="utf-8"),
-                encoding="utf-8",
-            )
-
-            state = profile_sync.compare(codex_home)
-
-        self.assertIn(
-            "config.toml:service_tier",
-            [change.path for change in state.changes if change.operation == "DELETE"],
-        )
-
-    def test_resolve_codex_executable_prefers_windows_local_app(self) -> None:
+    def test_resolve_codex_executable_prefers_current_windows_desktop_cache(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             local_app_data = Path(directory)
-            expected = local_app_data / "OpenAI" / "Codex" / "bin" / "codex.exe"
+            bin_root = local_app_data / "OpenAI" / "Codex" / "bin"
+            legacy = bin_root / "codex.exe"
+            legacy.parent.mkdir(parents=True)
+            legacy.write_bytes(b"legacy")
+            older = bin_root / "older" / "codex.exe"
+            older.parent.mkdir()
+            older.write_bytes(b"older")
+            expected = bin_root / "current" / "codex.exe"
             expected.parent.mkdir(parents=True)
-            expected.write_bytes(b"placeholder")
+            expected.write_bytes(b"current")
+            os.utime(older, ns=(1, 1))
+            os.utime(expected, ns=(2, 2))
 
             with mock.patch.object(profile_sync.sys, "platform", "win32"), mock.patch.dict(
                 profile_sync.os.environ,
@@ -85,6 +88,22 @@ class ProfileSyncCliTest(unittest.TestCase):
                 "which",
                 return_value=r"C:\Program Files\WindowsApps\OpenAI.Codex\codex.exe",
             ):
+                resolved = profile_sync.resolve_codex_executable()
+
+        self.assertEqual(resolved, str(expected))
+
+    def test_resolve_codex_executable_uses_legacy_windows_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            local_app_data = Path(directory)
+            expected = local_app_data / "OpenAI" / "Codex" / "bin" / "codex.exe"
+            expected.parent.mkdir(parents=True)
+            expected.write_bytes(b"legacy")
+
+            with mock.patch.object(profile_sync.sys, "platform", "win32"), mock.patch.dict(
+                profile_sync.os.environ,
+                {"LOCALAPPDATA": str(local_app_data)},
+                clear=True,
+            ), mock.patch.object(profile_sync.shutil, "which", return_value=None):
                 resolved = profile_sync.resolve_codex_executable()
 
         self.assertEqual(resolved, str(expected))
@@ -452,7 +471,7 @@ class ProfileSyncCliTest(unittest.TestCase):
             self.assertEqual(written_path, config_path)
             self.assertEqual(
                 {edit["keyPath"] for edit in edits},
-                set(profile_sync.CONFIG_KEYS + profile_sync.RETIRED_CONFIG_KEYS),
+                set(profile_sync.CONFIG_KEYS),
             )
             self.assertEqual(
                 profile_sync.load_toml(config_path)["unmanaged"],

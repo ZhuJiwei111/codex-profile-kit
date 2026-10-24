@@ -13,6 +13,21 @@ independently implement, execute, repair, validate, document, commit and close
 within the original task authority. ETA is a forecast, not a renewal quota.
 Preserve frozen science and separately retained external-action boundaries.
 
+## Discover Task Creation
+
+When the user authorizes a new App task, discover the native `create_thread`
+tool first. On a host with a documented Desktop bridge, also search for
+`remote_tasks.create_thread` / `mcp__remote_tasks__create_thread` before
+concluding that creation is unavailable. Read `HOST_LOCAL.md` for that host's
+scope and connection prerequisites; documentation alone does not establish a
+loaded tool. Use the tool's actual schema and native approval flow. Do not
+substitute a shell/socket call or a managed subagent for an App task without
+explaining the difference. If absent, report the missing capability and check
+the Desktop instance, host/project assignment, and whether a fresh turn is
+needed. Treat `clientThreadId` as queued setup, not a resolved `threadId`.
+
+## Ownership Boundaries
+
 Public maintenance owns shared environments/tools, container intake and the
 availability of common protection/monitoring, including actual infrastructure
 failures. Scientific owners retain their jobs, continuation, acceptance and job

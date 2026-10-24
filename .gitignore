@@ -11,6 +11,7 @@ __pycache__/
 
 # Sensitive or machine-local Codex state
 /.agent/
+/plugins/personal-long-job-supervisor/.mcp.json
 auth.json
 history.jsonl
 session_index.jsonl

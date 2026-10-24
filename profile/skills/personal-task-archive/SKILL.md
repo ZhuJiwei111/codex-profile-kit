@@ -12,7 +12,8 @@ user.
 ## Current-Host Boundary
 
 - Identify the calling task's current host before any task query. Use that same
-  exact host identity for every list, read, message, and archive operation.
+  exact host identity for scoped queries and mutations. The bounded global
+  metadata lookup described in the inventory reference is the only query exception.
 - Scope the entire run to the current execution host. A user naming another
   host does not expand this run; manage that host from a task executing there.
 - Use the current host's native shell and filesystem conventions. Resolve its
@@ -34,6 +35,8 @@ user.
 
 ## Choose The Operation
 
+- For explicitly named tasks, or confirmation of a previously linked candidate
+  list, use the confirmed-target route below; reuse the inventory already acquired.
 - For accumulated tasks or a periodic review, run the bounded current-host
   inventory below.
 - For unexpected ongoing traffic, identify whether a command, Goal,
@@ -64,6 +67,8 @@ than inventing an older substantive date.
 | Completed 24 hours to 15 days ago but not clearly lightweight | Ask the user with a task link and one-sentence summary. |
 | Completed more than 15 days ago | Archive automatically when authorized after the hard-protection check. |
 | Another task already explicitly owns all remaining work | Archive the source automatically after any necessary handoff. |
+| A finished subAgent already delivered its result, or its parent explicitly owns all remaining work | Archive automatically when authorized, regardless of age. |
+| A subAgent is running, awaiting delivery, missing its parent, or otherwise ambiguous | Protect or ask. |
 | Failed with a material next action | Protect or ask; failure is unfinished work. |
 | Closed failure that the user abandoned, terminated, or moved to an explicit successor | Archive automatically when authorized. |
 
@@ -84,6 +89,21 @@ work. Similar titles, a newer task in the same category, or a summary sent
 during archival do not establish ownership. Copying a summary alone does not
 transfer ownership.
 
+Classify a thread as a subAgent only from product source or parent metadata,
+never from its title. A confirmed finished subAgent is subordinate work rather
+than an independent recent task: once its result is delivered to the parent, or
+the parent explicitly owns the remaining work, archive it without the ordinary
+24-hour delay. Preserve every hard protection, especially running, unread,
+pinned, undelivered, and ambiguous subAgents. Archival organizes history; it
+does not stop, cancel, or prove completion of a subAgent.
+
+Treat parent archival state and child completion as separate facts. An
+unarchived parent does not protect a finished, delivered subAgent; it often
+remains active while it owns the integrated result and subsequent work. A
+parent ID alone is not delivery evidence. Confirm delivery or explicit
+ownership from product metadata or a bounded exact read before automatic
+archival.
+
 A task that the user unarchives during the current cleanup is protected for the
 rest of that run. Use pinning for durable protection across later cleanups; do
 not create a hidden archive-exclusion list.
@@ -91,26 +111,58 @@ not create a hidden archive-exclusion list.
 ## Build A Bounded Current-Host Inventory
 
 1. Resolve the current host identity and freeze it as the scope for this run.
-2. Seed candidate IDs from a product query that guarantees current-host
-   filtering before results enter context. If unavailable or incomplete, use
-   the safe metadata procedure in
-   [current-host inventory](references/session-inventory.md).
-3. Project bounded metadata first. Exclude the calling task and metadata-known
-   running, automation, Goal, pinned, unread, and less-than-24-hours-old tasks
-   before deep reads.
-4. Sort remaining candidates oldest first. Deep-read at most 50 tasks in one
+2. Acquire a complete host-local metadata list. Prefer a product query that
+   applies the frozen host filter before returning data, exposes source or
+   parent metadata, and pages to exhaustion. Otherwise use the local app-server
+   metadata path in [current-host inventory](references/session-inventory.md).
+3. Verify that pagination completed and record the inventory source. Treat an
+   app-wide, capped, cross-host, or child-omitting list as navigation only, not
+   as the inventory. A host filter applied after such results arrive does not
+   make the list complete.
+4. Project bounded metadata and report the raw unarchived main-task and
+   subAgent totals before exclusions. Then report protection exclusions,
+   eligible candidates, read candidates, and deferred candidates as
+   distinct counts; never label a candidate count as a host total.
+5. Exclude the calling task and metadata-known running, automation, Goal,
+   pinned, unread, and less-than-24-hours-old tasks before deep reads; retain
+   finished-and-delivered subAgents as age-independent candidates.
+6. Sort remaining candidates oldest first. Deep-read at most 50 tasks in one
    normal run. A user-requested complete inventory may continue in batches.
-5. Resolve only those candidates through exact reads on the frozen host. Treat
+7. Resolve only those candidates through exact reads on the frozen host. Treat
    `No Codex thread found` as an index-only child, stale entry, or
    unsupported record. Record it once; do not retry it as a mutation.
-6. Collect the latest substantive outcome, required next action, ownership,
+8. Collect the latest substantive outcome, required next action, ownership,
    and enough context to distinguish lightweight from continuing work.
-7. Split results into automatic archives, temporary or hard protection, and
+9. Split results into automatic archives, temporary or hard protection, and
    user review. Report whether more candidates remain beyond the 50-task cap.
 
 An incomplete, unfiltered, or cross-host product API is not archive authority.
 If the current-host identity or a material safety signal cannot be resolved,
 keep that candidate out of automatic execution.
+
+## Evidence Gaps And Confirmed Targets
+
+Record protection signals as present, absent, or unknown, with their source.
+A missing field is unknown, not evidence of protection or its absence. Use the
+product runtime surface for current execution status and the local metadata
+surface for persistent inventory; `notLoaded` from a separate app-server does
+not establish that execution stopped. See the inventory reference for lookup rules.
+
+Automatic selection requires resolved protection signals. For exact targets
+explicitly confirmed by the user after the relevant gaps were disclosed, check
+the latest outcome and product runtime status, then proceed despite still-missing
+pin, unread, Goal, or automation fields. Do not ask again about the same disclosed
+gap. This exception does not override known protection, unresolved host or target
+identity, running or indeterminate execution, material unfinished work, or
+ambiguous ownership. A newly discovered protection or changed outcome requires
+reclassification, not silent execution.
+
+Report a capability gap once and exhaust the available bounded complementary
+lookups. Repeat discovery only when tools or relevant state change. If the
+confirmed-target route still cannot establish identity and non-running status,
+stop those targets with the exact missing evidence rather than repeating the
+inventory or requesting the same authority. Approval to revise this skill does
+not itself authorize archiving an unspecified set of tasks.
 
 ## Review With Links
 
@@ -127,8 +179,9 @@ corrections by title or ID.
 ## Execute Authorized Archives
 
 1. Re-read every eligible target with the frozen host identity immediately
-   before mutation. If its status, pin, unread state, automation role, material
-   next action, or ownership changed, move it to protection or user review.
+   before mutation and obtain a product runtime snapshot when the read does not
+   establish current execution status. Apply the evidence route above; changed
+   protection, material next action, or ownership moves it to protection or review.
 2. Do not copy a summary by default. Task archival preserves the task history.
    Send a minimal handoff only when an explicit successor already owns the work
    and lacks information required to continue; verify delivery before archival.
@@ -156,7 +209,7 @@ asks to audit or change memory.
 ## Completion Report
 
 Report the current-host identity, automatically archived task links with
-individual reasons, protected categories, linked review items with one-sentence
-summaries, missing records, the remaining bounded-candidate count, and any
-product-tool limitation. Report memory work only when that branch was
-explicitly requested.
+individual reasons, raw unarchived main-task and subAgent totals, protection
+exclusions, eligible and deferred candidate counts, linked review items with
+one-sentence summaries, missing records, and any product-tool limitation.
+Report memory work only when that branch was explicitly requested.

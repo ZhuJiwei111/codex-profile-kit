@@ -1,50 +1,57 @@
 ---
 name: writing-for-agents
-description: Write or revise skills and agent-facing instructions when their wording, scope, or loading conditions affect behavior.
+description: Write or revise agent-facing instructions, including skills, AGENTS.md, and CLAUDE.md.
 ---
 
-# Writing for Agents
+# Writing For Agents
 
-Write instructions that change the agent's decisions for the requested task.
-For Codex skill metadata and invocation, read [SKILL-MECHANICS.md](SKILL-MECHANICS.md).
+Give the agent the outcome, relevant context, decision boundaries, and a
+checkable completion condition. Assume it can choose ordinary implementation
+steps. Preserve user preferences, domain facts, and operational constraints
+that would not be obvious from the task or environment.
 
-## Scope and authority
+When writing a skill, use [SKILL-MECHANICS.md](SKILL-MECHANICS.md) for Codex
+frontmatter, invocation policy, and reference routing.
 
-Preserve user intent, existing owners, and authorization boundaries. Distinguish
-an instruction from an example, a host fact, a task state, and a policy. Put each
-in its actual owner rather than copying all of them into a skill or AGENTS.md.
-A past incident should become a general rule only when a real recurring path
-justifies it.
+## Scope And Decisions
 
-## Routing and structure
+Separate binding constraints from recommendations and examples. State when a
+rule applies and what consequence requires stopping. Reuse existing task
+authority; ask only about unresolved choices that materially change the result
+or an action whose authority is missing. If a rule would block requested work,
+make the exact rule and its applicability visible to the user.
 
-Keep descriptions short and specific to the workflow. State the capability and
-trigger conditions before detailed procedure. Avoid synonyms that add no new
-case, generic catchalls, and claims that the skill is universally required.
+Specify required order when correctness depends on it. For ordinary work,
+describe success and let the agent choose the route. Replace blanket reading,
+confirmation, test, and review requirements with their actual triggers. Keep
+fragile procedures, schemas, security boundaries, and explicit user gates exact.
 
-Keep essential actions and non-obvious constraints in the entrypoint. Move a
-substantial conditional branch to a linked reference and state when to read it.
-Use one authoritative definition for shared material; do not create a new skill
-or a deep chain of routers just to expose it.
+## Discovery And Context
 
-Use the host's available tools and actual project conventions. Prefer looking
-up cheap environment facts to embedding copies that can become stale.
+A skill description or document pointer should identify its capability and
+when it is useful. Keep distinct triggers; remove synonym lists and broad
+catchalls that pull unrelated tasks into the workflow. Put detailed modes and
+examples in the body, not the always-loaded description.
 
-## Procedure and completion
+Keep shared purpose and essential boundaries in the entrypoint. Disclose
+substantial branch-specific guidance through a link that says when to read it.
+A short, self-contained skill needs no router. Preserve reference paths and
+load only material needed for the current branch.
 
-State the desired action, meaningful decision boundary, and observable result.
-Match control to risk: fragile operations need precise order; ordinary work
-needs room for judgment. Preserve real user choices without adding repeated
-confirmation, fixed stage counts, mandatory files, or exhaustive questionnaires.
+Keep each rule with its context and exceptions in one authoritative owner.
+Reference environment-owned facts instead of copying cheap lookups into prose.
+Use the project's familiar terms; introduce a new term only when it clarifies
+an actual distinction. Prefer positive target behavior, retaining explicit
+prohibitions where they express real authorization or safety boundaries.
 
-Use familiar language and concrete examples. Keep a prohibition when it protects
-an actual boundary; pair it with the correct action. Avoid unsupported claims
-about prompt psychology, model-specific context thresholds, or magic keywords.
+## Completion And Validation
 
-## Check
+Define completion by the requested result and proportionate evidence. A first
+implementation is not complete when applicable checks or cause-backed fixes
+remain. Passing checks need no repetition without new changes or concerns.
 
-Remove repeated rules, generic advice, obsolete tools, and process that adds no
-value. Review realistic positive and adjacent negative requests against the
-trigger, follow the important branches, and validate the resulting metadata or
-changed helper. Use live behavioral evaluation when its cost and risk are
-warranted; a schema check alone does not establish model effectiveness.
+Review the final instructions for conflicting routes, accidental authority
+expansion, hidden approval gates, and broken references. Use realistic requests
+to assess a substantial behavior change when such validation is authorized;
+schema checks alone do not establish model behavior. Remove obsolete or
+redundant guidance, but do not delete a real constraint merely to shorten text.

@@ -1,10 +1,11 @@
 import json
 import os
 from pathlib import Path
-import selectors
+import queue
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 
@@ -115,7 +116,7 @@ class DetachedProcessIntegrationTest(unittest.TestCase):
         heartbeat.touch()
         job = self.start(
             "heartbeat",
-            "import time; time.sleep(0.5)",
+            "import time; time.sleep(3)",
             heartbeat_path=heartbeat,
             stale_after=0.1,
         )
@@ -168,12 +169,13 @@ class DetachedProcessIntegrationTest(unittest.TestCase):
         )
         second.stdin.write(json.dumps(wait_request) + "\n")
         second.stdin.flush()
-        selector = selectors.DefaultSelector()
-        selector.register(second.stdout, selectors.EVENT_READ)
-        ready = selector.select(timeout=5)
-        selector.close()
-        self.assertTrue(ready, "reconnected MCP did not receive the durable event")
-        response = json.loads(second.stdout.readline())
+        responses = queue.Queue()
+        reader = threading.Thread(target=lambda: responses.put(second.stdout.readline()), daemon=True)
+        reader.start()
+        try:
+            response = json.loads(responses.get(timeout=5))
+        except queue.Empty:
+            self.fail("reconnected MCP did not receive the durable event")
         second.terminate()
         second.wait(timeout=5)
         for stream in (second.stdin, second.stdout, second.stderr):

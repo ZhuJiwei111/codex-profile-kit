@@ -1,11 +1,11 @@
 ---
-name: nature
-description: Manual router for the portable Nature research and academic-writing suite. Use only when the user explicitly invokes $nature and wants Codex to select the smallest appropriate Nature workflow without knowing each child skill name.
+name: personal-nature
+description: Manual router for the portable Nature research and academic-writing suite. Use only when the user explicitly invokes $personal-nature and wants Codex to select the smallest appropriate Nature workflow without knowing each child skill name.
 ---
 
-# Nature Skill Router
+# Personal Nature Skill Router
 
-Route one explicit `$nature` request to the smallest useful set of installed
+Route one explicit `$personal-nature` request to the smallest useful set of installed
 Nature skills. The router does not authorize unrelated external writes,
 credential changes, downloads, messages, or persistent jobs.
 

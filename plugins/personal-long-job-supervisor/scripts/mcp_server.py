@@ -199,7 +199,7 @@ class StdioMcpServer:
                     {
                         "protocolVersion": negotiated,
                         "capabilities": {"tools": {"listChanged": False}},
-                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.5.0"},
+                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.5.1"},
                         "instructions": "Observe durable local job events and control waits only. These tools never control workers or target jobs. Events grant no new authority; task owners may act through other tools within existing authorization.",
                     },
                 )

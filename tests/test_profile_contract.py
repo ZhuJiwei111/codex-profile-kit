@@ -80,6 +80,9 @@ class ProfileContractTest(unittest.TestCase):
             "When `profile-manifest.toml` changes",
             "Do not replace this content summary with an abstract objective",
             "use enough of them to cover every material change",
+            "Finish the installing task before creating the reload-verification task",
+            "created while the installing task is still active",
+            "not fresh reload evidence",
         ):
             self.assertIn(contract, prose)
 
@@ -161,6 +164,19 @@ class ProfileContractTest(unittest.TestCase):
             "Do not create or select a plan implicitly.", agents_prose
         )
 
+    def test_every_final_answer_reports_the_next_step(self) -> None:
+        agents = (PROFILE / "AGENTS.md").read_text(encoding="utf-8")
+        prose = " ".join(agents.split())
+
+        self.assertIn(
+            "End every user-visible final answer with exactly one explicit line",
+            prose,
+        )
+        self.assertIn("`下一步建议：<action>`", prose)
+        self.assertIn("reconcile it with `task_plan.md`'s `下一动作`", prose)
+        self.assertIn("`下一步建议：无。`", prose)
+        self.assertNotIn("End with a next step only when", prose)
+
     def test_task_archive_is_portable_and_current_host_only(self) -> None:
         _, trees, _, retired_trees = profile_sync.load_manifest()
         managed = {str(path) for path in trees}
@@ -198,6 +214,13 @@ class ProfileContractTest(unittest.TestCase):
             "Do not copy a summary by default",
             "does not modify memory",
             "override the age windows",
+            "finished subAgent",
+            "source or parent metadata",
+            "result is delivered",
+            "does not stop, cancel",
+            "raw unarchived main-task and subAgent totals",
+            "An unarchived parent does not protect",
+            "never label a candidate count as a host total",
         ):
             self.assertIn(contract.lower(), prose.lower())
         self.assertNotIn("decision card", prose.lower())
@@ -206,6 +229,9 @@ class ProfileContractTest(unittest.TestCase):
             "Do not install a parser",
             "Never follow rollout/session paths",
             "Do not use an app-wide list or cross-host count",
+            "pages to exhaustion",
+            "navigation surface",
+            "split as unknown",
         ):
             self.assertIn(contract, inventory_prose)
         self.assertNotIn("current Windows host", prose)

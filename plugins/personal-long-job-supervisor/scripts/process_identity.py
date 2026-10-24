@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Cross-platform PID/start identity for Linux and macOS."""
+"""Cross-platform PID/start identity for Linux, macOS, and Windows."""
 
 from __future__ import annotations
 
 import ctypes
+from ctypes import wintypes
 import os
 from pathlib import Path
 import sys
@@ -90,12 +91,63 @@ def _darwin_identity(pid: int) -> dict | None:
     return {"pid": pid, "start_ticks": start_ticks, "state_code": state_code}
 
 
+def _windows_identity(pid: int) -> dict | None:
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel32.OpenProcess.restype = wintypes.HANDLE
+    kernel32.GetProcessTimes.argtypes = [
+        wintypes.HANDLE,
+        ctypes.POINTER(wintypes.FILETIME),
+        ctypes.POINTER(wintypes.FILETIME),
+        ctypes.POINTER(wintypes.FILETIME),
+        ctypes.POINTER(wintypes.FILETIME),
+    ]
+    kernel32.GetProcessTimes.restype = wintypes.BOOL
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+
+    process_query_limited_information = 0x1000
+    handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
+    if not handle:
+        error_number = ctypes.get_last_error()
+        if error_number in (87, 1168):
+            return None
+        raise ProcessIdentityError(
+            f"cannot inspect process {pid} through Windows: error {error_number}"
+        )
+    try:
+        creation = wintypes.FILETIME()
+        exit_time = wintypes.FILETIME()
+        kernel_time = wintypes.FILETIME()
+        user_time = wintypes.FILETIME()
+        if not kernel32.GetProcessTimes(
+            handle,
+            ctypes.byref(creation),
+            ctypes.byref(exit_time),
+            ctypes.byref(kernel_time),
+            ctypes.byref(user_time),
+        ):
+            raise ProcessIdentityError(
+                f"cannot read process {pid} times through Windows: error {ctypes.get_last_error()}"
+            )
+        start_ticks = (int(creation.dwHighDateTime) << 32) | int(
+            creation.dwLowDateTime
+        )
+        if start_ticks <= 0:
+            raise ProcessIdentityError(f"invalid Windows start time for process {pid}")
+        return {"pid": pid, "start_ticks": start_ticks, "state_code": "R"}
+    finally:
+        kernel32.CloseHandle(handle)
+
+
 def process_identity(pid: int | None = None) -> dict | None:
     pid = int(pid or os.getpid())
     if sys.platform.startswith("linux"):
         return _linux_identity(pid)
     if sys.platform == "darwin":
         return _darwin_identity(pid)
+    if sys.platform == "win32":
+        return _windows_identity(pid)
     raise ProcessIdentityError(f"unsupported process identity platform: {sys.platform}")
 
 
