@@ -35,6 +35,9 @@ local adaptations:
 - `implement`, `codebase-design`, `wayfinder`, and phase-boundary guidance:
   proportional checks, optional authorized delegation, no fixed worker/session
   quotas, and no implicit Git authority.
+- `implement` and `ask-matt`: TDD follows the requested or project-required
+  workflow, review follows a request or material concern, and ready tickets keep
+  context until a real continuity or ownership boundary requires a handoff.
 - `writing-for-agents/SKILL-MECHANICS.md`: Codex-native invocation metadata,
   progressive loading, and authorized cross-skill references replace Claude-only
   discovery and router assumptions.

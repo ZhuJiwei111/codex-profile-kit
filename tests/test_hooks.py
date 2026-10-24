@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 from pathlib import Path
 import shlex
 import subprocess
 import sys
+import tempfile
 import unittest
+from unittest import mock
 
 from scripts import profile_sync
 
@@ -36,6 +39,53 @@ def invoke(name: str, tool_name: str, tool_input: dict[str, object]) -> str:
 
 
 class HookBehaviorTest(unittest.TestCase):
+    def test_conda_guard_denies_windows_executable_names(self) -> None:
+        commands = [
+            "conda.exe install demo --name base",
+            "conda.bat create --name base",
+            "mamba.exe env create -nbase",
+            r"& 'C:\Program Files\Conda\Scripts\conda.exe' install demo -n base",
+        ]
+        if os.name == "nt":
+            commands.append(r"D:\Anaconda\Scripts\conda.exe install demo -n base")
+        for command in commands:
+            with self.subTest(command=command):
+                output = invoke("conda_base_guard.py", "Bash", {"command": command})
+                self.assertTrue(output, command)
+                self.assertEqual(
+                    json.loads(output)["hookSpecificOutput"]["permissionDecision"],
+                    "deny",
+                )
+
+    def test_conda_guard_resolves_base_without_conda_root(self) -> None:
+        spec = importlib.util.spec_from_file_location(
+            "conda_guard", HOOKS / "conda_base_guard.py"
+        )
+        guard = importlib.util.module_from_spec(spec)
+        with mock.patch.object(sys, "dont_write_bytecode", True):
+            spec.loader.exec_module(guard)
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory) / "conda"
+            (base / "conda-meta").mkdir(parents=True)
+            (base / "condabin").mkdir()
+            tools = base / "envs" / "codex-tools"
+            unrelated_python = Path(directory) / "python"
+            sources = [
+                (tools, ""),
+                (unrelated_python, str(base / "Scripts" / "conda.exe")),
+            ]
+            for prefix, executable in sources:
+                with self.subTest(prefix=prefix, executable=executable):
+                    with mock.patch.dict(
+                        os.environ, {"CONDA_ROOT": "", "CONDA_EXE": executable}
+                    ), mock.patch.object(guard.sys, "prefix", str(prefix)):
+                        self.assertTrue(guard.targets_base(
+                            f"conda install demo --prefix '{base}'"
+                        ))
+                        self.assertFalse(guard.targets_base(
+                            f"conda install demo --prefix '{tools}'"
+                        ))
+
     def test_wiring_contains_only_owned_guards(self) -> None:
         hooks = json.loads(HOOKS_JSON.read_text(encoding="utf-8"))["hooks"]
         self.assertEqual(set(hooks), {"PreToolUse"})
@@ -117,6 +167,8 @@ class HookBehaviorTest(unittest.TestCase):
         ]
         allowed_commands = [
             "conda install demo --name project-env",
+            "conda.exe install demo --name project-env",
+            "conda.bat list --name base",
             "true # conda install demo --name base",
             "echo 'conda install demo --name base'",
             "conda install base --name project-env",
