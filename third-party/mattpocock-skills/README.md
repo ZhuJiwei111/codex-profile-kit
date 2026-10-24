@@ -5,62 +5,39 @@
 - Imported: 2026-08-08
 - License: MIT; see [LICENSE](./LICENSE).
 
-The original import contained the 25 promoted skills listed by the upstream
-`.claude-plugin/plugin.json` at this version. They are stored as independent
+The portable profile retains 20 of the promoted skills listed by the upstream
+`.claude-plugin/plugin.json` at this version; `resolving-merge-conflicts` is
+archived under `archive/20261020-skill-cleanup/`. They are stored as independent
 managed trees under `profile/skills/` so `profile_sync.py` can deploy them to
 Codex without installing the upstream Claude plugin or the experimental
 `in-progress` and `misc` buckets.
 
-The imported skill trees retain the upstream content except for these reviewed
-local adaptations:
+The pinned baseline is retained with reviewed Codex/local adapters. Current
+routing, authority, verification and glossary-owner changes are recorded per
+skill in [the 2026-10-20 review](../skill-review-20261020.toml). These are not a
+claim that the complete v1.3.1 package or its executable helpers was installed.
+Existing licenses and supporting reference files remain in place.
 
-- `diagnosing-bugs/SKILL.md`: complex-failure routing, evidence-led phase
-  selection, bounded probes, and proportionate verification replace mandatory
-  phase gates and fixed hypothesis or repetition counts.
-- `code-review/SKILL.md`: select uncommitted, commit, branch, or PR scope;
-  include relevant untracked files, allow review without tracker setup, use
-  delegation only with authority, and let the main agent synthesize findings.
-- `research`, `prototype`, `domain-modeling`, and `wizard` entrypoints: align
-  file output, production edits, delegation, credentials, Git, and external
-  actions with the user's actual authority instead of automatic workflow steps.
-- Upstream `grilling`, `grill-me`, and `grill-with-docs` are retired in favor
-  of explicit-only `personal-grilling` (questioning core) and
-  `personal-grill-with-docs` (documentation and continuity). Dependent callers
-  in `ask-matt`, `triage`, `wayfinder`, `improve-codebase-architecture`, and
-  setup domain guidance route to the new pair within existing authority.
-- `ask-matt`: route to current child entrypoints without restoring retired
-  reproduction gates, automatic prototype integration or Git writes, mandatory
-  handoffs, or tracker setup for workflows that do not need it.
+Invocation policy is owned by `agents/openai.yaml`. Claude-only
+`disable-model-invocation` and `argument-hint` frontmatter keys have been removed;
+manual skills remain `allow_implicit_invocation: false`. Local Git, external
+write, credential and resource authority continues to govern every workflow.
 
-- `implement`, `codebase-design`, `wayfinder`, and phase-boundary guidance:
-  proportional checks, optional authorized delegation, no fixed worker/session
-  quotas, and no implicit Git authority.
-- `implement` and `ask-matt`: TDD follows the requested or project-required
-  workflow, review follows a request or material concern, and ready tickets keep
-  context until a real continuity or ownership boundary requires a handoff.
-- `writing-for-agents/SKILL-MECHANICS.md`: Codex-native invocation metadata,
-  progressive loading, and authorized cross-skill references replace Claude-only
-  discovery and router assumptions.
-- `improve-codebase-architecture/SKILL.md`: use current deep-module guidance
-  without imposing replacement terminology or an adapter-count rule; explore
-  directly unless bounded delegation is authorized.
-- Astra instruction review (2026-09-13): `writing-for-agents/SKILL.md` focuses
-  on outcomes, conditional guidance, and proportionate validation; `tdd` reuses
-  established test interfaces without repeated approval and permits scoped
-  refactoring in the loop; `codebase-design` preserves project terminology and
-  evaluates seams by concrete needs rather than adapter counts.
-
-Preserve these adaptations when reviewing an upstream update. Local profile rules,
-including explicit authority for Git commits, external writes, credentials,
-heavy work, and repository changes, continue to take precedence over workflow
-steps suggested by a vendored skill.
-
-Upstream user-invoked skills retain the Claude-oriented
-`disable-model-invocation` frontmatter key, which Codex's strict
-`quick_validate.py` does not accept. Their Codex policy is carried by the
-co-located `agents/openai.yaml`; the repository contract test verifies that
-every such skill sets `allow_implicit_invocation: false`.
-
-To update them, review a new exact upstream tag, reconcile the promoted
-set from that tag with these local adaptations and retirements, update this version record and license if needed, then run
+To update them, review a new exact upstream tag, compare the selected retained
+workflows with that tag; preserve consolidation decisions instead of restoring retired aliases, update this version record and license if needed, then run
 the repository contract tests and profile preview before committing.
+
+## 上游核对：2026-10-20
+
+本机仍固定 `v1.2.3`；最新已发布版本为
+[`v1.3.1`](https://github.com/mattpocock/skills/releases/tag/v1.3.1)，
+对应 commit `24fe0ef7737efae15c87225755e9f6f5965e4888`。
+上游移除了 `resolving-merge-conflicts`，认为模型无需专用流程即可处理；
+将术语文件约定从 `CONTEXT.md` 改为 `GLOSSARY.md`；
+以明确的 Skill tool 调用替换 slash 指令；新增 `implement-spec`、`pr`、`retro`。
+
+`resolving-merge-conflicts` 已归档，`ask-matt` 已移除该引用并缩为按需路由。
+其余内容不整包升级：新增整规格并行实现、PR 和复盘流程不属于本次精简目标；
+已选择性吸收适用的入口更新，清理原有固定编排和宿主假设。保留 `tdd`、`codebase-design`、
+`domain-modeling`、`writing-for-agents` 的专用价值；普通任务不必套用完整编排。
+访谈统一为 grilling，吸收本地连续决策规则；移除 personal-grilling、grill-me、grill-with-docs 重复入口。调试统一为 personal-evidence-debugging；wait-what 由普通对话承担。原内容可从 Git 历史恢复，不保留活跃兼容别名。职责分组与取舍见上述 review。

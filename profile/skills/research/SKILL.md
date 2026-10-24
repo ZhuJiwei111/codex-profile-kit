@@ -1,17 +1,17 @@
 ---
 name: research
-description: Investigate a question against primary sources and return cited findings. Use when the user requests research, documentation or API fact gathering, or delegated reading; save a report only within the requested output scope.
+description: Produce a source-cited research note when the user requests a saved investigation or explicitly delegates reading legwork. Do not use for ordinary factual answers or quick documentation searches.
 ---
 
-Investigate in the main task by default. Delegate only when the user or applicable
-repository instructions authorize it and independent reading materially helps;
-then follow `personal-subagent-boundaries` and retain the final judgment here.
+Investigate the named question against primary sources: official documentation,
+source code, specifications, and first-party data. Trace material claims to
+the source that owns them; distinguish findings, inference, and unresolved gaps.
 
-Workflow:
+Save one concise cited note when the user requests it or the authorized workflow
+requires a durable research artifact. Use the repository's existing note owner
+and format. A request for an answer alone does not authorize creating a file.
 
-1. Investigate the question against **primary sources** — official docs, source code, specs, first-party APIs — not a secondary write-up of them. Follow every claim back to the source that owns it.
-2. Return the supported findings and material uncertainty with source citations.
-3. Save a Markdown report only when the user requests a file or existing task
-   authority includes that output. Use the named destination or established
-   repository convention. Research alone does not authorize repository changes,
-   external messages, publication, or Git actions.
+Use a bounded background agent when delegation is authorized and independent
+reading would help. Otherwise investigate directly. Keep the parent working on
+independent tasks while a delegated investigation runs; the parent synthesizes
+the result and owns the final conclusion.

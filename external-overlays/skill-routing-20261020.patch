@@ -1,0 +1,73 @@
+--- a/paper-spine/agents/openai.yaml
++++ b/paper-spine/agents/openai.yaml
+@@ -5,4 +5,4 @@
+   default_prompt: "Use $paper-spine to configure, research, rewrite or build, integrate LaTeX, and audit my paper/report."
+ 
+ policy:
+-  allow_implicit_invocation: true
++  allow_implicit_invocation: false
+--- a/academic-research-suite/SKILL.md
++++ b/academic-research-suite/SKILL.md
+@@ -1,19 +1,10 @@
+ ---
+ name: academic-research-suite
+ description: >
+-  ARS-Codex workflows for research, academic writing, manuscript review,
+-  research-to-paper pipelines, and experiment planning. Use when the user asks for deep research, literature
+-  review, systematic review, meta-analysis, research question refinement,
+-  academic paper drafting, paper revision, citation or integrity checks,
+-  reviewer simulation, peer review, editorial decision letters, research-to-paper
+-  workflows, experiment execution planning, statistical interpretation, or human
+-  study protocol support. Korean triggers: 논문 심사, 논문 수정, 초록 작성,
+-  체계적 문헌고찰, 연구부터 논문까지. Also use for Claude-style ARS command aliases such as
+-  /ars-plan, ars-plan, /ars-outline, /ars-abstract, /ars-lit-review,
+-  /ars-citation-check, /ars-disclosure, /ars-format-convert, /ars-3w,
+-  /ars-revision-coach, /ars-revision, /ars-reviewer, /ars-mark-read,
+-  /ars-unmark-read, /ars-cache-invalidate, /ars-rebuttal-audit, and /ars-full. This skill vendors ARS role prompts,
+-  references, templates, and shared handoff schemas under ars/.
++  Conduct systematic reviews, meta-analysis, research-question refinement,
++  study protocols, or reproducibility-focused experiment planning. Also use
++  for explicit ARS or ars-* workflow requests. Ordinary paper translation,
++  prose edits, figures, or mock review use their focused skills.
+ metadata:
+   version: "0.1.22"
+   upstream_suite: "academic-research-skills"
+@@ -32,6 +23,16 @@
+ `SKILL.md` metadata version, and `manifest.json` `adapter_version` must match.
+ Vendored ARS suite versions are tracked separately by source repository commit
+ in `manifest.json`.
++
++## Scope among installed research skills
++
++Use one workflow for the requested outcome. General literature discovery belongs
++to `nature-academic-search`; manuscript drafting, polishing, mock review and
++reviewer replies have focused `nature-*` entries. PDF bilingual translation uses
++`personal-translate-paper-zh`. Use the corresponding ARS writing/review workflow
++when the user explicitly requests ARS or an existing ARS project needs it; do not
++run both suites for the same deliverable. PaperSpine remains an explicit
++end-to-end alternative, not another automatic stage.
+ 
+ ## First Rule
+ 
+@@ -55,8 +56,8 @@
+ | End-to-end research-to-paper pipeline, integrity gate, staged review/revision/finalization workflow | `ars/academic-pipeline/WORKFLOW.md` |
+ | Experiment planning, code experiment execution plan, human study protocol, statistical interpretation, reproducibility validation | `ars/experiment-agent/WORKFLOW.md` |
+ 
+-If the request spans multiple workflows, start with `ars/academic-pipeline/WORKFLOW.md`
+-unless the user clearly asked for a single phase.
++Use `ars/academic-pipeline/WORKFLOW.md` only for a requested end-to-end pipeline.
++Several related requests can use their focused workflows without pipeline setup.
+ 
+ ### Paper Topic Scoping Override
+ 
+@@ -87,8 +88,8 @@
+ 
+ 1. State that the request is being routed to `deep-research` `socratic` mode
+    because the research question is not yet precise.
+-2. Ask 3-5 Socratic narrowing questions using `socratic_mentor_agent` and
+-   `research_question_agent` guidance.
++2. Propose a concrete candidate research question and ask the next material
++   scoping question using the relevant workflow guidance; preserve settled answers.
+ 3. Do not produce an outline, draft, literature review, or full pipeline
+    dashboard until the user has converged on at least one candidate RQ.
+ 

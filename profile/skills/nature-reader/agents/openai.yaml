@@ -1,7 +1,7 @@
 interface:
   display_name: "Nature Reader"
-  short_description: "Build bilingual figure-aware full-paper readers"
-  default_prompt: "Use $nature-reader to build a bilingual, figure-aware reader for this paper."
+  short_description: "Answer paper questions or build source-mapped readers"
+  default_prompt: "Use $nature-reader to answer source-linked questions or build a source-mapped reader package for this paper."
 
 policy:
   allow_implicit_invocation: false

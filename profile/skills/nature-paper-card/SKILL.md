@@ -1,6 +1,6 @@
 ---
 name: nature-paper-card
-description: Create a source-grounded, 16-section analytical Paper Card for one scientific paper, covering method, evidence, limitations, connections, and research ideas. Excludes full translation and formal peer review.
+description: "Build a structured deep-reading Paper Card for one scientific paper, analysing methods, experiment-to-claim evidence, limitations, and research ideas. Use for 论文精读卡、方法拆解、证据链分析; not full-paper bilingual translation or formal peer review."
 ---
 
 # Nature Paper Card - Router

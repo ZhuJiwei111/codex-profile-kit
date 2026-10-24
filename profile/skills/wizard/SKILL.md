@@ -52,7 +52,7 @@ Hold the bar the template sets: open the URL before asking for its value, use `a
 ### 4. Verify and hand off
 
 - `bash -n <script>`; run `shellcheck` if available.
-- `chmod +x <script>`.
+- Provide `bash <script>` as the run command; an executable-bit change is unnecessary.
 - Don't run it end-to-end yourself — it opens browsers and blocks on human input. Trace it statically instead: every value from step 1 is captured and lands where step 1 said, and every `set_secret` name exactly matches a `secrets.*` reference in CI.
 - Tell the user how to run it. Add an existing README link when documentation
   is within scope. Commit only with explicit Git authority.

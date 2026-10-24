@@ -1,39 +1,32 @@
 ---
 name: personal-code-simplifier
-description: Manual only. Use only when the user explicitly invokes this skill for a bounded behavior-preserving simplification of named code, or explicitly includes that cleanup as a scoped workflow step; not for unsolicited cleanup, behavior changes, diagnosis, or repository-wide refactoring.
+description: Manual only. Simplify named code or an explicitly scoped cleanup while preserving behavior; exclude unsolicited cleanup and behavior changes.
 ---
 
 # Personal Code Simplifier
 
-Make the named code easier to understand while preserving observable and
-contract-relevant behavior. Clarity and lower total complexity matter; fewer
-lines do not by themselves.
+Improve clarity and maintainability within the named surface. Optimize total
+complexity rather than line count.
+A review-only request belongs to `code-review`; diagnosing module boundaries
+belongs to `improve-codebase-architecture`. Use this entry for the authorized
+behavior-preserving edit, without turning it into an architecture project.
 
-## Bound The Change
+- Resolve the target files or symbols and preserve independently owned work.
+  If scope comes from a diff, verify its actual base and changed paths; do not
+  assume a local main branch is current or expand to its unrelated divergence.
+- Use the narrowest practical existing baseline before and after a nontrivial
+  refactor. If a meaningful check is unavailable, say so; visual inspection is
+  not proof of behavior preservation.
+- Remove needless nesting, indirection, and duplication only where the paths
+  share real invariants. Prefer established patterns and installed dependencies.
+- Preserve public contracts, side-effect order, exception behavior, numerical
+  behavior, and literal content. Prompts, templates, configuration, and user
+  strings are behavior: do not reword them as incidental code cleanup.
+- Check registration, reflection, and public callers before declaring code dead.
+  Avoid unrelated formatting and new abstractions without a present consumer.
 
-Identify the exact files or symbols, protected behavior, independently owned
-changes, and the local complexity being removed. For one obvious hunk this may
-remain implicit. Stop if the target cannot be separated safely from unrelated
-work or a design decision.
-
-Run the narrowest practical existing check before editing. Use the same check
-afterward; if no harness exists, use the strongest cheap parser, type, build, or
-contract comparison and state the gap.
-
-## Simplify Locally
-
-- Reduce unnecessary nesting, indirection, duplication, or cleverness while
-  preserving evaluation, exception, ordering, and side-effect behavior.
-- Consolidate only paths that actually share invariants.
-- Prefer existing patterns and dependencies. Do not add a framework,
-  compatibility layer, configuration surface, or speculative abstraction.
-- Do not infer dead code from one missing call site; consider public,
-  registration, reflection, generated, plugin, and compatibility surfaces that
-  are relevant to the target.
-- Avoid unrelated formatting, public API changes, and architecture changes
-  disguised as cleanup.
-
-Inspect the final scoped diff and report the material simplification, the
-before-and-after evidence, and any remaining equivalence gap.
+If simplification requires changing behavior or an architectural decision,
+separate that finding from the authorized refactor. Report the material change,
+the before-and-after check, and any remaining equivalence gap.
 
 Read `references/source-notes.md` only when maintaining provenance.

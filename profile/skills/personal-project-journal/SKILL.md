@@ -1,117 +1,83 @@
 ---
 name: personal-project-journal
-description: Record durable project events in an existing Git repository journal. Initialize a missing journal only during an authorized repository-write task.
+description: Record a durable project event in an existing repository JOURNAL; initialize a journal only during independently authorized repository writes. Excludes routine discussion and unchanged status checks.
 ---
 
 # Personal Project Journal
 
-Maintain a human-readable history of events that can affect future project work
-without turning it into current task state, a decision authority, or a
-transcript.
+Keep a concise, human-readable history of changes, decisions, failures, and
+outcomes that affect future work. JOURNAL owns chronological event history;
+plans own current task state and project documents own durable decisions.
 
-## Resolve The Journal Owner
+## Use the existing owner
 
-Locate the Git root and read applicable repository instructions. Update the
-primary repository that received the durable event. Update another repository
-only when it received its own durable event or actual write; do not journal an
-incidental dependency. The main process owns journal writes. Subagents and
-bounded workers return evidence instead of editing a journal.
+Locate the Git root and the applicable journal or work-line instructions.
+Read the local journal guide, file-ownership table, and relevant recent entry
+before writing. Do not write a synchronized read-only copy merely because it
+is named JOURNAL.md. Preserve
+existing single-file, work-line, monthly, and experiment-card conventions.
+Follow the repository's assigned event owner; by default the main task writes
+the journal and workers return evidence to that owner.
+An incidental dependency or read-only SSH reference needs no journal entry.
 
-When `.agent/JOURNAL.md` exists, read its instructions, index, and enough recent
-entries to understand the local format. Follow narrower repository rules and
-preserve an existing single-file or otherwise different layout. Do not migrate,
-normalize, or backfill an existing journal implicitly.
+If no journal exists, initialize only within an already-authorized repository
+write, using `assets/journal-index.md`, `assets/journal-readme.md`, and
+`assets/journal-month.md`. Substitute the local calendar month. Do not initialize a journal during a read-only task. Respect an existing ignore rule; do not
+change tracking policy or backfill earlier work without a request.
 
-## Initialize Only With Existing Write Authority
+## Record the consequential delta
 
-When a Git repository has no journal, initialize it only during a task already
-authorized to write that repository and record that task's durable event. Do
-not initialize a journal during a read-only task, in a non-Git or projectless
-directory, or merely because the repository was inspected. If an existing
-`.agent` layout directly conflicts with the target files, preserve it and
-report the conflict. Do not edit `.gitignore` or replace adjacent files without
-separate authority.
+A durable project event includes a material repository change, user decision,
+confirmed root cause or blocker, costly failure, consequential handoff, or
+completed outcome. Routine browsing, explanation, repeated status, and unchanged
+verification do not qualify. Existing journal maintenance is a narrow standing
+write exception; it grants no authority outside the journal-owned paths.
 
-For a new journal, read and instantiate the bundled assets:
-
-- `assets/journal-index.md` as `.agent/JOURNAL.md`;
-- `assets/journal-readme.md` as `.agent/README.md`;
-- `assets/journal-month.md` as `.agent/journal/YYYY-MM.md`.
-
-Replace the month placeholders with the task's local calendar month. Keep the
-files trackable, but do not stage, commit, or push them without matching Git
-authority. Do not reconstruct entries for work that predates initialization.
-
-## Record Durable Project Events
-
-Write one entry when work produces at least one durable event:
-
-- an actual repository-content change;
-- a project-level user decision, prohibition, or scope contract;
-- a confirmed root cause, important blocker, or expensive failure worth
-  preventing later;
-- a consequential external action, handoff, or final outcome.
-
-Ordinary explanation, browsing, repeated status, and verification that changes
-no conclusion do not need an entry. Once a journal exists, its maintenance is a
-narrow standing write exception for a qualifying event even during an otherwise
-read-only task.
-
-Classify detail by audit importance:
-
-- `high`: user authority or prohibition, scope or contract change, critical
-  gate, failure root cause, costly pitfall, consequential external action,
-  handoff, or final outcome; retain the important rationale and impact;
-- `medium`: material implementation, diagnosis, phase advance, or changed risk;
-  retain the consequential delta and actual evidence when useful;
-- `routine`: ordinary durable maintenance or implementation; keep one to three
-  factual sentences.
-
-Keep the stable heading and write the body in the natural shape of the event:
+Use the project's entry shape. For a new monthly journal:
 
 ```markdown
-## <ISO-8601 timestamp with offset> · <high|medium|routine> · <topic>
+## <local ISO-8601 timestamp with offset> · <high|medium|routine> · <topic>
 
-<concise request and outcome summary>
+<what changed or was decided, and why it matters>
 
-- **改动**：<include only when useful>
-- **证据**：<include only evidence already gathered and worth retaining>
-- **影响 / 后续**：<include only when consequential>
+- **证据**：<the relevant result and its source, when useful>
+- **后续**：<only a material unresolved item and its owner, when one remains>
 ```
 
-Labels are optional. Do not fill unused fields or run extra checks merely to
-complete an entry. Write after relevant checks and before the final response,
-handoff, stop, compaction, or archive. Record only Git and external state
-already observed. Never predict a future commit or push merely to make the
-entry look final, and do not create a second entry solely to report an ordinary
-commit or push; Git owns that history.
+- `high`: authority, scope, consequential decisions, critical gates, root causes,
+  expensive pitfalls, and handoffs; preserve rationale and impact.
+- `medium`: material implementation, changed risk, or phase outcome.
+- `routine`: ordinary durable maintenance; one to three sentences is enough.
 
-## Preserve Audit History
+Keep one coherent task entry rather than opening a new event for every command
+or verification. Update an explicitly active entry at meaningful phase changes;
+append the new verified delta without erasing earlier facts. Preserve a frozen
+entry's meaning; correct a material mistake in a dated note or new entry.
+Repository-specific status headings and lifecycle rules take precedence.
+Archive by continuing relevance, preserving the original facts and a pointer;
+keep unresolved work in its existing active owner. Archival is not completion.
 
-For the managed monthly layout, create a new month file when needed, add its
-link immediately below `<!-- journal-months -->`, and insert new entries
-immediately below `<!-- journal-entries -->`. Keep both lists newest first.
-Preserve the meaning of older entries. Correct a material fact, decision, or
-conclusion with a new entry that identifies the earlier timestamp and topic;
-minor spelling, punctuation, or formatting fixes that do not change meaning may
-be edited directly.
+For already-authorized long-running work, record actual start and meaningful
+phase changes without waiting for completion. Include the stage, owner, output,
+resource or budget boundary, and next check when relevant. A planned next stage
+is not a started stage; an ended chat is not proof that its process stopped.
+At handoff, leave unresolved work with a named TODO, plan, card, or successor.
 
-Read the target and append through its existing insertion point. If the layout
-or patch operation actually prevents a safe update, leave the journal untouched
-and report the missing entry instead of stacking fallback write paths.
+## Save and close
 
-Never record credentials, tokens, private keys, personal data, full internal
-addresses, secret-bearing commands, raw large logs, or unsupported inference.
-Summarize sensitive evidence and point only to an already-safe canonical owner.
+Use the existing insertion point. In the bundled monthly layout, insert entries
+below `<!-- journal-entries -->` and new month links below `<!-- journal-months -->`,
+newest first. Make writes atomically and read back the inserted anchor.
 
-## Keep State Owners Separate
+Record what is actually saved, tested, committed, pushed, or running; these are
+different states. Never predict a future commit or push. For ongoing work,
+point to the existing task/plan/card owner; record a blocker, recovery condition,
+or handoff only when consequential. Do not duplicate the active task board.
 
-JOURNAL owns chronological event history. An active file-backed plan owns the
-current goal, phase, findings, blocker, and next action. Durable
-project documents own binding decisions and contracts; Git, tests, receipts,
-and live checks remain evidence. Journal only the task delta and link to those
-owners instead of copying their full contents.
+Keep secrets, personal data, raw large logs, speculative claims, and full
+internal addresses out of the journal. Use existing evidence paths rather than
+copying outputs. If a safe write is blocked, report the missing entry instead
+of inventing another state owner.
 
-This skill authorizes only journal-owned writes described above. It never
-authorizes implementation, cleanup, staging, commits, pushes, publication,
-deployment, monitoring, or another external action.
+Write after a meaningful result and before a handoff or final response. It never
+authorizes implementation, cleanup, Git actions, deployment, or external changes.

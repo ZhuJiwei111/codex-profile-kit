@@ -43,7 +43,10 @@ credential changes, downloads, messages, or persistent jobs.
   manuscript LaTeX layout repair.
 - `researchwrite`: proposal-first scientific writing in compose, revise, or
   hybrid mode.
-- `nature-reader`: full-paper bilingual, figure-aware reading and translation.
+- `nature-reader`: source-linked questions, HTML/DOI reading, or an explicitly
+  requested source-mapped reader package.
+- `personal-translate-paper-zh`: paragraph-aligned PDF bilingual translation
+  with local figure/table screenshots.
 - `nature-ref-verifier`: field-by-field verification of supplied references.
 - `nature-response`: reviewer responses, rebuttals, revision cover letters, and
   red-marked revision packages.
@@ -58,8 +61,10 @@ credential changes, downloads, messages, or persistent jobs.
 - Use `nature-writing` to create substantive manuscript content; use
   `nature-polishing` when content already exists and the main need is language,
   structure, translation, or LaTeX presentation.
-- Use `nature-reader` for full bilingual reading; use `nature-paper-card` for a
-  structured analytical card.
+- Use `personal-translate-paper-zh` for a PDF bilingual translation,
+  `nature-reader` for questions or a source-mapped package, and
+  `nature-paper-card` for a structured analytical card. Produce only the
+  requested artifact; do not chain all three.
 - Use `nature-reviewer` before submission; use `nature-response` after receiving
   reviewer or editor comments.
 - Use `nature-academic-search` to discover literature; use `nature-citation` to

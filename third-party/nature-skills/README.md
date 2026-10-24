@@ -35,3 +35,20 @@ To update the snapshot, inspect a new exact upstream revision, compare it with
 the retained local integration changes, replace the complete imported trees,
 reapply only reviewed integration metadata, update this record and license if
 needed, then run the repository contract tests and profile preview.
+
+## 上游复核与本地适配：2026-10-20
+
+完整 vendored 基线仍为上述 revision；对上游
+`c8599197e7d2a22c2a091bbf8c14efcb3625cfa0` 的 19 个 child/proposal
+入口逐一比较，更新 16 个更短、更明确的触发描述；三个语义未变的描述
+保持原样，避免纯格式改动。详细取舍见
+[逐项复核记录](../skill-review-20261020.toml)。
+
+选择性适配 reader 的节选/问答范围、citation 的 Nature/CNS 适用边界、
+researchwrite 的 proposal 定位、figure 的现有后端与显式 provider 选择、
+reviewer 的按需多视角输出。保留已有脚本、静态参考和全部 explicit-only 策略；
+未宣称完整升级到各 child 最新版或运行时已验证。共享依赖仍按原树保留。
+
+不启用 SessionStart 自动更新，不隐式安装依赖或注册外部 MCP/provider，
+不把巡检、浏览器授权或定期投递当成内容请求的默认步骤。官方产物工具仍负责
+其原生文档/演示生命周期，专门的论文叙事、证据和版式指导不应取代工具契约。

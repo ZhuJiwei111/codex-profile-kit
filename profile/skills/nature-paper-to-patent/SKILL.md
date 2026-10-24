@@ -1,6 +1,6 @@
 ---
 name: nature-paper-to-patent
-description: Turn supplied papers, code, figures, or inventor notes into evidence-grounded Chinese invention-patent drafts and technical disclosures, with prior-art comparison, supported claims, and editable DOCX output.
+description: "Turn research papers or inventor materials into evidence-grounded Chinese invention patent drafts and technical disclosures. Use for 技术交底书、专利撰写、现有技术对比 and Chinese DOCX patent packages; not general manuscript writing."
 ---
 
 # Paper to Chinese Patent

@@ -24,3 +24,23 @@ its scripts or project-specific examples.
   fixed attempt count.
 - Keep expected RED with test-first work and final completion with final
   verification.
+
+## 2026-10-20 review
+
+Reviewed the current upstream entry at `obra/superpowers@bb92a77741419a4ab5f06e711a283343f1ada0c3`.
+It still prescribes sequential phases, test-first repair, and an architecture
+question after three failed fixes. These are not imported: the current portable
+contract favors a direct evidence fast path, proportionate checks, and changing
+the causal model instead of counting attempts. Retain the local rewrite.
+
+Community issue https://github.com/obra/superpowers/issues/1120 reports review
+overhead on mechanical tasks. It concerns another Superpowers workflow and is
+context for avoiding universal orchestration, not proof this debug skill fails.
+
+## Consolidated debugging entry
+
+Reviewed Matt `diagnosing-bugs` at the installed v1.2.3 baseline (MIT;
+third-party/mattpocock-skills/LICENSE in the profile source). Retained feedback
+signals, trace/differential reproduction, bisection and performance baselines.
+No upstream helper is bundled here. Mandatory six phases, a fixed hypothesis
+count, and a runnable-loop gate were not retained.

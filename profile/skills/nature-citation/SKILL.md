@@ -1,6 +1,6 @@
 ---
 name: nature-citation
-description: Add claim-level citations restricted to Nature Portfolio, Science-family, and Cell Press journals, with date filters and reference-manager export. Use for Nature/CNS citation support in supplied text.
+description: "Find and verify Nature/CNS-family literature supporting manuscript claims, with claim-to-source mapping and reference-manager export. Use for Nature系列引用、CNS支撑文献、分段补引用 when this journal scope is requested; use broader literature search for unrestricted sources."
 metadata:
   version: "2.0.0"
   author: "Yuan1z skill, refactored into static/dynamic layers"
@@ -16,6 +16,11 @@ This skill is split into two layers:
 Do not try to apply the citation logic from memory or from this router. Always load fragments from disk as described below.
 
 ## Routing protocol
+
+This is a journal-scoped literature workflow. For unrestricted claims or general
+citation checks, use broader literature search or ARS instead of silently
+filtering evidence by publisher prestige. Apply the workflow below when the
+user requests the Nature/CNS journal scope.
 
 Follow these four steps every time the skill is invoked.
 

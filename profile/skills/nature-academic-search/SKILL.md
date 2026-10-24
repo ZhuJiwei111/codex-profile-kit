@@ -1,6 +1,6 @@
 ---
 name: nature-academic-search
-description: Search academic literature across sources, manage reference files, and verify citation metrics or influential citers. Use for coordinated literature searches and citation audits beyond a single lookup.
+description: "Search literature across sources, verify or manage citations, and build MeSH strategies or citation-impact audits. Use for 文献检索、引文核对、参考文献管理、严格他引 and evidence-backed citer profiles; not for translating a paper or drafting manuscript prose."
 ---
 
 # Academic Search — Router

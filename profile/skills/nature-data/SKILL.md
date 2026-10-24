@@ -1,6 +1,6 @@
 ---
 name: nature-data
-description: Draft or audit manuscript Data Availability statements, repository plans, dataset citations, and FAIR metadata for Nature-family or other academic submissions.
+description: "Draft or audit manuscript Data/Code Availability statements, dataset access routes, repository plans, and FAIR metadata. Use for 数据可用性声明、数据共享、数据仓库选择 and dataset citations; not general data cleaning or statistical analysis."
 metadata:
   version: "2.0.0"
   author: "Yuan1z skill, refactored into static/dynamic layers"

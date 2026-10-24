@@ -1,6 +1,6 @@
 ---
 name: nature-response
-description: Draft or audit author responses to reviewer or editor comments, rebuttals, revision cover letters, and red-marked manuscript excerpts using Nature-style correspondence guidance.
+description: "Draft, audit, or revise responses to peer review, revision cover letters, and marked-manuscript or LaTeX revision packages. Use for 审稿意见回复、逐点回复、返修信、 rebuttals and edits to existing response drafts. Initial-submission materials belong to nature-writing; simulated peer review belongs to nature-reviewer."
 ---
 
 # Nature Reviewer Response — Router

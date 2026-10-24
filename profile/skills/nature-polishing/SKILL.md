@@ -1,6 +1,6 @@
 ---
 name: nature-polishing
-description: Polish, restructure, or translate existing academic prose into Nature-leaning English. Also use for manuscript LaTeX layout repairs involving floats, spacing, headings, or supplementary material.
+description: "Polish, translate, or tighten existing academic prose while preserving facts, terminology, and evidence boundaries. Use for 论文润色、学术翻译、正文精简, or manuscript LaTeX layout fixes. Use nature-writing when the main task is drafting new sections or rebuilding the manuscript argument."
 metadata:
   version: "6.1.0"
   author: "Yuan1z skill, refactored into static/dynamic layers"

@@ -1,6 +1,6 @@
 ---
 name: nature-writing
-description: Draft or restructure manuscript sections and initial-submission materials from author-provided claims, results, figures, and notes. Use for substantive scientific writing rather than polishing finished prose.
+description: "Draft or restructure scientific manuscript arguments, sections, and initial-submission materials from author-provided evidence. Use for 论文写作、章节起草、论证重构、正文压缩、首次投稿材料. Use nature-polishing for language-only edits to existing prose and nature-response for post-decision correspondence."
 ---
 
 # Nature-Style Scientific Writing — Router

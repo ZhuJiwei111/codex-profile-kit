@@ -1,6 +1,6 @@
 ---
 name: nature-statistics
-description: Audit or draft statistical reporting in manuscripts, methods, results, figure legends, and reviewer responses, including replicates, sample sizes, assumptions, uncertainty, and multiple comparisons.
+description: "Audit or improve manuscript statistical reporting, including experimental units, replication, uncertainty, tests, and figure statistics. Use for 统计审查、统计方法小节、图注统计 and reviewer concerns; compute new analyses only when requested with data."
 ---
 
 # Nature Statistics Reporting Skill

@@ -27,8 +27,4 @@ The two branches produce very different artifacts — getting this wrong wastes 
 3. **No persistence by default.** State lives in memory. Persistence is the thing the prototype is _checking_, not something it should depend on. If the question explicitly involves a database, hit a scratch DB or a local file with a clear "PROTOTYPE — wipe me" name.
 4. **Skip the polish.** No tests, no error handling beyond what makes the prototype _runnable_, no abstractions. The point is to learn something fast.
 5. **Surface the state.** After every action (logic) or on every variant switch (UI), print or render the full relevant state so the user can see what changed.
-6. **Deliver the answer.** Return the prototype, the question it tested, the
-   supported conclusion, and remaining uncertainty. Preserve the task-created
-   artifact for review. Production changes, branch creation, commits, and issue
-   updates require their matching authority; reuse authority already granted
-   for those exact actions rather than asking again.
+6. **Capture the answer.** Report the question, observed behavior, and remaining uncertainty. Keep useful prototype artifacts in the existing task-owned location; fold a decision into production only when that implementation is authorized. A prototype request does not require a new branch, commit, issue, or session.

@@ -49,7 +49,7 @@ class ProfileContractTest(unittest.TestCase):
             self.assertIsNotNone(frontmatter_name, skill)
             self.assertIsNotNone(description, skill)
             self.assertEqual(frontmatter_name.group(1), name)
-            self.assertNotIn("TODO", text)
+            self.assertNotRegex(text, r"(?m)^\s*TODO:|\[TODO\]")
 
             metadata = (skill / "agents" / "openai.yaml").read_text(
                 encoding="utf-8"

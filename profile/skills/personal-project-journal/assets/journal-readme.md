@@ -1,60 +1,33 @@
 # `.agent/` project audit journal
 
-This journal is the human-readable history of durable project events in this
-Git repository. It records what happened and why; it is not proof of current
-state, an active task plan, or the binding decision owner.
+JOURNAL records what changed, why it matters, and the evidence or remaining
+owner. It is event history, not proof of current state, a transcript, or a plan.
 
 ## Layout
 
-- `JOURNAL.md` indexes monthly journals, newest month first.
-- `journal/YYYY-MM.md` stores that month's entries, newest entry first.
-- Existing project-specific journal layouts remain valid and are not migrated
-  automatically.
+- `JOURNAL.md` indexes monthly journals, newest first.
+- `journal/YYYY-MM.md` keeps entries below `<!-- journal-entries -->`, newest first.
+- Preserve existing project-specific files, work lines, statuses, and lifecycle rules.
 
-## Importance
+## Events
 
-- `high`: authority, scope or contract changes, critical gates, root causes,
-  costly pitfalls, external actions, handoffs, and final outcomes.
-- `medium`: material implementation, diagnosis, phase progress, or changed
-  risk.
-- `routine`: ordinary durable maintenance or implementation.
+Record a material change, decision, cause, blocker, handoff, or outcome.
+Skip routine discussion, browsing, and unchanged verification. Keep one coherent
+task entry, updating an active entry at real phase changes. Correct frozen facts
+with a dated note or new entry rather than silently changing their meaning.
 
-Detail is proportional to importance. Completion alone is never a reason to
-compress an important result to one line.
+Use `high` for decisions, scope, costly failures, and important handoffs;
+`medium` for implementation or changed risk; `routine` for ordinary durable
+maintenance. Completion alone is never a reason to compress an important result.
+A routine event needs only one to three factual sentences, not a filled form.
 
-## What belongs here
+## Ownership and evidence
 
-Record repository changes, project-level decisions, confirmed root causes,
-important blockers or costly failures, consequential external actions,
-handoffs, and final outcomes. Ordinary explanation, browsing, repeated status,
-and unchanged verification do not need an entry.
+Plans own current task state, cards own experiment evidence, and project docs
+own binding decisions. Link to those owners; do not synchronize copies here.
+Distinguish saved, checked, committed, pushed, and actually running states.
+Use local time with an offset. Keep only evidence already observed.
 
-## Entry shape
-
-```markdown
-## YYYY-MM-DDTHH:MM:SS+08:00 · high|medium|routine · topic
-
-Concise request and outcome summary.
-
-- **改动**：include only when useful
-- **证据**：include only evidence already gathered and worth retaining
-- **影响 / 后续**：include only when consequential
-```
-
-Labels are optional. A routine entry can be one to three sentences. Do not fill
-unused fields or run checks merely to complete an entry.
-
-## Rules
-
-1. Preserve the meaning of historical entries. Correct a material fact,
-   decision, or conclusion with a new entry; spelling, punctuation, and
-   meaning-preserving formatting may be fixed directly.
-2. Do not record secrets, full internal addresses, personal data, raw large
-   logs, or unsupported inference.
-3. Record only Git and external state already observed before the journal edit;
-   do not predict later commit or push results or create an entry solely for
-   ordinary Git mechanics.
-4. Keep journal files trackable, but never stage, commit, or push without
-   matching authority.
-5. When the normal append fails, leave the journal unchanged and report it
-   instead of adding fallback write paths.
+Preserve privacy and secrets. Write atomically, read back the changed anchor,
+and report a blocked journal write. Tracking, staging, commit, push, and other
+external actions require their own authority; preserve existing ignore policy.

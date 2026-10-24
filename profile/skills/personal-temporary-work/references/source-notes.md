@@ -24,3 +24,11 @@ Official Codex skill guidance informed the concise, instruction-first structure:
   still benefits from it.
 - A retained helper needs only purpose, inputs, outputs, use, and delete
   condition.
+
+## 2026-10-20 review
+
+Confirmed local origin and retained the current portable preferences: one-off
+work stays temporary; existing project conventions win; keep recovery evidence;
+remove only exact task-created unused scratch. Simplified the durable/temporary/
+hybrid taxonomy into a decision rule, without adding a scratch framework,
+manifest, mandatory preflight, or blanket cleanup.

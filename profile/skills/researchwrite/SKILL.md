@@ -1,7 +1,6 @@
 ---
 name: researchwrite
-description: |
-  Proposal-first scientific writing pipeline. Three modes (compose/revise/hybrid) with four-layer QA pipeline. Enforces evidence-before-prose, argument-before-sections, and contracts-before-paragraphs.
+description: "Compose, revise, or audit research proposals, opening reports, and research plans from supporting evidence. Use for 研究计划、开题报告、科研项目申请书. Invoked as researchwrite for compatibility; use nature-writing for general manuscript sections."
 license: MIT
 metadata:
   hermes:
@@ -12,6 +11,10 @@ metadata:
 # researchwrite — proposal-first 科研写作 pipeline
 
 受 autonovel（状态机+打分）、professor（动态专家）、brainstorming（入口追问）、anti-AI-writing（语言清理）启发的科研写作状态机。**不是通用"帮我写论文"prompt。**
+
+`researchwrite` is the research-proposal workflow. Use `nature-writing` for
+general manuscript sections; do not run this proposal pipeline merely because
+a request says "write a paper".
 
 ## 核心原则
 

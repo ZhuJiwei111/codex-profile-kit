@@ -2,19 +2,17 @@
 
 A publication-quality scientific figure is a visual argument, not an isolated pretty plot. Every figure starts from a claim, an evidence hierarchy, and a review-risk check before code or aesthetics. Before generating or editing code, establish the contract below.
 
-## Backend selection uses a saved preference
+## Backend selection
 
-For plotting tasks, first honor an explicit Python/R choice in the current request or a clearly language-specific input file/workflow. Save that backend as the user's default with `scripts/nature_figure_backend.py set python` or `scripts/nature_figure_backend.py set r`.
+Honor the current request, language-specific input, established project stack,
+or an already-saved preference. With none of these, use an available project
+plotting stack, normally installed Python/matplotlib. Ask when the choice has a
+material compatibility, reproducibility, editability, or dependency consequence.
+Do not persist a new default unless the user asks to remember it.
 
-If the current request does not specify a backend, check the saved preference with `scripts/nature_figure_backend.py get`. If it returns `python` or `r`, use that backend without asking again.
-
-If no saved preference exists, ask one concise question: **Python or R? I will remember this as your default.** Then stop and wait for the user's answer. Do not generate mock data, write scripts, create figures, or choose Python/R by default before this first preference is established. After the user answers, save it and proceed.
-
-Only recommend a backend when the user explicitly asks you to choose or recommend one. In that case, use `references/backend-selection.md`, state the reason, save the selected backend, and then proceed with the recommended backend.
-
-## The selected backend is exclusive
-
-Once Python or R is selected, every plotting script, preview image, SVG/PDF/TIFF/PNG export, QA render, and visual workaround must be produced by that same backend. Do not use Python to draw a preview for an R figure, and do not use R to draw a preview for a Python figure, even if the selected runtime or packages are missing locally. The non-selected language may only be used for non-visual file inspection or data conversion when it does not open a graphics device, import plotting libraries, create image/vector files, or change the final visual appearance.
+Keep drawing source in that backend. Standard image/PDF rendering and inspection
+tools may verify its outputs without reconstructing the scientific figure in
+a different plotting language.
 
 ## Missing runtime/package rule
 

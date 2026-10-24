@@ -8,7 +8,9 @@ How the engineering skills should consume this repo's domain documentation when 
 - **`CONTEXT-MAP.md`** at the repo root if it exists — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
 - **`docs/adr/`** — read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
 
-If these files do not exist, proceed silently. `/domain-modeling` and `$personal-grill-with-docs` may maintain them when meaningful terms or durable decisions settle and documentation writes are authorized; their absence does not authorize creation.
+If these files do not exist, proceed silently. `/domain-modeling` may maintain
+the existing owners when meaningful terms or durable decisions settle and
+documentation writes are authorized; their absence does not authorize creation.
 
 ## File structure
 

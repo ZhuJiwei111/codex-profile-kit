@@ -1,21 +1,14 @@
 ---
 name: implement
-description: "Implement a piece of work based on a spec or set of tickets."
-disable-model-invocation: true
+description: Manual only. Implement an agreed specification or named work items within their authorized scope.
 ---
 
-Implement the work described by the user in the spec or tickets.
+Implement the user-approved behavior using the repository's existing patterns
+and environment. Keep unresolved user decisions separate from routine choices.
+Use test-first development when requested or useful at the affected seam;
+otherwise use the smallest meaningful existing behavior check.
 
-Use /tdd when test-first development is requested or required by the project.
-Reuse established public interfaces and test boundaries without another approval.
-
-Run project-required checks and focused checks for the changed behavior. Run
-the full suite when the project requires it or affected integration warrants it;
-repeat checks only for new changes, failures, or unresolved concerns.
-
-Use /code-review when requested or when a material concern warrants a focused
-review. Finish when the requested behavior and applicable checks pass.
-
-Commit only with matching Git authority already granted by the user. Otherwise
-return the verified implementation without adding a commit approval gate to
-the implementation itself.
+Complete the change, run proportionate checks, and inspect its scoped diff.
+Use an independent review only when authorized and likely to add value.
+Stage or commit only with the user's matching Git authority; implementation
+itself does not grant publication or external-action authority.
