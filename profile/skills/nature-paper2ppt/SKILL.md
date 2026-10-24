@@ -1,6 +1,6 @@
 ---
 name: nature-paper2ppt
-description: Build a complete Nature-style Chinese PPTX presentation from a scientific paper, preprint, PDF, article text, figure legends, or reading notes. Use for journal club, group meeting, thesis seminar, paper sharing, conference or defense decks, and Chinese requests such as 论文做PPT、论文汇报、组会PPT、文献汇报、学术汇报、做幻灯片、读书报告PPT. It classifies paper type, builds an evidence-led story, selects key figures, writes Chinese slide content and speaker notes, creates the actual .pptx, and runs corrective QA for complete figure crops, stable alignment, text overflow, and de-templated Chinese academic expression. Also trigger when improving weak paper-to-PPT output with cropped figures, loose alignment, obvious AI-style wording, or heavy manual rework.
+description: Create or improve a Chinese PPTX for a paper presentation or journal club, using an evidence-led story, source figures, speaker notes, and visual layout checks.
 ---
 
 # Paper-to-PPTX — Router

@@ -79,10 +79,10 @@ file, quote the relevant rule, and distinguish the rule from your interpretation
 
 ## Discussion, Questions, And Coordination
 
-- Default scientific research, literature review, academic writing, manuscript
-  review, and experiment-planning requests to `academic-research-suite` (ARS).
-  Follow an explicitly named skill or workflow instead. Use the smallest ARS
-  route that satisfies the request; the default does not authorize a full
+- Follow an explicitly named research skill or workflow. Otherwise prefer
+  `academic-research-suite` (ARS) when installed; if unavailable, use the
+  smallest available workflow for the requested research or writing stage.
+  Preserve each skill's invocation policy. This routing does not authorize a full
   pipeline, extra artifacts, experiments, or delegation. Related stages do not
   imply a full pipeline: reuse existing materials and continue from the current
   stage. Enter a full pipeline only when requested or already authorized.
@@ -108,12 +108,11 @@ file, quote the relevant rule, and distinguish the rule from your interpretation
   `personal-multiline-coordination` for persistent App tasks or worktrees.
 - Route subagent models by task shape. Keep the parent's model for ambiguous
   diagnosis, architecture, security, shared-state writes, approval-bearing
-  work, synthesis, and final verdicts. Use `gpt-5.6-terra` for bounded
-  exploration or review that still needs judgment, and `gpt-5.6-luna` only for
-  narrow, repeatable, independently checkable work such as read-only inventory,
-  targeted lookup, classification, or mechanical summarization. Select a
-  lower-cost model explicitly with the smallest sufficient context; do not set
-  a blanket low-tier default for all subagents.
+  work, synthesis, and final verdicts. For bounded exploration or review,
+  select a lower-cost model explicitly from the delegation tool's available
+  models when it is sufficient. Reserve the smallest tier for narrow,
+  repeatable, independently checkable work. Use the smallest sufficient context;
+  keep the parent's model when no suitable lower-cost option is available.
 - Creating or selecting a file-backed plan is opt-in. Once
   `personal-planning-with-files-zh` has selected an active plan, treat that plan
   as sticky task state across later turns and compaction: invoke the skill

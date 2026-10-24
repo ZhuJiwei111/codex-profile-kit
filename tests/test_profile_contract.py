@@ -177,7 +177,7 @@ class ProfileContractTest(unittest.TestCase):
         self.assertIn("`下一步建议：无。`", prose)
         self.assertNotIn("End with a next step only when", prose)
 
-    def test_task_archive_is_portable_and_current_host_only(self) -> None:
+    def test_task_archive_freezes_selected_host_and_protects_running_work(self) -> None:
         _, trees, _, retired_trees = profile_sync.load_manifest()
         managed = {str(path) for path in trees}
         retired = {str(path) for path in retired_trees}
@@ -193,45 +193,41 @@ class ProfileContractTest(unittest.TestCase):
         inventory_prose = " ".join(inventory.split())
 
         for contract in (
-            "current execution host",
-            "same exact host identity",
-            "manage that host from a task executing there",
-            "`personal-thread-closeout`",
-            "Treat archival as organization",
+            "exact product `hostId`",
+            "The local App can manage remote tasks",
+            "frozen host identity",
+            "Skill editing does not authorize archival",
+            "Archival does not stop execution or traffic",
+            "Unknown runtime status still blocks archival",
             "24 hours",
             "15 days",
+            "6 days",
             "50",
             "pinned",
-            "oldest",
         ):
             self.assertIn(contract, prose)
         for contract in (
             "lightweight",
             "explicitly owns",
-            "closed failure",
-            "actually archived",
             "thread://",
-            "Do not copy a summary by default",
-            "does not modify memory",
-            "override the age windows",
-            "finished subAgent",
+            "Send no summary by default",
+            "Memory work is separate and opt-in",
             "source or parent metadata",
-            "result is delivered",
-            "does not stop, cancel",
             "raw unarchived main-task and subAgent totals",
-            "An unarchived parent does not protect",
-            "never label a candidate count as a host total",
+            "an unarchived parent is not a reason to retain a finished, delivered child",
         ):
             self.assertIn(contract.lower(), prose.lower())
         self.assertNotIn("decision card", prose.lower())
         for contract in (
-            "Windows, macOS, and Linux",
-            "Do not install a parser",
+            "Use `pwsh` on Windows",
+            "POSIX-native tooling on macOS or Linux",
+            "not install a parser",
             "Never follow rollout/session paths",
-            "Do not use an app-wide list or cross-host count",
+            "not use an app-wide list or cross-host count",
             "pages to exhaustion",
             "navigation surface",
             "split as unknown",
+            "bounded auxiliary lookup",
         ):
             self.assertIn(contract, inventory_prose)
         self.assertNotIn("current Windows host", prose)

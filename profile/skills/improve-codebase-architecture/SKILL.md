@@ -10,7 +10,9 @@ Surface architectural friction and propose **deepening opportunities** — refac
 
 This command is _informed_ by the project's domain model and built on a shared design vocabulary:
 
-- Run the `/codebase-design` skill for the architecture vocabulary (**module**, **interface**, **depth**, **seam**, **adapter**, **leverage**, **locality**) and its principles (the deletion test, "the interface is the test surface", "one adapter = hypothetical seam, two = real"). Use these terms exactly in every suggestion — don't drift into "component," "service," "API," or "boundary."
+- Consult `../codebase-design/SKILL.md` for deep-module principles, the deletion
+  test, and testable interfaces. Preserve the project's established terminology.
+  Propose seams for actual variation or a concrete isolation requirement.
 - The domain language in `CONTEXT.md` gives names to good seams; ADRs in `docs/adr/` record decisions this command should not re-litigate.
 
 ## Process
@@ -24,7 +26,9 @@ This command is _informed_ by the project's domain model and built on a shared d
 
 Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching first.
 
-Then spawn a sub-agent to walk the codebase. Don't follow rigid heuristics — explore organically and note where you experience friction:
+Explore the selected area directly. Delegate a bounded independent exploration
+only when the user or applicable repository instructions authorize it, following
+`personal-subagent-boundaries`. Note where you experience friction:
 
 - Where does understanding one concept require bouncing between many small modules?
 - Where are modules **shallow** — interface nearly as complex as the implementation?

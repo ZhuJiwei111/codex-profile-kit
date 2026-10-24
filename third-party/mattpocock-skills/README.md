@@ -38,6 +38,9 @@ local adaptations:
 - `writing-for-agents/SKILL-MECHANICS.md`: Codex-native invocation metadata,
   progressive loading, and authorized cross-skill references replace Claude-only
   discovery and router assumptions.
+- `improve-codebase-architecture/SKILL.md`: use current deep-module guidance
+  without imposing replacement terminology or an adapter-count rule; explore
+  directly unless bounded delegation is authorized.
 - Astra instruction review (2026-09-13): `writing-for-agents/SKILL.md` focuses
   on outcomes, conditional guidance, and proportionate validation; `tdd` reuses
   established test interfaces without repeated approval and permits scoped
