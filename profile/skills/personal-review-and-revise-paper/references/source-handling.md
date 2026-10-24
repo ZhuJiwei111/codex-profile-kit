@@ -34,7 +34,8 @@ precondition. Before editing:
 
 1. Re-read the target file from disk.
 2. Search for the complete original block, including meaningful LaTeX markup.
-   Remove only the ledger's comparison spans when recovering the anchor. For
+   Remove the ledger's comparison spans and exclude separate review-reason
+   blockquotes when recovering the anchor; never apply those notes as prose. For
    rendered table views or multi-file packages, record each exact source block
    once in the anchor metadata so display transformations do not destroy it.
 3. Require exactly one unambiguous match.

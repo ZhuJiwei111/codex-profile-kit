@@ -20,15 +20,15 @@ placeholder, and an updated candidate replaces its superseded candidate.
 
 ## Required package shape
 
-Each package uses `### PKG-NNN — title` and these seven headings in order:
+New ledgers use `ledger_schema: review-and-revise-paper/v2`. Each package uses
+`### PKG-NNN — title` and these six headings in order:
 
 1. `原文英文`
 2. `候选英文`
 3. `原文中文`
 4. `候选中文`
-5. `修改判断`
-6. `作者决定`
-7. `应用与验证记录`
+5. `作者决定`
+6. `应用与验证记录`
 
 Package metadata before section 1 records the target file and semantic anchor,
 motivation, reviewer/evidence provenance, status, and workflow mode. Do not use
@@ -37,8 +37,32 @@ line numbers as the only anchor because edits move them.
 For a multi-part package, label the same target blocks consistently within each
 of the four language/version sections. A Response package also includes the
 complete reviewer comment and Chinese translation in metadata; it is context,
-not text to silently rewrite. Do not migrate an existing compatible ledger just
-to rename headings or reorder records during ordinary discussion.
+not text to silently rewrite. Existing v1 ledgers remain readable by the
+validator. When the author requests the new layout for an existing ledger,
+move each judgment to its corresponding Chinese passage, remove the standalone
+judgment section, renumber the final two headings, and set the schema to v2.
+Preserve wording, package IDs, decisions, and statuses; layout migration does
+not approve or reopen a proposal. Do not migrate unrelated historical ledgers.
+
+## Reasons at the changed passage
+
+Immediately after each affected Chinese paragraph, caption, or table explanation,
+add a separate uncolored blockquote, normally in the proposed Chinese view:
+
+> **修改理由（P2，建议修改）：** 原句未区分两种方法的机制。根据对应原论文区分其建模方式，可以避免读者把它们理解为同一类坐标回归模型，同时保留空间信息有助于重建的论点。
+
+Use `保留理由` for a no-change judgment. For a deletion, place the reason beside
+the deleted Chinese passage; for tables, place it after the Chinese explanation
+of the affected rows. Identify the local sentence or row when one paragraph
+contains independently judged changes. Do not collect notes for several
+passages at the end of a package or repeat them in a standalone `修改判断`
+section. Follow the same placement in the reply.
+
+These notes are review commentary, not translations or proposed manuscript
+content. Keep them outside red/blue spans and omit them when recovering source
+anchors or applying edits. Explain the concrete reason and supporting evidence;
+include claim boundaries, preserved contributions, and risks where they affect
+the decision. Do not repeat a fixed checklist at every edit.
 
 ## Color contract
 
