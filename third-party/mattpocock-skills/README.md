@@ -38,6 +38,11 @@ local adaptations:
 - `writing-for-agents/SKILL-MECHANICS.md`: Codex-native invocation metadata,
   progressive loading, and authorized cross-skill references replace Claude-only
   discovery and router assumptions.
+- Astra instruction review (2026-09-13): `writing-for-agents/SKILL.md` focuses
+  on outcomes, conditional guidance, and proportionate validation; `tdd` reuses
+  established test interfaces without repeated approval and permits scoped
+  refactoring in the loop; `codebase-design` preserves project terminology and
+  evaluates seams by concrete needs rather than adapter counts.
 
 Preserve these adaptations when reviewing an upstream update. Local profile rules,
 including explicit authority for Git commits, external writes, credentials,

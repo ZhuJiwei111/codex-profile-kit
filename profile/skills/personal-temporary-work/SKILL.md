@@ -1,6 +1,6 @@
 ---
 name: personal-temporary-work
-description: Use when one-off migration, conversion, repair, inspection, or artifact work might otherwise add permanent code; separate durable behavior from temporary transition work and manage only exact task-created scratch.
+description: Manage temporary scripts and scratch for one-off migrations, conversions, repairs, or artifact work that would otherwise leave unnecessary maintained code.
 ---
 
 # Personal Temporary Work

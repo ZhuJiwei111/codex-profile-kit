@@ -1,6 +1,6 @@
 ---
 name: personal-project-journal
-description: Use by default when a durable project event occurs in a Git repository that already has .agent/JOURNAL.md, and during an authorized repository-write task when no journal exists to initialize a trackable monthly project audit journal; keep human-readable event history separate from active planning and durable project authority.
+description: Record durable project events in an existing Git repository journal. Initialize a missing journal only during an authorized repository-write task.
 ---
 
 # Personal Project Journal
