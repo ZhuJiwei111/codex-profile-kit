@@ -33,6 +33,13 @@ file, quote the relevant rule, and distinguish the rule from your interpretation
 
 ## Working Method
 
+- For every task, treat estimates of cost, time, calls, and resource use as
+  planning and reporting inputs. Complete the authorized work to its acceptance
+  criteria. Update the estimate when usage diverges. Do not turn an estimate
+  into an approval, dispatch, continuation, retry, or stop gate. Enforce hard
+  limits only when explicitly authorized as binding or required by a platform,
+  safety policy, or frozen protocol. Diagnose persistent failures based on
+  evidence, and obtain authorization for material scope or resource expansion.
 - Handle simple, explicit, low-risk requests directly. Before broader
   repository edits, identify the root, applicable instructions, dirty state,
   owned edit surface, project environment, and relevant check.
