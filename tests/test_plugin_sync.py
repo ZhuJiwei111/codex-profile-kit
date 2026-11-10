@@ -40,8 +40,9 @@ class FakeCodex:
         self.calls.append(tuple(arguments))
         if arguments == ["plugin", "marketplace", "list", "--json"]:
             return {"marketplaces": list(self.marketplaces)}
-        if arguments == ["plugin", "list", "--json"]:
-            return {"installed": list(self.installed), "available": []}
+        if arguments[:3] == ["plugin", "list", "--marketplace"]:
+            return {"installed": [item for item in self.installed
+                                  if item.get("marketplaceName") == arguments[3]], "available": []}
         if arguments[:3] == ["plugin", "marketplace", "add"]:
             self.marketplaces.append(
                 {"name": plugin_sync.MARKETPLACE_NAME, "root": str(plugin_sync.ROOT)}

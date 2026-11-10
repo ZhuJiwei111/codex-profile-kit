@@ -48,6 +48,14 @@ The detached worker records its own identity, launches the target with `Popen`, 
 
 ## Wait And Resume
 
+Before entering a long wait, including when reconnecting to an already-running
+job, tell the user the best-effort remaining duration and expected completion
+window when the current wall clock is reliable. Use observed progress and
+throughput when available, or comparable runs and the task's existing estimate.
+State when the estimate is coarse or unavailable, and do not invent a range.
+Refresh the estimate when material new evidence changes it. Estimates are for
+planning and communication, not deadlines or gates on authorized work.
+
 Call `wait_event(job_id)` for one job or `wait_any(job_ids)` for several. The host waits without model sampling and returns one unacknowledged `completed`, `failed`, `attention`, or `supervisor_error`, preserving its original job and event IDs. No event is automatically acknowledged. In a multi-job wait, closed observations are skipped; when all are closed and no event is pending, waiting ends with an error instead of hanging.
 
 Do not supervise a waiting script or layer Goal polling, Scheduled tasks, shell polling, or another monitor around these waits. A finite command ends on its result. A resident public observer may wait indefinitely for a declared actionable condition: define what it observes, who handles events, and when its ownership ends. Normal waiting is not abandonment and does not justify a duplicate task.

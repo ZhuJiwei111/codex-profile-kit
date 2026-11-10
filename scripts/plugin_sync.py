@@ -182,13 +182,16 @@ def inspect_state(
     marketplace_value = runner(
         codex_home, ["plugin", "marketplace", "list", "--json"]
     )
-    plugin_value = runner(codex_home, ["plugin", "list", "--json"])
     marketplaces = marketplace_value.get("marketplaces")
-    installed = plugin_value.get("installed")
     if not isinstance(marketplaces, list) or not all(isinstance(item, dict) for item in marketplaces):
         raise PluginSyncError("Codex returned invalid marketplace state")
-    if not isinstance(installed, list) or not all(isinstance(item, dict) for item in installed):
-        raise PluginSyncError("Codex returned invalid installed-plugin state")
+    installed = []
+    for name in (MARKETPLACE_NAME, "personal"):
+        plugin_value = runner(codex_home, ["plugin", "list", "--marketplace", name, "--json"])
+        entries = plugin_value.get("installed")
+        if not isinstance(entries, list) or not all(isinstance(item, dict) for item in entries):
+            raise PluginSyncError("Codex returned invalid installed-plugin state")
+        installed.extend(entries)
 
     changes: list[Change] = []
     registered = [item for item in marketplaces if item.get("name") == MARKETPLACE_NAME]
