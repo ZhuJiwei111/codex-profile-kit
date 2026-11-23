@@ -45,11 +45,9 @@ Honor current scientific decisions and separately retained external-action bound
 ## Discover Task Creation
 
 When the user authorizes a new App task, discover the native `create_thread`
-tool first. On a host with a documented Desktop bridge, also search for
-`remote_tasks.create_thread` / `mcp__remote_tasks__create_thread` before
-concluding that creation is unavailable. Read `HOST_LOCAL.md` for that host's
-scope and connection prerequisites; documentation alone does not establish a
-loaded tool. Use the tool's actual schema and native approval flow. Do not
+tool first. Use the tool's actual schema and native approval flow. Remote
+execution from a local chat follows the SSH workflow in
+[personal-tencent-remote-execution](../personal-tencent-remote-execution/SKILL.md). Do not
 substitute a shell/socket call, CLI run, or managed subagent for an App chat.
 Explaining the difference is not permission to change the requested form; obtain
 the user's agreement before any alternative. If absent, report the missing capability and check
