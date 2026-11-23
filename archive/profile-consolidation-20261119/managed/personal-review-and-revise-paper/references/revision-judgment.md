@@ -70,9 +70,12 @@ revision-history prose when they add no needed distinction. Preserve useful
 original sentences and supported contributions. A shorter candidate that loses
 part of the argument is not an improvement.
 
-## Required judgment record
+## Local reasons in the Chinese comparison
 
-Every proposal must state:
+Place the judgment immediately after the affected Chinese passage as described
+in `ledger-format.md`, not in a separate `修改判断` section. State the local
+verdict and concrete reason in connected Chinese prose. Use these dimensions
+to support the decision, without imposing a seven-field form on every edit:
 
 - `verdict`;
 - `direct evidence` and its location;
@@ -84,7 +87,9 @@ Every proposal must state:
 
 Avoid generic reasons such as "clearer", "more academic", or "more robust".
 Name the ambiguity, contradiction, reader inference, or unsupported claim that
-actually changes the decision.
+actually changes the decision. Put evidence or its source next to the reason
+it supports. A straightforward language edit needs only its concrete rationale;
+a scientific claim change also needs its evidence and relevant claim boundary.
 
 ## Approval boundary
 

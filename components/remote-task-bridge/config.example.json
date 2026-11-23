@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "enabled": false,
+  "stateRoot": "C:/path/to/isolated-remote-bridge",
+  "sourceApp": "C:/path/to/official/app",
+  "hostId": "remote-ssh-discovered:YOUR_SSH_ALIAS",
+  "sshAlias": "YOUR_SSH_ALIAS",
+  "sshExecutable": "C:/Windows/System32/OpenSSH/ssh.exe",
+  "remotePython": "/usr/bin/python3",
+  "remoteDirectory": "/absolute/private/path/remote-bridge-v1",
+  "projects": []
+}

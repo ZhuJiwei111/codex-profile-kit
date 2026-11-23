@@ -1,5 +1,5 @@
 ---
-ledger_schema: review-and-revise-paper/v1
+ledger_schema: review-and-revise-paper/v2
 canonical_entrypoint: TODO
 canonical_source_type: latex
 target_venue: TODO
@@ -29,6 +29,7 @@ workflow_mode: one_shot
 - 审阅顺序：按当前对象的阅读顺序；作者另有要求时在此记录
 - 授权例外：无；若有，记录作者原话与精确范围，并将 approval_policy 改为 recorded_scope
 - 完整前后英中对照：台账与回复中均展示；修改标注至少精确到句子
+- 修改理由：紧接对应中文修改块，以独立引述注释呈现；不设单独“修改判断”节，不将理由写入论文正文
 
 ## Coverage inventory（可选）
 
@@ -64,23 +65,15 @@ TODO：忠实、完整翻译原文，并保持与英文相同的红色语义范�
 
 TODO：忠实、完整翻译候选，并保持与英文相同的蓝色语义范围。
 
-#### 5. 修改判断
+> **修改理由（本处，建议修改）：** TODO：说明本处修改的具体原因和必要证据；涉及科学结论时交代适用边界。多个修改块分别在各自中文位置附理由，不集中放到末尾；保留原文时可用“保留理由”。此注释不属于候选正文。
 
-- verdict：`TODO（必须修改 / 建议修改 / 不建议修改 / 作者选择 / 作者锁定风险）`
-- direct evidence：TODO
-- necessity：TODO
-- consequence if unchanged：TODO
-- claim boundary：TODO
-- contribution preserved：TODO
-- residual risk：TODO
-
-#### 6. 作者决定
+#### 5. 作者决定
 
 - 决定：`待决定`
 - 批准范围：无
 - 讨论记录：TODO
 
-#### 7. 应用与验证记录
+#### 6. 应用与验证记录
 
 - application：`未应用`
 - target paths：无

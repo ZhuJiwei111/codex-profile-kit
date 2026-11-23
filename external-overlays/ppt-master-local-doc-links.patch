@@ -1,0 +1,22 @@
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -264,7 +264,7 @@
+ 
+ #### Three template kinds
+ 
+-The architecture has three independent reference bundles. Full schema in [`docs/zh/templates-architecture.md`](../../docs/zh/templates-architecture.md). Summary:
++The installed architecture has three independent reference bundles. Use the bundled [template workflow](workflows/create-template.md) and [brand workflow](workflows/create-brand.md) for creation contracts. Summary:
+ 
+ | Kind | Physical dir | Contains | Frontmatter |
+ |---|---|---|---|
+--- a/workflows/create-template.md
++++ b/workflows/create-template.md
+@@ -27,7 +27,7 @@
+ | **deck** (default) | Source is a specific organization's branded PPT (e.g. company report, university defense template); the visual identity is part of the replica | `templates/decks/<id>/templates/` | Full segments: identity + structure + middle |
+ | **layout** | Source is a generic stylistic template (no specific brand); only the structural skeleton should be reusable; color / typography decided per-deck downstream | `templates/layouts/<id>/templates/` | Structure segments only (canvas / page structure / page types / SVG roster); identity segment omitted |
+ 
+-Default to **deck** unless the user explicitly says "structure only" / "layout only" / "no brand identity". When in doubt, lean deck — losing identity later is easy; reconstructing it from a layout-mode strip is not. See [`docs/zh/templates-architecture.md`](../../../docs/zh/templates-architecture.md) for the full kind / schema / fusion model.
++Default to **deck** unless the user explicitly says "structure only" / "layout only" / "no brand identity". When in doubt, lean deck — losing identity later is easy; reconstructing it from a layout-mode strip is not. See [the installed template-kind model](../SKILL.md#three-template-kinds) for kind and segment ownership; the output contract is defined below.
+ 
+ ## Output scope — library (default) vs project
+ 

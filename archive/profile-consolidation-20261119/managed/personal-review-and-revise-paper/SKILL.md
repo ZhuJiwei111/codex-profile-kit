@@ -98,18 +98,25 @@ Choose a semantic package:
 
 Reuse the matching inventory ID, or assign the next stable `PKG-NNN` ID. Replace
 its inventory placeholder with the complete package. Set it to `drafting`, then
-populate the full original/proposed English and Chinese views, judgment, and
-pending decision record. Change it to `pending_author_decision` only when every
+populate the full original/proposed English and Chinese views, reasons beside
+the affected Chinese passages, and pending decision record. Change it to
+`pending_author_decision` only when every
 required section is complete.
 
 Read `references/ledger-format.md` before writing or revising a package. Copy
 the exact package shape from `assets/revision-ledger-template.md`; do not invent
 a shorter summary format.
 
-## 3. Judge without defensive drift
+## 3. Explain changes beside the Chinese comparison
 
 Apply `references/revision-judgment.md` to each package; read it once and revisit
-when the scientific decision changes. State:
+when the scientific decision changes. Explain each change immediately after
+the affected Chinese paragraph, caption, or table explanation, normally in the
+proposed Chinese view. Use a separate, uncolored `修改理由` blockquote; do not
+insert review notes into the translated manuscript or its source anchor.
+For a retained passage that needs an explicit judgment, use `保留理由`.
+Do not create a separate `修改判断` section or collect all reasons at the end
+of a multi-part package. The local explanation should cover what matters:
 
 - the verdict;
 - the direct evidence and claim boundary;
@@ -126,9 +133,9 @@ findings unrelated to the requested decision.
 Update the ledger, then show the author in the reply itself:
 
 - the package ID and target location;
-- the recommended verdict;
 - complete current and proposed English, and faithful complete Chinese versions,
-  grouped by paragraph when useful for comparison;
+  grouped by paragraph when useful for comparison, with the verdict and reasons
+  directly beside each affected Chinese passage;
 - exact table/figure changes using the ledger's adaptive display rules; and
 - a clickable link to the full bilingual package.
 
@@ -204,6 +211,8 @@ Run its bundled tests after changing the validator:
 
 Resolve `<skill-dir>` as the directory containing this `SKILL.md`.
 
-The validator checks structure, status, duplicate/active packages, and color
-markup only. A passing result does not certify author authority, translation
-fidelity, scientific correctness, citation validity, or claim strength.
+The validator checks structure, status, duplicate/active packages, color markup,
+and the presence of local reason notes in the Chinese comparison. It accepts
+legacy v1 ledgers without forcing unrelated historical migrations. A passing
+result does not certify placement at every affected passage, author authority,
+translation fidelity, scientific correctness, citation validity, or claim strength.

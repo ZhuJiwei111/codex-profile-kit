@@ -29,10 +29,14 @@ REQUIRED_SECTIONS = (
     "候选英文",
     "原文中文",
     "候选中文",
-    "修改判断",
     "作者决定",
     "应用与验证记录",
 )
+LEGACY_SECTIONS = REQUIRED_SECTIONS[:4] + ("修改判断",) + REQUIRED_SECTIONS[4:]
+SCHEMA_SECTIONS = {
+    "review-and-revise-paper/v1": LEGACY_SECTIONS,
+    "review-and-revise-paper/v2": REQUIRED_SECTIONS,
+}
 
 VALID_STATUSES = {
     "drafting",
@@ -48,8 +52,12 @@ ACTIVE_STATUSES = {"drafting", "pending_author_decision", "approved"}
 ALLOWED_COLORS = {"c62828", "1565c0"}
 PACKAGE_RE = re.compile(r"^###\s+(PKG-\d{3,})\s+—\s+(.+?)\s*$", re.MULTILINE)
 PACKAGE_HEADING_RE = re.compile(r"^###\s+PKG-[^\n]+$", re.MULTILINE)
-SECTION_RE = re.compile(r"^####\s+([1-7])\.\s+(.+?)\s*$", re.MULTILINE)
+SECTION_RE = re.compile(r"^####\s+(\d+)\.\s+(.+?)\s*$", re.MULTILINE)
 STATUS_RE = re.compile(r"^-\s*状态[：:]\s*`([^`]+)`\s*$", re.MULTILINE)
+RATIONALE_RE = re.compile(
+    r"^> \*\*(?:修改|保留)理由(?:（[^）\n]+）)?[：:]\*\*[ \t]*(?P<body>[^\n]*)$",
+    re.MULTILINE,
+)
 
 
 @dataclass(frozen=True)
@@ -105,14 +113,17 @@ def parse_packages(body: str) -> tuple[list[Package], list[str]]:
     return packages, errors
 
 
-def split_sections(package: Package) -> tuple[dict[str, str], list[str]]:
+def split_sections(
+    package: Package, required: tuple[str, ...]
+) -> tuple[dict[str, str], list[str]]:
     matches = list(SECTION_RE.finditer(package.body))
     errors: list[str] = []
     names = [match.group(2).strip() for match in matches]
-    if names != list(REQUIRED_SECTIONS):
+    numbers = [int(match.group(1)) for match in matches]
+    if names != list(required) or numbers != list(range(1, len(required) + 1)):
         errors.append(
             f"{package.package_id} sections must be exactly: "
-            + " | ".join(REQUIRED_SECTIONS)
+            + " | ".join(required)
         )
     sections: dict[str, str] = {}
     for index, match in enumerate(matches):
@@ -136,8 +147,10 @@ def validate_text(text: str, source: str = "<memory>") -> list[str]:
         elif fields[field].strip().upper() == "TODO":
             errors.append(f"frontmatter field still contains TODO: {field}")
 
-    if fields.get("ledger_schema") not in {None, "review-and-revise-paper/v1"}:
-        errors.append("ledger_schema must be review-and-revise-paper/v1")
+    schema = fields.get("ledger_schema")
+    if schema is not None and schema not in SCHEMA_SECTIONS:
+        errors.append("ledger_schema must be review-and-revise-paper/v1 or v2")
+    required = SCHEMA_SECTIONS.get(schema, REQUIRED_SECTIONS)
     if fields.get("canonical_source_type") not in {None, "latex", "markdown"}:
         errors.append("canonical_source_type must be latex or markdown")
     if fields.get("build_policy") not in {None, "explicit_or_final_freeze"}:
@@ -165,9 +178,9 @@ def validate_text(text: str, source: str = "<memory>") -> list[str]:
         elif package.status in ACTIVE_STATUSES:
             active.append(package)
 
-        sections, section_errors = split_sections(package)
+        sections, section_errors = split_sections(package, required)
         errors.extend(section_errors)
-        for section in REQUIRED_SECTIONS:
+        for section in required:
             if section not in sections or not sections[section].strip():
                 errors.append(f"{package.package_id} section is empty: {section}")
 
@@ -175,9 +188,22 @@ def validate_text(text: str, source: str = "<memory>") -> list[str]:
             "pending_author_decision", "approved", "applied_source_verified",
             "final_render_verified",
         }:
-            for section in REQUIRED_SECTIONS[:5]:
+            proposal_sections = required[:5] if schema == "review-and-revise-paper/v1" else required[:4]
+            for section in proposal_sections:
                 if not meaningful(sections.get(section, "")):
                     errors.append(f"{package.package_id} proposal is incomplete: {section}")
+
+        rationales = [
+            match
+            for name in ("原文中文", "候选中文")
+            for match in RATIONALE_RE.finditer(sections.get(name, ""))
+        ]
+        if schema == "review-and-revise-paper/v2" and package.status in {
+            "pending_author_decision", "approved", "applied_source_verified",
+            "final_render_verified", "closed_without_change", "author_locked_risk",
+        }:
+            if not rationales or any(not meaningful(m.group("body")) for m in rationales):
+                errors.append(f"{package.package_id} lacks a complete reason note in the Chinese comparison")
 
         for original_name in ("原文英文", "原文中文"):
             if "color:#1565c0" in sections.get(original_name, ""):
@@ -203,7 +229,11 @@ def validate_text(text: str, source: str = "<memory>") -> list[str]:
             if "render" not in application and "构建" not in application:
                 errors.append(f"{package.package_id} final status lacks render/build evidence")
         if package.status == "author_locked_risk":
-            judgment = sections.get("修改判断", "")
+            judgment = (
+                sections.get("修改判断", "")
+                if schema == "review-and-revise-paper/v1"
+                else "\n".join(m.group(0) for m in rationales)
+            )
             if "作者锁定风险" not in judgment:
                 errors.append(f"{package.package_id} locked-risk status lacks matching verdict")
 
@@ -248,26 +278,18 @@ The model has <span style="color:#1565c0">higher MCC on the evaluated tasks</spa
 
 该模型<span style="color:#1565c0">在所评估任务上取得更高 MCC</span>。
 
-#### 5. 修改判断
+> **修改理由（本句，建议修改）：** Table 2 支持已评估任务上的 MCC 优势，原句会被理解为未经验证的普遍可迁移性；候选保留有证据支持的定量贡献。
 
-- verdict：`建议修改`
-- direct evidence：Table 2
-- necessity：使结论与指标一致。
-- consequence if unchanged：原句无法由当前实验直接支持。
-- claim boundary：仅限已评估任务。
-- contribution preserved：保留定量优势。
-- residual risk：无。
-
-#### 6. 作者决定
+#### 5. 作者决定
 
 - 决定：`待决定`
 
-#### 7. 应用与验证记录
+#### 6. 应用与验证记录
 
 - application：`未应用`
 """.strip()
     return f"""---
-ledger_schema: review-and-revise-paper/v1
+ledger_schema: review-and-revise-paper/v2
 canonical_entrypoint: paper.tex
 canonical_source_type: latex
 target_venue: Example Journal
@@ -294,6 +316,29 @@ def run_self_test() -> int:
     valid = valid_fixture()
     package_block = valid[valid.index("### PKG-001") :]
     cases.append(("valid replacement", valid, True))
+    reason = RATIONALE_RE.search(valid).group(0)
+    cases.append(("missing local reason", valid.replace(reason, ""), False))
+    cases.append((
+        "reason only in English comparison",
+        valid.replace(reason, "").replace("#### 2. 候选英文", reason + "\n\n#### 2. 候选英文"),
+        False,
+    ))
+    # A note in the author-decision record cannot replace a Chinese comparison note.
+    misplaced = valid.replace(reason, "").replace("- 决定：`待决定`", reason + "\n\n- 决定：`待决定`")
+    cases.append(("reason only in decision record", misplaced, False))
+    cases.append(("unfinished local reason", valid.replace(reason, '> **修改理由（本句，建议修改）：** TODO'), False))
+    cases.append(("retention reason", valid.replace("修改理由", "保留理由"), True))
+    cases.append(("stale section numbering", valid.replace("#### 5. 作者决定", "#### 6. 作者决定"), False))
+    legacy = valid.replace("review-and-revise-paper/v2", "review-and-revise-paper/v1").replace(
+        reason, "#### 5. 修改判断\n\n- verdict：`建议修改`\n- direct evidence：Table 2 支持已评估任务的定量优势。"
+    ).replace("#### 5. 作者决定", "#### 6. 作者决定").replace("#### 6. 应用与验证记录", "#### 7. 应用与验证记录")
+    cases.append(("legacy v1 remains valid", legacy, True))
+    cases.append(("v2 rejects standalone judgment", legacy.replace("review-and-revise-paper/v1", "review-and-revise-paper/v2"), False))
+    locked = valid.replace("pending_author_decision", "author_locked_risk").replace(
+        "active_package: PKG-001", "active_package: none"
+    ).replace("- 决定：`待决定`", "- 决定：`作者明确保留已知矛盾`\n- verdict：作者锁定风险")
+    cases.append(("locked risk needs local verdict", locked, False))
+    cases.append(("locked risk with local verdict", locked.replace("本句，建议修改", "本句，作者锁定风险"), True))
     insertion = valid.replace(
         'The model has <span style="color:#c62828">strong transferability</span>.',
         "*【原文在此处没有对应句子。】*",

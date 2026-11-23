@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import json
+import ntpath
 import os
+from pathlib import Path
 import re
 import shlex
 import sys
@@ -13,7 +15,11 @@ from typing import Any
 
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 BOUNDARY_CHARS = frozenset(";&|()\n")
-CONDA_EXECUTABLES = {"conda", "mamba"}
+CONDA_EXECUTABLES = {
+    name + suffix
+    for name in ("conda", "mamba")
+    for suffix in ("", ".exe", ".bat", ".cmd")
+}
 
 
 def load_event() -> dict[str, Any]:
@@ -81,6 +87,9 @@ def command_segments(command: str) -> list[list[str]]:
     lexer.whitespace = " \t\r"
     lexer.whitespace_split = True
     lexer.commenters = ""
+    if os.name == "nt":
+        # PowerShell and cmd paths use backslashes as separators, not escapes.
+        lexer.escape = ""
     try:
         tokens = list(lexer)
     except ValueError:
@@ -140,18 +149,40 @@ def option_values(arguments: list[str], short: str, long: str) -> list[str]:
 
 
 def normalized_path(value: str) -> str:
-    return os.path.normpath(os.path.expandvars(os.path.expanduser(value)))
+    return os.path.normcase(
+        os.path.normpath(os.path.expandvars(os.path.expanduser(value)))
+    )
+
+
+def conda_roots() -> set[str]:
+    explicit = os.environ.get("CONDA_ROOT")
+    roots = {normalized_path(explicit)} if explicit else set()
+    runtime = Path(sys.prefix)
+    if runtime.parent.name.casefold() == "envs":
+        runtime = runtime.parent.parent
+    candidates = [runtime]
+    executable = os.environ.get("CONDA_EXE")
+    if executable:
+        parent = Path(executable).parent
+        if parent.name.casefold() in {"scripts", "bin", "condabin"}:
+            root = parent.parent
+            if root.name.casefold() == "library":
+                root = root.parent
+            candidates.append(root)
+    for candidate in candidates:
+        if (candidate / "conda-meta").is_dir() and (candidate / "condabin").is_dir():
+            roots.add(normalized_path(str(candidate)))
+    return roots
 
 
 def targets_base(command: str) -> bool:
-    conda_root = os.environ.get("CONDA_ROOT")
-    normalized_root = normalized_path(conda_root) if conda_root else None
+    roots = conda_roots()
 
     for segment in command_segments(command):
         argv = direct_invocation(segment)
         if (
             not argv
-            or os.path.basename(argv[0]).casefold() not in CONDA_EXECUTABLES
+            or ntpath.basename(argv[0]).casefold() not in CONDA_EXECUTABLES
         ):
             continue
         arguments = mutation_arguments(argv)
@@ -162,8 +193,8 @@ def targets_base(command: str) -> bool:
             for value in option_values(arguments, "-n", "--name")
         ):
             return True
-        if normalized_root and any(
-            normalized_path(value) == normalized_root
+        if roots and any(
+            normalized_path(value) in roots
             for value in option_values(arguments, "-p", "--prefix")
         ):
             return True

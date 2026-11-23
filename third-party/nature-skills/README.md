@@ -19,6 +19,12 @@ version and author fields under `metadata`, and every child has Codex
 `agents/openai.yaml` metadata with `allow_implicit_invocation: false`. Portable
 profile contract metadata adds missing display names and short descriptions.
 
+Thirteen child entrypoints have locally shortened descriptions: academic-search,
+citation, data, figure, paper-card, paper-to-patent, paper2ppt, polishing, reader,
+response, reviewer, statistics, and writing (all with the `nature-` prefix).
+These descriptions retain each workflow's distinguishing scope; their bodies,
+supporting resources, and explicit-only Codex policies are unchanged.
+
 The child skills include executable Python, MJS, and shell helpers. Some routes
 can access literature services, institution-authorized browser sessions,
 credential configuration, OpenRouter image generation, or recurring delivery.
