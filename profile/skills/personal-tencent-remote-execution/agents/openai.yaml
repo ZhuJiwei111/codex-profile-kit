@@ -1,0 +1,6 @@
+interface:
+  display_name: "腾讯远端容器与执行"
+  short_description: "按项目登记准备腾讯容器，执行与委派任务，衔接资源、服务和现有长作业观察"
+  default_prompt: "使用 $personal-tencent-remote-execution 按项目登记完成腾讯容器上的已授权工作。"
+policy:
+  allow_implicit_invocation: true

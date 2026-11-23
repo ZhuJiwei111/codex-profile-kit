@@ -43,6 +43,19 @@ class DetachedProcessIntegrationTest(unittest.TestCase):
             time.sleep(0.02)
         self.fail("detached worker did not become inactive")
 
+    @unittest.skipUnless(os.name == "posix", "POSIX file mode semantics")
+    def test_target_keeps_caller_umask_while_supervisor_state_is_private(self):
+        previous = os.umask(0o022)
+        try:
+            job = self.start("permissions", "from pathlib import Path; Path('output').write_text('ok')")
+        finally:
+            os.umask(previous)
+        event = self.store.wait_event(job["job_id"], poll_interval=0.02)
+        self.assertEqual("completed", event["event_type"])
+        self.assertEqual(0o644, (Path(self.tmp.name) / "output").stat().st_mode & 0o777)
+        self.assertEqual(0o600, (self.store.job_dir(job["job_id"]) / "result.json").stat().st_mode & 0o777)
+        self.ack_and_clean(job["job_id"], event)
+
     def test_process_identity_and_atomic_terminal_result(self):
         job = self.start("identity", "import time; time.sleep(0.3)")
 

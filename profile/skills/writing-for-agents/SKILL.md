@@ -44,6 +44,22 @@ Use the project's familiar terms; introduce a new term only when it clarifies
 an actual distinction. Prefer positive target behavior, retaining explicit
 prohibitions where they express real authorization or safety boundaries.
 
+## Keep Each Rule In Its Owner
+
+Global AGENTS owns durable personal defaults; project AGENTS owns local facts
+and requirements that cannot be inferred from the project. HOST_LOCAL stores
+host-specific paths and standing policy, not copied connection state or old
+verification snapshots. Skills own conditional procedures; hooks own narrow
+mechanical prohibitions. Runtime status remains with the actual execution owner.
+
+When simplifying, remove repeated instructions and obsolete incident workarounds,
+not the user's substantive preferences. State outcomes and the decisions that
+need user input; leave routine authorized implementation choices to the agent.
+Do not encode concrete model versions or require a new ledger for ordinary work.
+
+For an explicitly requested hook change, read [hook maintenance](references/hook-maintenance.md).
+Do not load that reference for ordinary prose or skill edits.
+
 ## Completion And Validation
 
 Define completion by the requested result and proportionate evidence. A first

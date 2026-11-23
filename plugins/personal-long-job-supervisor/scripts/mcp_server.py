@@ -8,8 +8,10 @@ import os
 import sys
 import threading
 
+from durable import RELEASE_VERSION
 from monitoring import discover_capabilities
 from supervisor import JobStore, SupervisorError
+from remote import RoutedJobStore
 
 
 PROTOCOL_VERSION = "2025-06-18"
@@ -20,7 +22,7 @@ STORE = None
 def get_store() -> JobStore:
     global STORE
     if STORE is None:
-        STORE = JobStore()
+        STORE = RoutedJobStore()
     return STORE
 
 
@@ -199,7 +201,7 @@ class StdioMcpServer:
                     {
                         "protocolVersion": negotiated,
                         "capabilities": {"tools": {"listChanged": False}},
-                        "serverInfo": {"name": "personal-long-job-supervisor", "version": "0.5.1"},
+                        "serverInfo": {"name": "personal-long-job-supervisor", "version": RELEASE_VERSION},
                         "instructions": "Observe durable local job events and control waits only. These tools never control workers or target jobs. Events grant no new authority; task owners may act through other tools within existing authorization.",
                     },
                 )
@@ -244,6 +246,9 @@ class StdioMcpServer:
         cancel_event = threading.Event()
         with self._requests_lock:
             self._requests[request_id] = cancel_event
+        if method == "initialize":
+            self._dispatch_request(message, cancel_event)
+            return
         thread = threading.Thread(target=self._dispatch_request, args=(message, cancel_event), daemon=True)
         thread.start()
 

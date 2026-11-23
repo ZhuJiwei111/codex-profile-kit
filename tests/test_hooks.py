@@ -42,9 +42,8 @@ class HookBehaviorTest(unittest.TestCase):
         groups = hooks["PreToolUse"]
         by_matcher = {group["matcher"]: group["hooks"] for group in groups}
 
-        self.assertEqual(set(by_matcher), {"^Bash$", "^request_user_input$"})
+        self.assertEqual(set(by_matcher), {"^Bash$"})
         self.assertEqual(len(by_matcher["^Bash$"]), 1)
-        self.assertEqual(len(by_matcher["^request_user_input$"]), 1)
         handlers = {
             matcher: matcher_handlers[0]
             for matcher, matcher_handlers in by_matcher.items()
@@ -65,14 +64,6 @@ class HookBehaviorTest(unittest.TestCase):
             windows_commands["^Bash$"],
             "{{PROFILE_SYNC_COMMAND_WINDOWS:hooks/conda_base_guard.py}}",
         )
-        self.assertEqual(
-            commands["^request_user_input$"],
-            "{{PROFILE_SYNC_COMMAND:hooks/no_autoresolution_guard.py}}",
-        )
-        self.assertEqual(
-            windows_commands["^request_user_input$"],
-            "{{PROFILE_SYNC_COMMAND_WINDOWS:hooks/no_autoresolution_guard.py}}",
-        )
     def test_rendered_wiring_uses_absolute_runtime_and_script_paths(self) -> None:
         runtime = Path("/opt/profile python/bin/python")
         codex_home = Path("/Users/example/Codex Home/.codex")
@@ -87,7 +78,7 @@ class HookBehaviorTest(unittest.TestCase):
             for hook in group["hooks"]
         ]
 
-        self.assertEqual(len(handlers), 2)
+        self.assertEqual(len(handlers), 1)
         for handler in handlers:
             script_name = Path(shlex.split(handler["command"])[1]).name
             relative = Path("hooks") / script_name
@@ -148,11 +139,11 @@ class HookBehaviorTest(unittest.TestCase):
                     "",
                 )
 
-    def test_no_autoresolution_guard_checks_field_presence(self) -> None:
+    def test_no_autoresolution_guard_rejects_timer_but_allows_null(self) -> None:
         denied = invoke(
             "no_autoresolution_guard.py",
             "request_user_input",
-            {"questions": [], "autoResolutionMs": None},
+            {"questions": [], "autoResolutionMs": 60000},
         )
         allowed = invoke(
             "no_autoresolution_guard.py",
@@ -165,6 +156,10 @@ class HookBehaviorTest(unittest.TestCase):
             "deny",
         )
         self.assertEqual(allowed, "")
+        self.assertEqual(invoke("no_autoresolution_guard.py", "request_user_input",
+                                {"questions": [], "autoResolutionMs": None}), "")
+        self.assertEqual(json.loads(invoke("no_autoresolution_guard.py", "request_user_input",
+                                         {"questions": [], "autoResolutionMs": 0}))["hookSpecificOutput"]["permissionDecision"], "deny")
 
     def test_adjacent_tools_are_silent(self) -> None:
         self.assertEqual(

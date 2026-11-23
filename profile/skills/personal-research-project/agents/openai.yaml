@@ -1,0 +1,6 @@
+interface:
+  display_name: "个人研究项目启动与协作"
+  short_description: "按研究目的启动或接手项目，组织公共实现、证据与协作交接，保持最小结构"
+  default_prompt: "使用 $personal-research-project 启动或接手这个研究项目，完成已授权的整体工作并留下可理解、可接续的结果。"
+policy:
+  allow_implicit_invocation: true

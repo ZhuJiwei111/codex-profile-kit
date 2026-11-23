@@ -1,84 +1,21 @@
-# Current-Host Task Inventory
+# Product inventory and runtime evidence
 
-Use this reference only for the host where the calling Codex task is executing.
-The procedure is the same on Windows, macOS, and Linux; only host-native path
-and shell syntax may differ.
+Use native list_threads history pagination for the selected host and archive
+state. For explicitly requested complete inventories, follow nextCursor to
+exhaustion; otherwise state the range actually reviewed. Recent lists and pinned
+lists can complement an inventory but are not proof of complete coverage.
 
-## Freeze The Host Scope
+Use read_thread for the latest substantive outcome and ownership. Use a compact
+wait_threads snapshot when execution status remains relevant and unclear.
+notLoaded from an independent app-server does not establish that another
+instance has stopped execution. Missing pin, unread, Goal, or automation fields
+remain unknown; do not invent their values or repeatedly rediscover the same gap.
 
-- Derive the current host identity from the calling task or a product surface
-  that identifies it before returning task data.
-- Use that same exact identity for scoped queries and every mutation. The
-  bounded auxiliary lookup below is the only global-query exception.
-- Treat an unknown host identity as a mutation blocker.
-- Do not accept another host's ID, filesystem path, index content, or task list
-  into this inventory. Manage another host from a task executing there.
+Keep host identity and exact task ID together. Connected remote hosts can be
+handled through native tools when the user selects them; do not transfer private
+history files or inspect auth/session stores. Do not start a second app-server or
+scan raw rollouts merely to produce exhaustive statistics for routine archival.
 
-## Complete Metadata Source
-
-Use the first available source that is both host-local and complete:
-
-1. Prefer a product query that applies the frozen host filter before returning
-   data, exposes source or parent metadata, and pages to exhaustion.
-2. Otherwise initialize a local app-server on the current execution host and
-   page `thread/list` with `archived=false`, `useStateDbOnly=true`, a bounded
-   page size, every supported source kind, and each returned cursor until no
-   cursor remains. Project only task ID, title, update time, status, source or
-   parent metadata, and hard-protection signals, including section metadata
-   when exposed. Do not request turns.
-3. If neither source is available, use the current host's metadata index only
-   as incomplete discovery:
-
-   1. Resolve `CODEX_HOME` from the current process or current-host contract;
-      otherwise use the current user's standard `~/.codex` directory.
-   2. Read `session_index.jsonl` explicitly as UTF-8 with an already-available
-   host-native JSON parser. Project only task ID, title, and update time.
-   3. Read filenames under `archived_sessions/` only to identify archived task
-   IDs.
-   4. Subtract archived IDs from index candidates.
-
-The index fallback cannot establish a raw main-task/subAgent split because its
-safe projection lacks source and parent metadata. Report that split as unknown,
-identify the fallback as incomplete, and require exact product reads to confirm
-host identity and every protection signal before any candidate can become an
-automatic archive.
-
-Use `pwsh` on Windows and available POSIX-native tooling on macOS or Linux. Do
-not install a parser merely for inventory. If safe parsing is unavailable,
-report the evidence gap and stop before mutation. Never follow rollout/session
-paths from the index or transfer the index to another host for processing.
-
-An app-wide list that accepts only a global limit, mixes hosts, or omits
-delegated children is a navigation surface. Do not filter it after retrieval
-and present the remainder as a complete current-host inventory. A full page,
-an unexhausted cursor, missing host identity, or missing source metadata is an
-explicit completeness gap rather than evidence that no more subAgents exist.
-
-## Product Reconciliation
-
-- Prefer host-filtered queries. When a necessary signal is available only from
-  an app-wide list, make a bounded auxiliary lookup for already selected IDs
-  whose host has been confirmed. Project only those IDs with the exact frozen
-  host; discard other entries without reading, reporting, or acting on them.
-  Use this solely for protection evidence, never for host totals or discovering
-  additional archive targets. A missing target in a capped list proves nothing;
-  an explicitly complete pinned list can establish pin absence for a known ID.
-- Record the raw unarchived main-task and subAgent totals before applying the
-  exclusions in `SKILL.md`; keep total, protected, eligible, read, and
-  deferred counts distinct.
-- Sort the remaining candidates by oldest substantive activity first and
-  exact-read no more than the current run's bounded batch.
-- Classify `No Codex thread found` once as index-only, stale, or unsupported;
-  do not retry it as an archive operation.
-
-Use an exact product read for the latest outcome and a product runtime snapshot
-(such as `wait_threads` with `timeoutMs: 0`) for current execution status when
-needed. A separate local app-server knows which tasks it has loaded, not which
-tasks another instance is executing. Preserve unknown fields as unknown; do not
-infer Goal or automation absence from a completed turn. Interpret section/pin
-fields only after checking their schema. If signals remain unavailable, apply
-the automatic-versus-confirmed-target rules in `SKILL.md` and report the gap once.
-
-After execution, verify only each actual archive target on the frozen host. Do
-not re-read protected or main tasks merely to prove they were preserved. Do not
-use an app-wide list or cross-host count as proof of archival.
+A missing record is a lookup limitation, not a target for blind mutation. After
+archiving, verify the exact target with the native product surface. Do not read
+all excluded chats again just to demonstrate that they were left untouched.

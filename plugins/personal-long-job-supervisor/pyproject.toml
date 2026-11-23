@@ -1,6 +1,6 @@
 [project]
 name = "personal-long-job-supervisor"
-version = "0.5.1"
+version = "0.6.10"
 description = "Event-driven local long-job supervision for Codex"
 requires-python = ">=3.9"
 dependencies = []

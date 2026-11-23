@@ -1,61 +1,32 @@
 # Host-Local Codex Facts
 
-This file is local-only, read-only input for ordinary tasks and monitoring.
-Never store credentials, tokens, private-key contents, secret-bearing proxy
-commands, authentication sockets, or session state here. Updating this file
-requires separate configuration authority; a monitoring request alone does not
-authorize edits.
+Local-only, non-secret host paths and standing policy. Ordinary tasks read this
+file when relevant; updates require configuration authority. Project connections
+and live execution state belong to their project registration or native tools.
+Do not copy credentials, auth/session state, SSH parameters, process status,
+capacity snapshots or old verification results here.
 
-## Host Identity
+## Paths
 
-- Updated at (ISO 8601 with timezone):
-- Operating system and version:
-- Architecture:
-- Codex controller host ID or label:
 - Codex home:
-- Long-lived profile repository:
+- Portable profile source:
+- Host Python interpreter and environment:
+- Conda/Mamba root, if used:
+- Codex desktop application:
+- Codex CLI executable or discovery method:
 
-## Python And Package Policy
+## Standing Policy
 
-- Ordinary Python environment:
-- Absolute Python interpreter:
-- Conda or Mamba root:
-- Reusable project-environment policy:
-- Standing package-install authority, if any:
+- Authorized ordinary package installation scope:
+- Environment/channel conventions:
+- Host-specific resource or availability constraints:
+- Protected local paths:
 
-## Codex Installation
-
-- Codex desktop version:
-- Codex CLI version and absolute executable:
-- Hook runtime interpreter:
-- Known runtime or plugin-cache paths that must not be modified:
-- Fresh-task hook trust status and verification date:
-
-## Local Resources
-
-- Storage locations and material capacity constraints:
-- CPU, memory, GPU, or power constraints relevant to task planning:
-- Sleep or availability constraints for local Scheduled tasks:
-
-## Network And Remote Aliases
-
-Record aliases and non-secret route facts only. Keep SSH configuration
-authoritative; do not copy secrets from it.
-
-- Proxy or route aliases:
-- SSH aliases, effective non-secret endpoint facts, and last bounded probe:
-- Saved project roots by host ID or project label:
-- Known connectivity limitations:
-
-## Host-Specific Decisions
-
-- Approved local installation or deployment conventions:
-- Paths or services that require explicit approval:
-- Other current, non-secret host limitations:
+Verify volatile versions and availability from the actual runtime when needed.
+Record tests and deployment events in their owning journal, not in this file.
+Project SSH and model routing remain in project/platform configuration.
 
 ## File Protection
 
-- POSIX: owner-readable and owner-writable only (`0600`).
-- Windows: remove inherited access where appropriate and grant read/write only
-  to the current user and required system administrators; record the exact ACL
-  verification command used.
+POSIX mode 0600; on Windows restrict access to the user and required system
+administrators. This file is not a credential store.

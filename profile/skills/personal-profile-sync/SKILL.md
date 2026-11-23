@@ -1,6 +1,6 @@
 ---
 name: personal-profile-sync
-description: Manual only. Use only when the user explicitly invokes this skill to preview, apply, or check the complete portable Codex profile and its owned personal plugins, update the local portable repository from GitHub before applying it, or commit and non-force push an explicitly named portable-profile change.
+description: Manual only. Use when the user explicitly invokes this skill or requests portable-profile preview, apply, check, or deployment; an update from GitHub before applying; or commit and non-force push of a named profile change. Keep each action within the requested scope.
 ---
 
 # Personal Profile Sync
@@ -40,18 +40,39 @@ applied to the source, but does not authorize bulk active-profile export.
 The sync scripts perform no Git operation. Calling `apply` is authorization for
 the scoped local profile and owned-plugin writes; it is not push authority.
 
-## Apply From A Reviewed Commit
+## Scoped Local Deployment
 
-For new portable changes, validate source and skills, run focused checks,
-preview the exact diff, inspect it, stage exact paths, and create a local
-factual commit before deployment. Reusing an existing reviewed commit does not
+Set `PROFILE_PYTHON` to the interpreter recorded in `HOST_LOCAL.md`. For an authorized skill or AGENTS change, use repeatable `--path` with exact
+manifest entries on `preview`, `apply`, and `check`, for example:
+
+```text
+"$PROFILE_PYTHON" scripts/profile_sync.py preview --path skills/personal-subagent-boundaries
+"$PROFILE_PYTHON" scripts/profile_sync.py apply --path skills/personal-subagent-boundaries
+"$PROFILE_PYTHON" scripts/profile_sync.py check --path skills/personal-subagent-boundaries
+```
+
+Use the host's recorded Python. Scoped mode excludes configuration leaves and
+plugins, accepts reviewed uncommitted source, and retains backup, lock, drift
+checks and rollback. Reconcile pre-existing active/source differences before
+applying. Git actions require separate authority; do not commit merely to deploy
+an authorized local correction. Use exact retired manifest entries to remove a
+skill; removing a source directory alone does not express retirement.
+
+## Full Profile Release From A Reviewed Commit
+
+For an explicitly requested full profile release, validate source and skills, run focused checks,
+preview the exact diff, inspect it, stage exact paths, and, only with Git authority, create a local
+factual commit before deployment. Without that authority, use scoped local
+deployment for approved file/skill changes; leave a full release pending. Reusing an existing reviewed commit does not
 create an empty commit.
 
 `profile_sync.py apply` owns the manifest's managed paths, exact retirement
 paths, and configured leaf keys. It must show the resolved target, back up every
 replaced or retired leaf, use the official config writer, and finish with
-`check`. Absence from the portable source is not retirement; delete only entries
-explicitly listed in `retired_files` or `retired_trees`.
+`check`. Retiring an entire managed entry requires an explicit retirement entry. An active
+managed directory mirrors the source tree, including in scoped mode. Files found
+only in its installed copy appear as DELETE in preview and are backed up before
+removal. Review those paths before applying.
 
 `plugin_sync.py apply` owns only the repository's `profile-kit` marketplace,
 `personal-long-job-supervisor@profile-kit`, and the exact retired selector

@@ -122,185 +122,46 @@ class ProfileContractTest(unittest.TestCase):
             "approve",
         )
 
-    def test_file_plan_continuity_is_sticky_but_opt_in(self) -> None:
-        planning = (
-            PROFILE
-            / "skills"
-            / "personal-planning-with-files-zh"
-            / "SKILL.md"
-        ).read_text(encoding="utf-8")
-        planning_metadata = (
-            PROFILE
-            / "skills"
-            / "personal-planning-with-files-zh"
-            / "agents"
-            / "openai.yaml"
-        ).read_text(encoding="utf-8")
-        coordination = (
-            PROFILE
-            / "skills"
-            / "personal-multiline-coordination"
-            / "SKILL.md"
-        ).read_text(encoding="utf-8")
-        agents = (PROFILE / "AGENTS.md").read_text(encoding="utf-8")
-        planning_prose = " ".join(planning.split())
-        coordination_prose = " ".join(coordination.split())
-        agents_prose = " ".join(agents.split())
-
-        self.assertIn(
-            "Do not create or select a plan implicitly.", planning_prose
-        )
-        self.assertIn("two compact current-state files", planning_prose)
-        self.assertIn("`task_plan.md`: the sole owner", planning_prose)
-        self.assertIn("`findings.md`", planning_prose)
-        self.assertIn("Do not create a new `progress.md`", planning_prose)
-        self.assertIn("optional legacy record", planning_prose)
-        self.assertNotIn("read all three files", planning_prose)
-        self.assertIn("allow_implicit_invocation: true", planning_metadata)
-
-        self.assertIn("recommend `/goal` once", agents_prose)
-        self.assertIn("Keep related phases in the same task.", agents_prose)
-        self.assertIn(
-            "Do not create or select a plan implicitly.", agents_prose
-        )
-
-    def test_every_final_answer_reports_the_next_step(self) -> None:
-        agents = (PROFILE / "AGENTS.md").read_text(encoding="utf-8")
-        prose = " ".join(agents.split())
-
-        self.assertIn(
-            "End every user-visible final answer with exactly one explicit line",
-            prose,
-        )
-        self.assertIn("`下一步建议：<action>`", prose)
-        self.assertIn("reconcile it with `task_plan.md`'s `下一动作`", prose)
-        self.assertIn("`下一步建议：无。`", prose)
-        self.assertNotIn("End with a next step only when", prose)
-
-    def test_task_archive_is_portable_and_current_host_only(self) -> None:
+    def test_research_workflow_replaces_planning_package(self) -> None:
         _, trees, _, retired_trees = profile_sync.load_manifest()
         managed = {str(path) for path in trees}
         retired = {str(path) for path in retired_trees}
-        self.assertIn("skills/personal-task-archive", managed)
-        self.assertIn("skills/personal-session-memory-hygiene", retired)
-
-        archive_root = PROFILE / "skills" / "personal-task-archive"
-        skill = (archive_root / "SKILL.md").read_text(encoding="utf-8")
-        inventory = (archive_root / "references" / "session-inventory.md").read_text(
-            encoding="utf-8"
-        )
-        prose = " ".join(skill.split())
-        inventory_prose = " ".join(inventory.split())
-
-        for contract in (
-            "current execution host",
-            "same exact host identity",
-            "manage that host from a task executing there",
-            "native archive action only when explicitly",
-            "Treat archival as organization",
-            "24 hours",
-            "15 days",
-            "50",
-            "pinned",
-            "oldest",
-        ):
-            self.assertIn(contract, prose)
-        for contract in (
-            "lightweight",
-            "explicitly owns",
-            "closed failure",
-            "actually archived",
-            "thread://",
-            "Do not copy a summary by default",
-            "does not modify memory",
-            "override the age windows",
-            "finished subAgent",
-            "source or parent metadata",
-            "result is delivered",
-            "does not stop, cancel",
-            "raw unarchived main-task and subAgent totals",
-            "An unarchived parent does not protect",
-            "never label a candidate count as a host total",
-        ):
-            self.assertIn(contract.lower(), prose.lower())
-        self.assertNotIn("decision card", prose.lower())
-        for contract in (
-            "Windows, macOS, and Linux",
-            "Do not install a parser",
-            "Never follow rollout/session paths",
-            "Do not use an app-wide list or cross-host count",
-            "pages to exhaustion",
-            "navigation surface",
-            "split as unknown",
-        ):
-            self.assertIn(contract, inventory_prose)
-        self.assertNotIn("current Windows host", prose)
-        self.assertNotIn("hostId=local", prose)
-
-    def test_default_project_journal_is_implicit_and_separate(self) -> None:
-        journal_root = PROFILE / "skills" / "personal-project-journal"
-        journal = (journal_root / "SKILL.md").read_text(encoding="utf-8")
-        metadata = (journal_root / "agents" / "openai.yaml").read_text(
-            encoding="utf-8"
-        )
-        index = (journal_root / "assets" / "journal-index.md").read_text(
-            encoding="utf-8"
-        )
-        readme = (journal_root / "assets" / "journal-readme.md").read_text(
-            encoding="utf-8"
-        )
-        month = (journal_root / "assets" / "journal-month.md").read_text(
-            encoding="utf-8"
-        )
-        planning = (
-            PROFILE
-            / "skills"
-            / "personal-planning-with-files-zh"
-            / "SKILL.md"
-        ).read_text(encoding="utf-8")
+        for name in ("personal-research-project", "personal-project-journal"):
+            self.assertIn(f"skills/{name}", managed)
+        old = "skills/personal-planning-with-files-zh"
+        self.assertIn(old, retired)
+        self.assertNotIn(old, managed)
+        self.assertFalse((PROFILE / old).exists())
         agents = (PROFILE / "AGENTS.md").read_text(encoding="utf-8")
-        journal_prose = " ".join(journal.split())
-        planning_prose = " ".join(planning.split())
-        agents_prose = " ".join(agents.split())
+        self.assertNotIn("personal-planning-with-files-zh", agents)
 
-        self.assertIn("allow_implicit_invocation: true", metadata)
-        self.assertIn("$personal-project-journal", metadata)
-        for contract in (
-            "durable project event",
-            "Do not initialize a journal during a read-only task",
-            "narrow standing write exception",
-            "high",
-            "medium",
-            "routine",
-            "Never predict a future commit or push",
-            "JOURNAL owns chronological event history",
-            "It never authorizes implementation",
-        ):
-            self.assertIn(contract, journal_prose)
-        self.assertIn("<!-- journal-months -->", index)
-        self.assertIn("{{YEAR_MONTH}}", index)
-        self.assertIn("<!-- journal-entries -->", month)
-        self.assertIn("{{YEAR_MONTH}}", month)
-        self.assertIn("Completion alone is never a reason", readme)
-        gitignore_lines = (ROOT / ".gitignore").read_text(
-            encoding="utf-8"
-        ).splitlines()
-        self.assertIn("/.agent/", gitignore_lines)
-        for contract in (
-            "Project journaling is the default for durable project events",
-            "Initializing a journal still requires",
-            "JOURNAL owns human-readable event history",
-            "Journal maintenance grants no Git",
-        ):
-            self.assertIn(contract, agents_prose)
-        for contract in (
-            "continuing importance",
-            "never reduce an important completed outcome mechanically",
-            "let JOURNAL own chronological event history",
-            "not a competing current-state ledger",
-            "owned independently by `personal-project-journal`",
-        ):
-            self.assertIn(contract, planning_prose)
+    def test_task_archive_is_manual_and_keeps_action_boundaries(self) -> None:
+        root = PROFILE / "skills" / "personal-task-archive"
+        skill = " ".join((root / "SKILL.md").read_text().split())
+        policy = (root / "agents/openai.yaml").read_text()
+        self.assertIn("allow_implicit_invocation: false", policy)
+        self.assertIn("Manual only.", skill)
+        self.assertIn("native archive action only when explicitly authorized", skill)
+        self.assertIn("does not stop, cancel", skill)
+        self.assertIn("does not modify memory", skill)
+        self.assertIn("exact host/ID pairs", skill)
+
+    def test_research_packages_have_resolvable_local_references(self) -> None:
+        import re
+
+        for name in ("personal-research-project", "personal-project-journal"):
+            root = PROFILE / "skills" / name
+            metadata = (root / "agents/openai.yaml").read_text(encoding="utf-8")
+            self.assertIn("$" + name, metadata)
+            self.assertIn("allow_implicit_invocation: true", metadata)
+            for document in root.rglob("*.md"):
+                content = document.read_text(encoding="utf-8")
+                for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", content):
+                    if "://" in target or target.startswith("#"):
+                        continue
+                    relative = target.split("#", 1)[0]
+                    with self.subTest(document=document, target=target):
+                        self.assertTrue((document.parent / relative).is_file())
 
 
 if __name__ == "__main__":

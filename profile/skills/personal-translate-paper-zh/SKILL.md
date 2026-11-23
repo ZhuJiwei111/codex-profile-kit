@@ -18,6 +18,21 @@ Default outputs:
 - Table assets: `input-name.assets/table-NNN-page-NNN.png`
 - Final translation: `input-name.zh.md` in the same directory as the source PDF
 
+## Scope And Reuse
+
+For a full paper, follow the complete output contract below. For an explicitly
+requested section or excerpt, translate only that scope and its associated
+figures/tables; do not regenerate the whole paper. Reuse an already reviewed
+extraction and assets when their source and requested scope are unchanged.
+Preserve user edits in existing translations. New extraction or changed crops
+require checking the affected material, not automatically repeating every check.
+
+If the input is extracted text rather than a PDF, preserve the supplied source
+and state which visual or layout checks cannot be performed; request the PDF
+only when those checks are needed for the requested deliverable. A deterministic
+validator checks structure and source retention, not semantic translation quality;
+review terminology, negation, conditions and quantitative meaning separately.
+
 ## Workflow
 
 1. Locate the paper PDF the user named. If multiple PDFs match or the target is unclear, ask the user to choose.

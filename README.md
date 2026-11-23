@@ -10,7 +10,7 @@ active profile 不是反向导出源。
 
 ## 管理范围
 
-- `profile/`：按目标相对路径保存 `AGENTS.md`、三个 hooks 和 personal
+- `profile/`：按目标相对路径保存 `AGENTS.md`、一个启用的 Conda base hook（计时器守卫已解除注册；旧 runner 暂留至新会话确认） 和 personal
   skills，以及固定版本、经审查的第三方 skills。
 - `profile-manifest.toml`：列出受管 file/tree 和经过审阅的精确退役
   file/tree；除这些退役项外，相邻的外部 skill、plugin cache 和未列出文件不受
@@ -29,7 +29,7 @@ active profile 不是反向导出源。
 
 仓库不管理 live `memories/MEMORY.md`、`model_reasoning_effort`、`service_tier`、
 `HOST_LOCAL.md`、连接合同、credentials、auth/session/history、trust、cache、
-plugin 安装或认证、MCP、sandbox、TUI、项目配置和其他未列出的 `config.toml`
+其他插件的安装与认证、全局 MCP 配置、sandbox、TUI、项目配置和其他未列出的 `config.toml`
 键。前三项是会在同步后继续变化的主机/产品运行时状态；已有值保持原样。
 同步器不覆盖或删除 `service_tier`，启动配置 API 时也不临时改成 `fast`。
 
@@ -46,6 +46,8 @@ PROFILE_PYTHON=/absolute/path/from/HOST_LOCAL
 "$PROFILE_PYTHON" scripts/profile_sync.py apply
 ```
 
+完整同步另通过 Codex CLI 检查并按需安装本仓库的 `personal-long-job-supervisor@profile-kit` 和登记其 marketplace；该插件自带的 MCP 配置随包提供。
+
 - `preview`：显示解析后的官方 `$CODEX_HOME`、hook runtime 和精确
   add/change/delete，存在 drift 仍返回 0。
 - `check`：完全一致才返回 0。
@@ -55,12 +57,21 @@ PROFILE_PYTHON=/absolute/path/from/HOST_LOCAL
   通过 `config/batchWrite` 写入，随后检查；失败时尽力恢复本批已改目标。调用
   `apply` 本身就是本机部署授权。
 - manifest 中的精确退役项会显示为 `DELETE`，并与普通变更一样先进入上述备份；
-  仓库中普通文件或 skill 的缺失不会触发删除。
+  删除整个受管入口需显式退役。仍列在 manifest 中的受管目录按整树同步：仅安装副本里存在的文件会列为 `DELETE`，应用时先备份再删除。`--path` 选择该目录时规则相同；部署前用相同参数预览。
 
 脚本不提供 target override、active→repo export、Git 写操作、JSON 输出、备份清理
 或永久远程 fan-out。备份和部署锁文件不会自动删除。
 
-## 修改与 Git
+## 精确更新与 Git
+
+局部修改使用重复的 `--path <manifest精确条目>`，例如
+`"$PROFILE_PYTHON" scripts/profile_sync.py apply --path skills/personal-project-journal`。
+`preview`、`check` 使用同一选项。此模式仅处理指定文件或树，不触碰配置及插件；
+允许经审阅的未提交源文件，保留短部署锁、备份、变更检查和失败回滚。
+部署前先核 active/source 已有差异。完整发布仍沿下面的已提交版本流程，
+但 Git 提交必须另有授权；局部部署不会为了满足发布门槛自动提交。
+
+## 完整发布与 Git
 
 直接修改 portable 源。新变更在部署前：
 

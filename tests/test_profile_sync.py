@@ -299,6 +299,40 @@ class ProfileSyncCliTest(unittest.TestCase):
                 profile_sync.apply_profile(profile_sync.compare(codex_home))
             )
 
+    def test_scoped_apply_preserves_unselected_drift_and_config(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory) / "home"
+            home.mkdir()
+            (home / "AGENTS.md").write_text("old")
+            (home / "config.toml").write_text('model = "user-choice"\n')
+            other = home / "skills" / "grilling" / "SKILL.md"
+            other.parent.mkdir(parents=True)
+            other.write_text("other task")
+            state = profile_sync.compare(home, ("AGENTS.md",))
+            with mock.patch.object(profile_sync, "validate_hook_runtime") as hook_check:
+                backup = profile_sync.apply_profile(state)
+                hook_check.assert_not_called()
+            self.assertIsNotNone(backup)
+            self.assertEqual((home / "AGENTS.md").read_bytes(), (ROOT / "profile/AGENTS.md").read_bytes())
+            self.assertEqual(other.read_text(), "other task")
+            self.assertEqual((home / "config.toml").read_text(), 'model = "user-choice"\n')
+            self.assertEqual(profile_sync.compare(home, ("AGENTS.md",)).changes, ())
+
+    def test_scoped_apply_rejects_selected_target_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            (home / "AGENTS.md").write_text("old")
+            state = profile_sync.compare(home, ("AGENTS.md",))
+            (home / "AGENTS.md").write_text("concurrent edit")
+            with self.assertRaisesRegex(profile_sync.SyncError, "changed after"):
+                profile_sync.apply_profile(state)
+            self.assertEqual((home / "AGENTS.md").read_text(), "concurrent edit")
+
+    def test_scoped_sync_rejects_unmanaged_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(profile_sync.SyncError, "exact manifest"):
+                profile_sync.compare(Path(directory), ("../HOST_LOCAL.md",))
+
     def test_git_source_revision_requires_a_clean_committed_head(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

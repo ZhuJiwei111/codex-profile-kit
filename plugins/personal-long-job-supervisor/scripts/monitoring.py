@@ -11,7 +11,7 @@ import subprocess
 import sys
 import time
 
-from durable import append_event, locked_events, utc_now
+from durable import RELEASE_VERSION, read_json, append_event, locked_events, utc_now
 
 
 class MonitorError(RuntimeError):
@@ -74,6 +74,7 @@ class NvidiaAdapter:
         if result.returncode:
             raise MonitorError((result.stderr or result.stdout).strip()[:512])
         utilization: dict[int, float] = {}
+        unavailable: set[int] = set()
         try:
             for line in result.stdout.splitlines():
                 stripped = line.strip()
@@ -85,11 +86,15 @@ class NvidiaAdapter:
                 gpu_index, pid = int(fields[0]), int(fields[1])
                 if pid not in target_pids:
                     continue
-                sm = 0.0 if fields[3] == "-" else float(fields[3])
+                if fields[3] == "-":
+                    unavailable.add(gpu_index)
+                    continue
+                sm = float(fields[3])
                 utilization[gpu_index] = min(100.0, utilization.get(gpu_index, 0.0) + sm)
         except (TypeError, ValueError) as error:
             raise MonitorError("nvidia-smi pmon returned invalid process data") from error
-        return utilization
+        # An unsupported sample for any target process makes the aggregate unknown.
+        return {index: value for index, value in utilization.items() if index not in unavailable}
 
 
 def discover_capabilities(adapter: NvidiaAdapter | None = None) -> dict:
@@ -107,7 +112,9 @@ def discover_capabilities(adapter: NvidiaAdapter | None = None) -> dict:
         try:
             devices = adapter.devices()
             adapter.process_sample(set())
-            gpu.update(available=True, process_attribution=True, devices=devices)
+            gpu.update(available=True, process_attribution=True, devices=devices,
+                       target_attribution="not_verified_by_discovery",
+                       pid_identity_domain="requires_deployment_verification")
         except MonitorError as error:
             gap = str(error)[:512]
     else:
@@ -116,6 +123,7 @@ def discover_capabilities(adapter: NvidiaAdapter | None = None) -> dict:
         gpu["evidence_gap"] = gap
     return {
         "schema_version": 1,
+        "release_version": RELEASE_VERSION,
         "platform": "linux" if linux_procfs else ("darwin" if sys.platform == "darwin" else ("windows" if sys.platform == "win32" else "unsupported")),
         "procfs": linux_procfs,
         "monitors": {
@@ -238,9 +246,9 @@ def normalize_monitors(
                 {"kind", "path", "stale_after_seconds"},
                 {"startup_grace_seconds", "sample_interval_seconds"},
             )
-            path = Path(config["path"])
             if not isinstance(config["path"], str) or not config["path"]:
                 raise MonitorError("path must be a non-empty string")
+            path = Path(config["path"])
             parsed.append(
                 {
                     "monitor_id": monitor_id,
@@ -343,24 +351,37 @@ class MonitorEngine:
             error["alerted"] = True
 
     def _sample_gpu(self, data, monitor, now):
+        state = data.setdefault("monitor_states", {}).setdefault(
+            monitor["monitor_id"], {"kind": monitor["kind"], "subjects": {}})
         try:
             observed = self.adapter.process_sample(process_tree(self.target_pid))
             indices = {device["uuid"]: device["index"] for device in self.adapter.devices()}
-            state = data.setdefault("monitor_states", {}).setdefault(monitor["monitor_id"], {"kind": monitor["kind"], "subjects": {}})
-            state.pop("probe_error", None)
         except MonitorError as error:
+            for subject in state.get("subjects", {}).values():
+                subject.update(condition_since=None, alerted=False, active=False)
             self._probe_error(data, monitor, now, error)
             return
         statuses = []
+        gaps = []
         for device in monitor["devices"]:
             index = indices.get(device["uuid"])
-            if index is None:
-                self._probe_error(data, monitor, now, f"NVIDIA device disappeared: {device['uuid']}")
-                return
-            utilization = observed.get(index, 0.0)
+            if index is None or index not in observed:
+                gaps.append(device["uuid"])
+                subject = state["subjects"].setdefault(device["uuid"], {})
+                subject.update(condition_since=None, alerted=False, active=False)
+                continue
+            utilization = observed[index]
             idle = utilization < float(monitor["utilization_below_percent"])
             statuses.append((device, index, utilization, idle))
-        if monitor["mode"] == "all" and not all(item[3] for item in statuses):
+        if gaps:
+            self._probe_error(data, monitor, now,
+                "no attributable GPU utilization sample for " + ", ".join(gaps) +
+                "; target PID mapping, device or utilization may be unavailable; absence is not zero")
+        else:
+            state.pop("probe_error", None)
+        # Independent healthy devices remain observable in 'any' mode.
+        # 'all' requires a complete, simultaneously idle set of samples.
+        if monitor["mode"] == "all" and (gaps or not all(item[3] for item in statuses)):
             statuses = [(d, i, u, False) for d, i, u, _ in statuses]
         for device, index, utilization, idle in statuses:
             self._update_subject(
@@ -411,20 +432,27 @@ class MonitorEngine:
 
     def tick(self, now: float | None = None) -> None:
         now = now if now is not None else time.time()
-        with locked_events(self.job_dir) as data:
-            states = data.setdefault("monitor_states", {})
-            for monitor in self.registration.get("monitors", []):
-                state = states.get(monitor["monitor_id"], {})
-                last = state.get("last_dispatch_epoch", 0)
-                if now - float(last) < float(monitor["sample_interval_seconds"]):
-                    continue
-                state = states.setdefault(monitor["monitor_id"], {"kind": monitor["kind"], "subjects": {}})
-                state["last_dispatch_epoch"] = now
-                if now < self.registration["created_epoch"] + float(monitor.get("startup_grace_seconds", 0)):
-                    continue
-                if monitor["kind"] == "gpu_process_idle":
-                    self._sample_gpu(data, monitor, now)
-                elif monitor["kind"] == "disk_free":
-                    self._sample_disk(data, monitor, now)
-                else:
-                    self._sample_heartbeat(data, monitor, now)
+        data = {"monitor_states": read_json(self.job_dir / "events.json").get("monitor_states", {}),
+                "events": [], "next_event_id": 1}
+        states = data.setdefault("monitor_states", {})
+        for monitor in self.registration.get("monitors", []):
+            state = states.get(monitor["monitor_id"], {})
+            last = state.get("last_dispatch_epoch", 0)
+            if now - float(last) < float(monitor["sample_interval_seconds"]):
+                continue
+            state = states.setdefault(monitor["monitor_id"], {"kind": monitor["kind"], "subjects": {}})
+            state["last_dispatch_epoch"] = now
+            if now < self.registration["created_epoch"] + float(monitor.get("startup_grace_seconds", 0)):
+                continue
+            if monitor["kind"] == "gpu_process_idle":
+                self._sample_gpu(data, monitor, now)
+            elif monitor["kind"] == "disk_free":
+                self._sample_disk(data, monitor, now)
+            else:
+                self._sample_heartbeat(data, monitor, now)
+        with locked_events(self.job_dir) as current:
+            current["monitor_states"] = data["monitor_states"]
+            for event in data["events"]:
+                fields = {key: value for key, value in event.items()
+                          if key not in ("event_id", "event_type", "job_id", "created_at", "acknowledged_at")}
+                append_event(current, self.registration, event["event_type"], **fields)

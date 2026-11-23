@@ -162,7 +162,7 @@ class JobStoreTest(unittest.TestCase):
         first, second = self.start(), self.start()
         ready = threading.Event()
         errors = []
-        original = self.store.inspect_job
+        original = self.store._observe_job
 
         def inspect(job_id):
             ready.set()
@@ -174,7 +174,7 @@ class JobStoreTest(unittest.TestCase):
             except SupervisorError as error:
                 errors.append(str(error))
 
-        with mock.patch.object(self.store, "inspect_job", side_effect=inspect):
+        with mock.patch.object(self.store, "_observe_job", side_effect=inspect):
             thread = threading.Thread(target=wait, daemon=True)
             thread.start()
             self.assertTrue(ready.wait(1))

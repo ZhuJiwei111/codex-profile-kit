@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -36,7 +38,6 @@ class FakeCodex:
         self.calls: list[tuple[str, ...]] = []
 
     def __call__(self, codex_home: Path, arguments: list[str]) -> dict:
-        del codex_home
         self.calls.append(tuple(arguments))
         if arguments == ["plugin", "marketplace", "list", "--json"]:
             return {"marketplaces": list(self.marketplaces)}
@@ -49,6 +50,11 @@ class FakeCodex:
             )
             return {"name": plugin_sync.MARKETPLACE_NAME}
         if arguments[:3] == ["plugin", "add", plugin_sync.PLUGIN_ID]:
+            cache = codex_home / "plugins/cache/profile-kit" / plugin_sync.PLUGIN_NAME / plugin_sync.validate_source()
+            shutil.copytree(plugin_sync.PLUGIN_ROOT / "scripts", cache / "scripts", dirs_exist_ok=True)
+            template = plugin_sync.read_json(plugin_sync.PLUGIN_MCP_TEMPLATE)
+            template["mcpServers"]["long_job_supervisor"]["command"] = sys.executable
+            (cache / ".mcp.json").write_text(json.dumps(template))
             self.installed = [
                 item for item in self.installed if item.get("pluginId") != plugin_sync.PLUGIN_ID
             ]
@@ -210,6 +216,19 @@ class PluginSyncTest(unittest.TestCase):
         self.assertTrue(
             any(item.get("pluginId") == "unrelated@example" for item in fake.installed)
         )
+
+    def test_check_detects_and_apply_repairs_missing_installed_dependency(self):
+        fake = FakeCodex()
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(
+            plugin_sync, "render_mcp_config"
+        ), mock.patch.object(plugin_sync.profile_sync, "git_source_revision", return_value=("a" * 40, False)):
+            home = Path(directory)
+            installed = plugin_sync.apply_plugins(home, runner=fake)
+            cache = home / "plugins/cache/profile-kit" / plugin_sync.PLUGIN_NAME / installed.version
+            (cache / "scripts/remote.py").unlink()
+            changes = plugin_sync.inspect_state(home, runner=fake).changes
+            self.assertEqual(changes, (plugin_sync.Change("CHANGE", f"plugin:{plugin_sync.PLUGIN_ID}"),))
+            self.assertFalse(plugin_sync.apply_plugins(home, runner=fake).changes)
 
     def test_apply_blocks_marketplace_name_collision(self) -> None:
         fake = FakeCodex()

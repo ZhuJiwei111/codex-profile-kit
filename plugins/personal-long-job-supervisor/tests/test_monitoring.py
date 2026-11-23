@@ -50,6 +50,12 @@ class MonitorConfigTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_heartbeat_path_rejects_non_strings_as_configuration_errors(self):
+        for path in (None, 123, [], {}, ""):
+            with self.subTest(path=path), self.assertRaisesRegex(MonitorError, "non-empty string"):
+                normalize_monitors([{"kind": "heartbeat_stale", "path": path,
+                                     "stale_after_seconds": 60}], self.cwd)
+
     @mock.patch("monitoring.linux_process_tree_available", return_value=True)
     def test_gpu_index_normalizes_to_stable_uuid(self, _available):
         monitors = normalize_monitors(
@@ -111,6 +117,17 @@ class MonitorConfigTest(unittest.TestCase):
         )
         observed = NvidiaAdapter("/usr/bin/nvidia-smi").process_sample({101, 102})
         self.assertEqual({0: 7.0, 1: 4.0}, observed)
+
+    @mock.patch("monitoring._run")
+    def test_missing_and_unsupported_samples_are_not_zero(self, run):
+        adapter = NvidiaAdapter("/usr/bin/nvidia-smi")
+        for output in ("0 999 C 0 0 0 0 other\n", "0 101 C - - - - python\n",
+                       "0 101 C 0 0 0 0 python\n0 102 C - - - - python\n"):
+            with self.subTest(output=output):
+                run.return_value = subprocess.CompletedProcess([], 0, output, "")
+                self.assertEqual({}, adapter.process_sample({101, 102}))
+        run.return_value = subprocess.CompletedProcess([], 0, "0 101 C 0 0 0 0 python\n", "")
+        self.assertEqual({0: 0.0}, adapter.process_sample({101}))
 
     @mock.patch("monitoring.linux_process_tree_available", return_value=True)
     def test_capabilities_report_process_attribution_and_devices(self, _available):
@@ -213,6 +230,48 @@ class MonitorEngineTest(unittest.TestCase):
         engine.tick(131)
         self.assertEqual("gpu_probe_error", self.events()[0]["reason"])
         self.assertEqual("driver query unavailable", self.events()[0]["evidence_gap"])
+
+    @mock.patch("monitoring.process_tree", return_value={123})
+    def test_attribution_gap_is_probe_error_and_breaks_idle_episode(self, tree):
+        self.registration["monitors"] = [{
+            "monitor_id": "m1", "kind": "gpu_process_idle",
+            "devices": [self.adapter.devices()[0]], "mode": "any",
+            "utilization_below_percent": 5.0, "duration_seconds": 10.0,
+            "startup_grace_seconds": 0.0, "sample_interval_seconds": 0.1,
+        }]
+        engine = MonitorEngine(self.job_dir, self.registration, 123, self.adapter)
+        engine.tick(100)
+        self.adapter.observed = {}
+        engine.tick(105)
+        engine.tick(136)
+        self.assertEqual(["gpu_probe_error"], [event["reason"] for event in self.events()])
+        self.adapter.observed = {0: 0.0}
+        engine.tick(137)
+        self.assertEqual(1, len(self.events()))
+        engine.tick(148)
+        self.assertEqual(["gpu_probe_error", "gpu_process_idle"],
+                         [event["reason"] for event in self.events()])
+
+    @mock.patch("monitoring.process_tree", return_value={123})
+    def test_partial_gap_keeps_any_device_observation_but_breaks_all(self, tree):
+        for mode in ("any", "all"):
+            with self.subTest(mode=mode):
+                atomic_write_json(self.job_dir / "events.json", {
+                    "schema_version": 3, "next_event_id": 1, "events": [], "monitor_states": {}})
+                self.registration["monitors"] = [{
+                    "monitor_id": "m1", "kind": "gpu_process_idle",
+                    "devices": self.adapter.devices(), "mode": mode,
+                    "utilization_below_percent": 5.0, "duration_seconds": 10.0,
+                    "startup_grace_seconds": 0.0, "sample_interval_seconds": 0.1,
+                }]
+                self.adapter.observed = {0: 0.0}
+                engine = MonitorEngine(self.job_dir, self.registration, 123, self.adapter)
+                engine.tick(100)
+                engine.tick(111)
+                engine.tick(131)
+                idle = [e for e in self.events() if e["reason"] == "gpu_process_idle"]
+                self.assertEqual(["GPU-aaa"] if mode == "any" else [], [e["subject"] for e in idle])
+                self.assertEqual(1, sum(e["reason"] == "gpu_probe_error" for e in self.events()))
 
     def test_disk_and_heartbeat_are_filesystem_and_declared_path_scoped(self):
         heartbeat = self.job_dir / "heartbeat"

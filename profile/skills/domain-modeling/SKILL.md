@@ -12,7 +12,9 @@ the behavior. Distinguish current facts, proposed terms, and user decisions.
 Use the repository's existing glossary and ADR owners, including work-line
 files such as `.agent/GLOSSARY.md` or an established CONTEXT.md. Do not migrate
 or duplicate them to follow a preferred filename. If a new owner is needed
-within authorized documentation work, prefer GLOSSARY.md and create only the
+within authorized documentation work, follow the project convention (for personal
+research projects, see [project records](../personal-project-journal/references/project-records.md)).
+Where no convention exists, prefer GLOSSARY.md. Create only the
 material that has actually been settled.
 
 For discussion-only requests, propose terms and surface contradictions without

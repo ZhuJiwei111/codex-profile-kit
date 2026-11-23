@@ -1,31 +1,47 @@
 ---
 name: grilling
-description: Stress-test a plan or design when the user asks for an interview, grilling, or consequential requirement clarification.
+description: Clarify consequential unresolved choices in a plan or design through focused discussion, with concrete recommendations and alternatives. Use for requested interviews or material requirement clarification, not routine implementation choices.
 ---
 
-Ask one material decision at a time, with a concrete recommendation and a small
-set of real alternatives. Resolve prerequisite choices before downstream ones.
-Explore discoverable facts directly rather than asking the user; use a bounded
-worker only when delegation is authorized and useful.
+Clarify the actual plan, not just its labels. Explain any mismatch between what
+the user expects and what the proposed work entails, such as a check that would
+actually train another model. Discuss only choices whose answers materially
+change the goal, design, evidence interpretation, scope, major investment or
+delivery and cannot already
+be resolved from evidence or settled preferences. Investigate discoverable facts;
+handle minor implementation choices within the agreed scope independently.
+Maintaining this skill or mentioning it as a future example does not start an
+interview with the user.
 
-Wait for the user's explicit answer. Preserve settled choices and do not reopen
-them without new evidence. Prefer concrete examples to abstract questions the
-user cannot meaningfully answer. Stop once no open choice could materially
-change the outcome, scope, or acceptance; do not explore a hypothetical tree to
-exhaustion. Summarize the agreed design, evidence, and remaining assumptions.
+When a material choice remains during a design discussion, ask the user directly
+what they want to achieve or which tradeoff they prefer. Use their answer to
+shape the plan and decide what still needs discussion.
 
-For multi-turn continuity, reuse the existing plan or decision owner. Bind a
-short answer to the complete option shown. Reread settled decisions after
-compaction or handoff. If the user requests a durable record and none exists,
-keep one compact task-owned note with scope, settled choices and their evidence,
-open questions, and the next material decision. Do not create another ledger
-beside an existing owner.
+Group related questions that can usefully be answered together. Sequence them
+only when an earlier answer changes the meaningful downstream options; do not
+require one decision per turn or exhaust hypothetical branches. Give a concrete
+recommendation, real alternatives and their important consequences. Use a small
+comparison table when it clarifies differences, otherwise concise prose; do not
+impose a question count, fixed questionnaire or report format.
 
-If the request also includes glossary or ADR maintenance, use
-`../domain-modeling/SKILL.md` for that document scope; an interview by itself
-does not create domain documents.
+Wait for explicit answers to choices that require the user; unanswered choices
+are not agreement. Continue independent, already-authorized work that does not
+depend on them. Preserve settled decisions, bind short replies to the actual
+options shown, and do not reopen them without new evidence. Stop asking when no
+material choice remains; summarize the agreed scope and relevant assumptions.
+If the understandable plan and execution are already authorized, proceed without
+an additional confirmation ceremony.
 
-This interview alone does not authorize implementation, new files, or external
-actions. Respect authority already given for a next step.
+Reuse the existing decision owner across turns and handoffs. For research plans,
+update confirmed decisions through [project records](../personal-project-journal/references/cards.md#更新和失败)
+when the current assignment includes maintaining that record. A discussion-only
+request stays in chat, including when this chat previously edited the card. Record the selected design, not the interview transcript. For other
+work, use the existing authorized record or a user-requested note, not a parallel
+plan or decision ledger. Recording a design does not authorize its execution.
 
-Read `references/source-notes.md` only when maintaining provenance.
+If the request includes glossary or ADR maintenance, use
+[domain-modeling](../domain-modeling/SKILL.md) for that document scope. Discussion
+alone does not authorize implementation or external actions; honor authority
+already given for the next step. Delegate only when authorized and useful.
+
+Read references/source-notes.md only for provenance maintenance.

@@ -1,6 +1,6 @@
 interface:
   display_name: "Personal Task Archive"
-  short_description: "Safely archive tasks on the current host"
+  short_description: "Manually review and archive selected chats"
   default_prompt: "Use $personal-task-archive to safely organize and archive eligible tasks on this task's current host."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

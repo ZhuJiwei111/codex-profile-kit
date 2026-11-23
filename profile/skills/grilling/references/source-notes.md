@@ -4,7 +4,7 @@ Checked: 2026-07-25.
 
 - Matt Pocock's `grilling`, `grill-me`, `grill-with-docs`, `to-spec`, and
   `to-tickets` were reviewed at
-  `ed37663cc5fbef691ddfecd080dff42f7e7e350d` (MIT). This skill keeps
+  `ed37663cc5fbef691ddfecd080dff42f7e7e350d` (MIT). The 2026-07 version kept
   recommendation-first, one-decision-at-a-time clarification while leaving
   specs and tickets to separate user-authorized work.
 - Local tasks `019f6f4d-ed8f-7661-a773-9a48e901df56` and
@@ -30,9 +30,17 @@ concrete proposals; https://github.com/mattpocock/skills/issues/893 distinguishe
 an empty question frontier from an explained design. They support bounded
 questions and a final agreed-design summary, not universal interviewing.
 
-## Consolidated entry
+## Historical consolidated entry
 
-The canonical `grilling` entry combines the reviewed Matt interview with the
+The earlier consolidated `grilling` entry combined the reviewed Matt interview with the
 local one-decision continuity rules. Chat remains the default; persistent notes
 need a requested record or an existing authorized owner. Domain documents use
 `domain-modeling` within the requested scope.
+
+## 2026-11-20 user-directed revision
+
+The user replaced one-decision-per-turn interviewing with grouped material
+questions, sequencing only genuine dependencies. Current behavior follows
+SKILL.md: investigate facts, skip low-value questions, explain actual work,
+and reuse the authorized project card for settled research decisions. The
+earlier sequencing descriptions above are provenance, not current constraints.

@@ -20,10 +20,27 @@ Before editing or removing an existing artifact, establish its owner and role.
 Use staging, a sample, or a dry run when it reduces a concrete transition risk;
 ordinary reversible work does not need all three.
 
-At completion, remove only exact task-created scratch that is no longer used
-by a process, recovery path, or handoff. Retain useful unfinished work with a
-short purpose and next-use or delete condition. Pre-existing or shared cleanup
+Disposition of the task's temporary materials is part of completion. After
+verification, remove task-created one-off scripts, inspection outputs, and
+rollback copies when no process, unfinished recovery, or handoff still needs
+them. Do this within the task's existing authority; do not leave it as a future
+cleanup suggestion or keep backups merely because a rollback was once possible.
+
+Before removal, place any necessary lasting conclusions or evidence with their
+existing project owner, retaining only what supports continued use or review.
+Do not move the entire scratch directory into an archive or create a new ledger.
+Keep private configuration and credentials out of versioned project records.
+Useful unfinished materials stay with a short reason and next-use or removal
+condition in the existing task record or handoff. Native job records follow
+the owning tool's lifecycle, not generic scratch deletion.
+
+Remove only the task's own, identified materials; pre-existing or shared cleanup
 needs explicit scope. A failed attempt is not permission to erase its only
 useful evidence or modify unrelated files.
+
+This skill owns filesystem scratch, not App-chat archival or task succession.
+Use `personal-task-archive` for authorized chat archival and
+`personal-multiline-coordination` for an actual owner handoff. Do not apply
+scratch cleanup to retained source material or another active task's outputs.
 
 Read `references/source-notes.md` only when maintaining provenance.

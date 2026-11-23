@@ -1,0 +1,11 @@
+--- a/academic-research-suite/SKILL.md
++++ b/academic-research-suite/SKILL.md
+@@ -28,7 +28,7 @@
+ 
+ Use one workflow for the requested outcome. General literature discovery uses the user-selected search tools; manuscript
+ drafting, polishing, mock review and reviewer replies use the corresponding
+-focused skills selected by the user. Nature entries are optional manual tools. PDF bilingual translation uses
++focused skills selected by the user. PDF bilingual translation uses
+ `personal-translate-paper-zh`. Use the corresponding ARS writing/review workflow
+ when the user explicitly requests ARS or an existing ARS project needs it; do not
+ run both suites for the same deliverable. Personal project organization and records belong to personal-research-project

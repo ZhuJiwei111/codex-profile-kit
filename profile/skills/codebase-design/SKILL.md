@@ -59,6 +59,20 @@ When designing an interface, ask:
 - Can I simplify the parameters?
 - Can I hide more complexity inside?
 
+## Assess Or Refactor
+
+Start from the named area or actual maintenance friction. Inspect affected callers
+and current behavior; recommend a boundary change only for a present consumer,
+observed repetition or concrete isolation need. An assessment does not authorize
+implementation. Do not create a separate report, issue tree or session unless
+requested.
+
+For an authorized refactor, use a focused before/after check and preserve public
+contracts, side-effect order, errors and numerical behavior. Prompts and config
+are behavior too. Check registration and callers before calling code dead. If a
+proposed simplification changes behavior, explain that choice separately rather
+than hiding it in cleanup. Ordinary edits do not require this design workflow.
+
 ## Principles
 
 - **Depth is a property of the interface, not the implementation.** A deep module can be internally composed of small, mockable, swappable parts — they just aren't part of the interface. A module can have **internal seams** (private to its implementation, used by its own tests) as well as the **external seam** at its interface.

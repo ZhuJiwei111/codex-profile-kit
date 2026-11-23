@@ -1,8 +1,6 @@
 # ADR Format
 
-ADRs live in `docs/adr/` and use sequential numbering: `0001-slug.md`, `0002-slug.md`, etc.
-
-Create the `docs/adr/` directory lazily — only when the first ADR is needed.
+Use the project’s decision record location and naming convention. A project with numbered ADRs might use `0001-slug.md`.
 
 ## Template
 
@@ -24,7 +22,7 @@ Only include these when they add genuine value. Most ADRs won't need them.
 
 ## Numbering
 
-Scan `docs/adr/` for the highest existing number and increment by one.
+When the project uses sequential numbers, continue the existing series in its decision record directory.
 
 ## When to offer an ADR
 

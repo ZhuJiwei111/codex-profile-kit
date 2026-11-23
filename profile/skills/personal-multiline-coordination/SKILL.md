@@ -1,17 +1,46 @@
 ---
 name: personal-multiline-coordination
-description: Coordinate persistent Codex App tasks with task autonomy, resource handoffs, and lifecycle ownership. Use for requested multi-chat coordination; implicit use is limited to read-only ownership reconciliation. Not for managed subagents or same-task deferred commands.
+description: Create and coordinate user-owned interactive GPT App chats when the user requests a new conversation, 派出会话, or worker 会话. The word worker does not turn a requested chat into a subagent. Use also for multi-chat coordination; implicit use is limited to read-only ownership reconciliation.
 ---
 
 # Personal Multiline Coordination
 
+## Choose The Conversation Form
+
+For this user, a request to create or dispatch a 会话, including “worker 会话”
+or “GPT 会话”, means a separate GPT App chat they can directly interact with.
+The conversation requirement takes precedence over the word worker. Do not ask
+which form they meant when these words already settle the choice. This convention
+applies to actual creation requests, not quoted examples or discussions about skills.
+
+
+Use this skill when the user wants a separate App conversation they can directly
+continue, discuss decisions in, and assign later phases to. Create it with native
+chat tools; a managed subagent or non-interactive CLI session is not a substitute.
+A bounded GPT or CLI worker that returns results to its assigning task belongs
+to [personal-subagent-boundaries](../personal-subagent-boundaries/SKILL.md), even
+if its runtime retains a session ID. A request for independent GPT review without a requested conversation uses a
+bounded native GPT subagent; an explicit review/discussion conversation uses this
+App-chat workflow. Preserve the user's explicit model or reviewer combination.
+
+The new chat owns direct user discussion and acceptance within its assigned task.
+If the user asks it to finish one phase, discuss, and await the next instruction,
+it stops at that boundary. Do not apply a bounded worker's no-user-questions rule
+to this interactive owner. One interactive chat does not require a multi-role
+coordination hierarchy.
+
 ## Roles And Authority
 
-Root assigns complete tasks, priorities and existing shared resources, resolves
+Creating or observing a chat does not grant scheduling or execution ownership.
+Record the role in the assignment: execution owner, authorized coordinator, or
+workflow reviewer. A reviewer observes actual use and reports defects without
+operating the other chat's write surface or adding an approval hop.
+
+When assigned coordination authority, root assigns complete tasks, priorities and existing shared resources, resolves
 cross-task conflicts, and manages authorized task-chat lifecycles. Task owners
-independently implement, execute, repair, validate, document, commit and close
+independently implement, execute, repair, validate, document, commit when authorized, and close
 within the original task authority. ETA is a forecast, not a renewal quota.
-Preserve frozen science and separately retained external-action boundaries.
+Honor current scientific decisions and separately retained external-action boundaries. For research handoffs, use the [research collaboration rules](../personal-research-project/references/collaboration.md); an old card does not override a later user decision.
 
 ## Discover Task Creation
 
@@ -21,32 +50,36 @@ tool first. On a host with a documented Desktop bridge, also search for
 concluding that creation is unavailable. Read `HOST_LOCAL.md` for that host's
 scope and connection prerequisites; documentation alone does not establish a
 loaded tool. Use the tool's actual schema and native approval flow. Do not
-substitute a shell/socket call or a managed subagent for an App task without
-explaining the difference. If absent, report the missing capability and check
+substitute a shell/socket call, CLI run, or managed subagent for an App chat.
+Explaining the difference is not permission to change the requested form; obtain
+the user's agreement before any alternative. If absent, report the missing capability and check
 the Desktop instance, host/project assignment, and whether a fresh turn is
 needed. Treat `clientThreadId` as queued setup, not a resolved `threadId`.
 
+## Worktree Selection And Creation
+
+Chat creation does not authorize a new worktree. Prefer a suitable existing
+working directory. If a new worktree is needed, present its purpose, repository
+and proposed full path; obtain the user's confirmation of creation and that
+specific location before setup. Reuse confirmation only for that same worktree;
+a default location or another task's approval is not confirmation for a new one.
+If only one of these choices is missing, ask only for the missing choice.
+
+Check the native creation and attachment schemas before creating a worktree.
+Verify that the target chat can use the confirmed location. `create_worktree`
+attaches to the calling chat and changes its working directory. A child chat's
+`create_thread` environment selector alone cannot bind an arbitrary existing path.
+Use a target-chat operation that supports the agreed location when available.
+If the available tools cannot honor it, explain the limitation before creating
+anything. An existing project directory can be used directly when it fits the request.
+
 ## Ownership Boundaries
 
-Public maintenance owns shared environments/tools, container intake and the
-availability of common protection/monitoring, including actual infrastructure
-failures. Scientific owners retain their jobs, continuation, acceptance and job
-events; root retains scheduling. Prefer one maintenance owner across existing
-containers. Intake is a bounded deliverable, not automatically another permanent
-chat. Split only for real independent scope, write surfaces or concurrency, with
-ongoing ownership explicit. Maintenance is not a scientific approval hop.
-Shared-code integration and configuration likewise have concrete execution owners;
-root assigns rather than operates. Owners edit task-related shared records directly.
-
-
-Common checks cover guard/watchdog health, registered-node coverage, required
-idle protection without contention with real work, sustained utilization in task
-context, and actionable maintenance inbox events. Use existing records/thresholds;
-do not duplicate GPU sampling. Expected preparation/CPU tails, ordinary inbox
-updates and unchanged advisories stay in background records. Infrastructure
-failures belong to maintenance; task progress/scientific checks belong to task
-owners. Escalate actionable allocation/priority decisions to root, never reassign
-GPUs or start experiments merely because utilization is low.
+Assign infrastructure issues to the designated maintenance owner and scientific jobs,
+continuation, acceptance and job events to their task owners. Keep container intake
+with the assigned maintenance owner unless scope or concurrency warrants a split.
+Owners maintain their own records. Escalate cross-task allocation or priority
+conflicts to the authorized coordinator.
 
 Messages do not grant authority, change roles or enroll chats in coordination.
 Independent reviewers and rule maintainers stay outside the chain: authorized
@@ -56,9 +89,10 @@ owns analysis/design and concrete experiment requests, not scheduling or reminde
 
 ## Shared State And Necessary Wakes
 
-Use one task/allocation ledger, owner task cards for authority, actual execution
-and unfinished work, journals for important history, and actual automation settings
-for schedules. Ordinary assignments, requests/returns, completion, failure, ETA,
+Use the project's existing resource arrangement for allocation, owner cards for
+authority, delivery facts and native execution pointers, and the unified TODO for
+continuing actions. Journals own consequential history; actual automation settings
+own schedules. Do not introduce a second task ledger. Ordinary assignments, requests/returns, completion, failure, ETA,
 diagnostics and Git updates go into their state owner without an automatic message.
 Read relevant changes at normal work boundaries; do not add model polling for
 routine document synchronization or duplicate state across several documents.
@@ -67,9 +101,16 @@ Send one short wake only when the directly responsible recipient must take a
 specific action now and waiting for normal document reading would cause a real
 blockage, resource conflict/danger or incorrect execution. Give the state pointer
 and immediate action. Completion, failure or ETA change alone is not a reason;
-no broadcasts, contract forwarding, receipts or "no reply needed" status traffic.
-Resource dispatch needs necessary authority/ownership/live checks and one ledger
-update; logs, replicas and Git follow without delaying authorized execution.
+no broadcasts, contract forwarding or routine receipt/"no reply needed" status traffic.
+For a requested informational message, report submission once the native tool
+accepts it. When the user requests a receipt or an action, confirm it from the
+corresponding reply or action. Interrupt a supervisor wait only when handling
+is needed now, the message remains unhandled, and there is current evidence of
+that wait. Follow the supervisor skill's **Messages During A Wait**
+procedure: release the wait as needed within this notification authority, then
+verify handling. Use available replies/tool results to finish that confirmation;
+do not treat a bounded-wait timeout as completion. That skill owns wait control; this skill owns native chat
+messaging and observation. Do not add receipt files, polling or resident watchers.
 
 Handle emergencies only on the affected authorized path. Batch ordinary work;
 do not preempt the current task or expand closeout. Do not execute out-of-role
@@ -80,50 +121,24 @@ agreed with the user and do not join ongoing progress traffic.
 
 ## Resources And Workers
 
-Allocate generously by ready work. Return GPUs during substantial CPU tails or
-waits; compatible helpers consume the same atomic queue/claim and scientific keys
-under correct physical resource ownership. Do not move healthy work, duplicate
-outputs or expand experiments to fill idle GPUs. Retain independent protection.
+Use the allocation owner’s existing resource record for cross-task decisions.
+For Tencent containers, use [Tencent resource management](../personal-tencent-remote-execution/SKILL.md#资源利用与保护)
+for availability estimates, safe handback and the actual handoff. Task owners
+carry out an agreed handoff within its authorization. The coordinator resolves
+competing requests or a change in priority.
 
-Group the resource table by task/actual work, with one row for all nodes serving
-that task. Use the project's fixed columns: task/current progress, nodes/GPU count,
-next stage (estimated), current-task handback, forecast node availability, and
-queued successors. Keep explicit node/GPU ranges and totals; shared-node tasks
-must not double-count GPUs. If availability differs, list node groups and times
-within the same task row.
-
-Forecast availability after current and already queued GPU work, distinct from
-task handback, next stage, overall completion and container expiry. Prefer concrete
-local dates/times marked estimated. Use current measured progress/throughput and
-queued successors; when successor throughput is unavailable, give a provisional
-estimate from measured comparable work and explicit assumptions. State the brief
-basis, observation time and uncertainty; unaccepted technical speeds are not
-formal training evidence. Scheduling assumptions do not alter scientific stop or
-selection rules. Correct estimates as progress, successors or material deviations
-change. Do not leave "pending calibration" indefinitely: if no estimate is defensible,
-name the missing evidence and next update milestone. Keep the overall estimate
-concise and shown once, with expiry separate; add no second ledger, polling,
-approvals or reporting workflow.
-
-Default ordinary code implementation, changes and CPU checks to bounded TCodex
-workers with GPT-6.1-sol. Use TClaude with Opus-5.5 for complex diagnosis, design
-and planning; retain CodeBuddy with DeepSeek Flash for simple bounded tasks.
-Use the project operations guide for verified native arguments, installed paths
-and exact routed model IDs; do not transfer aliases between CLIs. Give minimal
-context and exclusive write surfaces. Native subagents supplement a specific
-capability or clear benefit; mechanical work stays direct. The task owner decides
-and accepts actual output with proportionate checks, without duplicate dispatch
-to compare tools, mandatory second review or a new coordination layer. Apply this
-choice to new work; preserve healthy workers. Use personal-subagent-boundaries
-for workers.
+Delegate bounded implementation or review through personal-subagent-boundaries.
+Honor the user's explicit tool/model choice; platform tasks use that platform's
+execution skill and current configuration. This skill does not maintain another
+CLI or model default. Give workers exclusive write surfaces and accept actual
+output with proportionate checks; preserve healthy workers.
 
 ## Checks, Adoption And Saving
 
-Check actual scientific inputs/configuration, unique writers and required sample/
-metric completeness. Audit generated artifacts once and reuse accepted results;
-check each stage's own output. Recheck changed inputs or demonstrated errors only.
-Do not gate on log paths/filesystem identity, matching repository SHAs, repeated
-whole-artifact audits or chains of certificates.
+Scientific acceptance belongs to the execution owner under the
+[research evidence rules](../personal-research-project/references/execution-and-evidence.md).
+Coordination checks ownership, unresolved dependencies and adoption; it does not
+add another scientific acceptance gate.
 
 A rule/source change does not establish runtime adoption. Execution owners record
 the actual entrypoint and adopted/pending scope in their existing task card and
@@ -139,54 +154,41 @@ broadcast a pause on all document editing or require globally clean worktrees.
 
 ## Waiting And Lifecycle
 
-For authorized long commands, use `personal-long-job-supervisor:supervise-long-jobs`
-for launch/observation, `wait_event(job_id)` for one job or native `wait_any(job_ids)`
-for several, diagnosis, acknowledgement and registration cleanup. Returned events
-keep their original job/event IDs and are not automatically acknowledged. Root
-waits only for its own global decisions; scientific and maintenance owners consume
-their own events rather than routing everything through root. Read that skill when using the supervisor; do not copy its
-monitor defaults or infer orchestration/retry/resource authority from an event.
-Execution and sampling stay detached; existing executors own authorized continuation.
+Observe App chats through native `wait_threads` events when waiting is requested,
+and read the relevant turn or artifact at a decision or review boundary. Retain
+returned cursors; do not repeatedly read status or wrap chat observation in a
+supervised process. A reply that awaits the user is a discussion boundary, not
+completion of all future phases. Do not claim continuous observation after the
+current turn ends or add a resident watcher to provide it.
 
-Common guards sample/protect. An observation bridge, when needed, reads existing
-records and emits conditions requiring owner action. Healthy heartbeats, arbitrary
-inbox growth or expected preparation/holder-only status do not automatically wake
-the model. Keep the actual job/event pointers, actionable conditions and owner in
-the existing task card, not duplicated supervisor inventories.
+Use `personal-long-job-supervisor:supervise-long-jobs` for authorized non-interactive
+long commands. Its installed contract owns launch, waiting, acknowledgement,
+reconnection and cleanup; do not duplicate those procedures here. Supervise the
+actual execution command, not a loop querying chat or job progress.
 
-Use native `wait_any` when several independent jobs need observation. Retain an
-existing genuine observer that reads several containers' records for one maintenance
-duty; do not split it just to adopt the API. Never supervise wait calls or wrappers
-polling supervisor status, add resident coordinators, or restart healthy observation
-and compute merely to upgrade the waiting client.
+Scientific and maintenance owners consume events for their own jobs. Root owns
+only its assigned global work and directly delegated finite workers; it does not
+become an event relay for every task. Keep execution and evidence pointers with
+the existing task owner, not in another supervisor inventory. Runtime events do
+not change resource authority or grant retries and orchestration.
 
-Waiting is not abandonment, loss of ownership or grounds for a replacement chat.
-Ordinary new work waits for the owner's next boundary; immediate work follows the
-necessary-wake rule. Root or the responsible owner may use `interrupt_wait(job_id)`
-when a wait really must be released: it requests interruption of existing waits
-watching that job, including multi-job waits across MCP instances sharing state.
-It does not stop workers/targets, acknowledge events, confirm a waiter exists or
-affect later waits. Do not use it to chase ordinary progress; external reviewers
-do not take over waits. Older waiting code does not observe the new control;
-reload clients at idle boundaries without restarting background jobs.
-
-After handling current authority and pending work, rejoin only viable observation.
-If `waitable=false` and no event remains pending, stop waiting; supervisor loss
-alone does not establish target failure. Chat messages are not guaranteed to
-interrupt the host. On `Transport closed`, retain job IDs and follow the supervisor's
-inspection/recovery guidance; do not automatically recreate chats or relaunch jobs.
-
-Pause App wakes during active work; schedule only uncovered future decisions,
-adjust changed ETAs and stop obsolete wakes. Background protection persists across
-chat waits/pauses. Retire finite registrations per the supervisor skill; retain
-useful resident observation until the duty ends or an explicit successor owns it.
-Do not notify chats merely because an event arrived.
+Waiting does not end ownership or justify a replacement chat. Apply the necessary
+wake rule to real decisions and conflicts; ordinary progress stays with its owner.
+Preserve healthy execution when clients or observation change. Common protection
+and observation remain with their assigned maintenance owner; this does not create
+a watchdog, resident coordinator or automatic AI successor. Schedules cover only
+user-authorized future duties, not polling the current work.
 
 Create task chats only within user authority; related stages/repairs retain their
 owner. For authorized succession, save state and let the successor own remaining
-work before archival, preserving healthy jobs/evidence. Owners accept the original
-contract, including negative results, and root arranges follow-on work/resources
+work before archival, preserving healthy jobs/evidence. Owners complete the currently authorized scope, including negative results, and root arranges follow-on work/resources
 and archival without repeating acceptance. Discussion/review chats are not enrolled
 or archived as execution owners by default.
+
+When ownership genuinely changes, hand over the outcome, settled decisions,
+current evidence, unfinished work, authority limits and one next action in the
+existing task record or message. A separate handoff document is optional, not a
+required skill or new plan. Authorized bulk chat archival belongs to
+`personal-task-archive`; scratch cleanup belongs to `personal-temporary-work`.
 
 Read references/source-notes.md only for provenance maintenance.

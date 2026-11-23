@@ -1,0 +1,30 @@
+--- a/academic-research-suite/SKILL.md
++++ b/academic-research-suite/SKILL.md
+@@ -26,13 +26,13 @@
+ 
+ ## Scope among installed research skills
+ 
+-Use one workflow for the requested outcome. General literature discovery belongs
+-to `nature-academic-search`; manuscript drafting, polishing, mock review and
+-reviewer replies have focused `nature-*` entries. PDF bilingual translation uses
++Use one workflow for the requested outcome. General literature discovery uses the user-selected search tools; manuscript
++drafting, polishing, mock review and reviewer replies use the corresponding
++focused skills selected by the user. Nature entries are optional manual tools. PDF bilingual translation uses
+ `personal-translate-paper-zh`. Use the corresponding ARS writing/review workflow
+ when the user explicitly requests ARS or an existing ARS project needs it; do not
+-run both suites for the same deliverable. PaperSpine remains an explicit
+-end-to-end alternative, not another automatic stage.
++run both suites for the same deliverable. Personal project organization and records belong to personal-research-project
++and personal-project-journal; ARS does not create a parallel project ledger.
+ 
+ ## First Rule
+ 
+@@ -323,7 +323,7 @@
+ ## Output Defaults
+ 
+ - Default language follows the user's language.
+-- For Chinese, use Traditional Chinese unless the user requests otherwise.
++- Follow the user's current Chinese script and terminology; do not switch to Traditional Chinese by default.
+ - For staged workflows, show the current stage, required inputs, output artifact,
+   and whether the next gate is optional or mandatory.
+ - For paper/research outputs, keep uncertainty explicit and separate evidence,

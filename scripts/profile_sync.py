@@ -70,6 +70,7 @@ class State:
     codex_home: Path
     changes: tuple[Change, ...]
     config_values: dict[str, Any]
+    paths: tuple[str, ...] = ()
 
 
 def resolve_codex_executable() -> str:
@@ -489,9 +490,9 @@ def render_hooks(runtime: Path, codex_home: Path) -> Leaf:
         return item
 
     rendered = replace_tokens(value)
-    if substitutions != {"posix": 2, "windows": 2}:
+    if substitutions["posix"] != substitutions["windows"]:
         raise SyncError(
-            "portable hooks.json must contain exactly two POSIX and two Windows command tokens"
+            "portable hooks.json must pair POSIX and Windows command tokens"
         )
     data = (
         json.dumps(rendered, ensure_ascii=False, indent=2) + "\n"
@@ -609,8 +610,17 @@ def restore_config_edits(active: dict[str, Any]) -> list[dict[str, Any]]:
     return edits
 
 
-def compare(codex_home: Path) -> State:
+def compare(codex_home: Path, paths: tuple[str, ...] = ()) -> State:
     files, trees, retired_files, retired_trees = load_manifest()
+    if paths:
+        owned = {str(p) for p in files + trees + retired_files + retired_trees}
+        unknown = set(paths) - owned
+        if unknown:
+            raise SyncError(f"--path requires exact manifest entries: {sorted(unknown)}")
+        files, trees, retired_files, retired_trees = (
+            [p for p in group if str(p) in paths]
+            for group in (files, trees, retired_files, retired_trees)
+        )
     changes: list[Change] = []
     for relative in files:
         source_path = PROFILE.joinpath(*relative.parts)
@@ -653,6 +663,8 @@ def compare(codex_home: Path) -> State:
                 Change("DELETE", str(relative / leaf_path), None, target)
             )
 
+    if paths:
+        return State(codex_home, tuple(changes), {}, paths)
     expected = portable_config_values()
     active = load_toml(codex_home / "config.toml", missing_ok=True)
     for key, expected_value in expected.items():
@@ -845,9 +857,10 @@ def rollback_files(
 def _apply_profile_locked(state: State) -> Path | None:
     if not state.changes:
         return None
-    if compare(state.codex_home) != state:
+    if compare(state.codex_home, state.paths) != state:
         raise SyncError("source or target changed after the diff was computed")
-    validate_hook_runtime(state.codex_home)
+    if not state.paths or any(p == "hooks.json" or p.startswith("hooks/") for p in state.paths):
+        validate_hook_runtime(state.codex_home)
 
     file_changes = [
         change for change in state.changes if not change.path.startswith("config.toml:")
@@ -861,7 +874,7 @@ def _apply_profile_locked(state: State) -> Path | None:
     if config_changed:
         expected_version = config_user_version(state.codex_home, config_path)
 
-    if compare(state.codex_home) != state:
+    if compare(state.codex_home, state.paths) != state:
         raise SyncError("source or target changed during apply preflight")
     backup = create_backup(state, file_changes, config_changed)
     applied: list[Change] = []
@@ -894,7 +907,7 @@ def _apply_profile_locked(state: State) -> Path | None:
                 expected_version,
             )
 
-        post_state = compare(state.codex_home)
+        post_state = compare(state.codex_home, state.paths)
         if post_state.changes:
             raise SyncError("post-check found remaining profile drift")
         prune_empty(prune_candidates, state.codex_home)
@@ -931,7 +944,7 @@ def apply_profile(
 ) -> Path | None:
     with deployment_lock(state.codex_home):
         if expected_revision is not None:
-            current_revision, _ = git_source_revision(ROOT, require_clean=True)
+            current_revision, _ = git_source_revision(ROOT, require_clean=not state.paths)
             if current_revision != expected_revision:
                 raise SyncError(
                     "profile source revision changed after apply preflight: "
@@ -948,17 +961,21 @@ def main() -> int:
         action="store_true",
         help="Operate only on the core profile; intended for focused diagnostics.",
     )
+    parser.add_argument(
+        "--path", action="append", default=[],
+        help="Preview/apply/check exact manifest entries only; repeatable. Excludes config and plugins, permits reviewed uncommitted source.",
+    )
     args = parser.parse_args()
     try:
         codex_home = resolve_codex_home()
         revision, dirty = git_source_revision(
-            ROOT, require_clean=args.command == "apply"
+            ROOT, require_clean=args.command == "apply" and not args.path
         )
-        state = compare(codex_home)
+        state = compare(codex_home, tuple(args.path))
         print_changes(state, revision, dirty=dirty)
         plugin_module = None
         plugin_state = None
-        if not args.profile_only:
+        if not args.profile_only and not args.path:
             if __package__:
                 from scripts import plugin_sync as plugin_module
             else:

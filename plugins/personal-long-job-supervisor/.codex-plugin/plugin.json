@@ -1,7 +1,7 @@
 {
   "name": "personal-long-job-supervisor",
-  "version": "0.5.1+codex.20261110",
-  "description": "Run long local commands in detached process sessions and resume Codex only for durable terminal or attention events.",
+  "version": "0.6.10+codex.20261124",
+  "description": "Supervise authorized local or SSH remote commands with detached workers and durable events.",
   "author": {
     "name": "Jiwei Zhu"
   },
@@ -13,7 +13,7 @@
     "developerName": "Jiwei Zhu",
     "category": "Productivity",
     "capabilities": [
-      "Local jobs",
+      "Local and SSH remote jobs",
       "Event-driven observation"
     ],
     "defaultPrompt": "Discover capabilities, report the expected duration, declare an observation contract, supervise this authorized long command without model polling, and report the actual duration when it ends."

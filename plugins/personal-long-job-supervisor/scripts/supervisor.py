@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -18,7 +19,7 @@ import uuid
 
 from durable import append_event, atomic_write_json, locked_events, read_json, utc_now
 from monitoring import MonitorError, NvidiaAdapter, discover_capabilities, normalize_monitors
-from process_identity import ProcessIdentityError, process_identity
+from process_identity import ProcessIdentityError, process_identity, execution_host_identity
 
 
 SCHEMA_VERSION = 3
@@ -29,6 +30,10 @@ NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
 class SupervisorError(RuntimeError):
     pass
+
+
+class WorkerNotStarted(SupervisorError):
+    """The OS rejected worker creation before a child process existed."""
 
 
 def parse_time(value: str) -> float:
@@ -67,7 +72,7 @@ class DetachedProcessRuntime:
                     close_fds=True,
                 )
         except OSError as error:
-            raise SupervisorError(f"detached launch failed: {error}") from error
+            raise WorkerNotStarted(f"detached launch failed: {error}") from error
         self._children[process.pid] = process
         identity_path = Path(registration["paths"]["identity"])
         deadline = time.monotonic() + 2
@@ -151,6 +156,9 @@ class JobStore:
         if "process" not in registration:
             identity_path = job_dir / "process.json"
             if not identity_path.exists():
+                events = self._read_json(job_dir / "events.json") if (job_dir / "events.json").exists() else {}
+                if any(event["event_type"] == "supervisor_error" for event in events.get("events", [])):
+                    return registration
                 raise SupervisorError(f"process identity is not yet available for job {job_id}")
             identity = self._read_json(identity_path)
             try:
@@ -173,6 +181,9 @@ class JobStore:
         heartbeat_path: Path | str | None = None,
         stale_after: float | None = None,
         artifacts: list[Path | str] | None = None,
+        request_id: str | None = None,
+        event_lock: str = "flock",
+        stage_path: Path | str | None = None,
     ) -> dict:
         if not NAME_PATTERN.fullmatch(name):
             raise SupervisorError("name must be 1-64 characters using letters, digits, '.', '_' or '-'")
@@ -209,9 +220,37 @@ class JobStore:
         except (MonitorError, json.JSONDecodeError, AttributeError) as error:
             raise SupervisorError(str(error)) from error
 
-        job_id = f"{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:12]}"
+        if event_lock not in ("flock", "mkdir"):
+            raise SupervisorError("unsupported event lock")
+        job_id = request_id or f"{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:12]}"
         job_dir = self.job_dir(job_id)
-        job_dir.mkdir(mode=0o700)
+        stage_file = None
+        if stage_path is not None:
+            stage_file = Path(stage_path).expanduser()
+            stage_file = str((cwd_path / stage_file).resolve())
+        request = dict(name=name, cwd=str(cwd_path), command=list(command),
+                       monitors=normalized_monitors,
+                       artifacts=[str(Path(item).expanduser().resolve()) for item in (artifacts or [])],
+                       event_lock=event_lock)
+        if stage_file is not None:
+            request["stage_path"] = stage_file
+        if (self.state_root / "cleaned_requests" / job_id).exists():
+            raise SupervisorError("request was already cleaned; it cannot be launched again")
+        try:
+            job_dir.mkdir(mode=0o700)
+        except FileExistsError:
+            if not request_id:
+                raise
+            try:
+                previous = read_json(job_dir / "job.json")
+            except (OSError, ValueError):
+                raise SupervisorError("launch unconfirmed: request directory exists without complete registration; do not relaunch")
+            if previous.get("request") != request:
+                raise SupervisorError("request_id is already bound to different launch arguments")
+            return self.inspect_job(job_id)
+        if (self.state_root / "cleaned_requests" / job_id).exists():
+            job_dir.rmdir()
+            raise SupervisorError("request was already cleaned; it cannot be launched again")
         log_path = job_dir / "combined.log"
         log_path.touch(mode=0o600)
         artifact_paths = [str(Path(item).expanduser().resolve()) for item in (artifacts or [])]
@@ -219,6 +258,8 @@ class JobStore:
         created_at = utc_now()
         registration = {
             "schema_version": SCHEMA_VERSION,
+            "execution_host": execution_host_identity(),
+            "event_lock": event_lock,
             "job_id": job_id,
             "name": name,
             "cwd": str(cwd_path),
@@ -238,6 +279,11 @@ class JobStore:
                 "result": str(job_dir / "result.json"),
             },
         }
+        if stage_file is not None:
+            registration["stage_path"] = stage_file
+        if request_id:
+            registration["request_id"] = request_id
+            registration["request"] = request
         atomic_write_json(job_dir / "job.json", registration)
         atomic_write_json(
             job_dir / "events.json",
@@ -251,7 +297,8 @@ class JobStore:
             )
             atomic_write_json(job_dir / "job.json", registration)
         except Exception as error:
-            self._record_supervisor_error(job_id, f"launch failed: {error}", registration)
+            self._record_supervisor_error(job_id, f"launch failed: {error}", registration,
+                                          reason="worker_not_started" if isinstance(error, WorkerNotStarted) else "launch_unconfirmed")
             raise SupervisorError(f"launch failed for registered job {job_id}: {error}") from error
         return self.inspect_job(job_id)
 
@@ -262,12 +309,14 @@ class JobStore:
                 yield data
         except FileNotFoundError as error:
             raise SupervisorError(f"unknown job: {job_id}") from error
+        except RuntimeError as error:
+            raise SupervisorError(str(error)) from error
 
-    def _record_supervisor_error(self, job_id: str, message: str, registration=None) -> None:
+    def _record_supervisor_error(self, job_id: str, message: str, registration=None, reason=None) -> None:
         registration = registration or self._registration(job_id)
         with self._locked_events(job_id) as data:
-            if not any(event["event_type"] == "supervisor_error" for event in data["events"]):
-                append_event(data, registration, "supervisor_error", detail=message[:1000])
+            if not any(event.get("reason") == reason and event["event_type"] == "supervisor_error" for event in data["events"]):
+                append_event(data, registration, "supervisor_error", detail=message[:1000], reason=reason)
 
     def _reconcile_v2_heartbeat(self, registration: dict, data: dict, result) -> None:
         heartbeat = registration.get("heartbeat_path")
@@ -286,24 +335,35 @@ class JobStore:
 
     def _reconcile(self, job_id: str) -> tuple[dict, dict, dict]:
         registration = self._registration(job_id)
-        process_state = self.runtime.inspect(registration["process"])
+        origin = registration.get("execution_host")
+        local_hostname_only = registration.get("event_lock") != "mkdir" and origin and origin.get("platform") != "linux"
+        same_host = not origin or local_hostname_only or origin == execution_host_identity()
+        process = registration.get("process")
+        if same_host and process:
+            process_state = self.runtime.inspect(process)
+        else:
+            process_state = {**(process or {}), "active": False, "identity_matches": False,
+                             "state": "launch_unconfirmed" if same_host else "execution_host_unverified"}
         result_path = self.job_dir(job_id) / "result.json"
         result = self._read_json(result_path) if result_path.exists() else None
         with self._locked_events(job_id) as data:
+            if result and result.get("monitor_error") and not any(event["event_type"] == "supervisor_error" for event in data["events"]):
+                append_event(data, registration, "supervisor_error", detail=result["monitor_error"])
             if result is not None and not any(event["event_type"] in ("completed", "failed") for event in data["events"]):
                 exit_code = int(result["exit_code"])
                 append_event(data, registration, "completed" if exit_code == 0 else "failed", exit_code=exit_code, finished_at=result.get("finished_at"))
             if int(registration.get("schema_version", 2)) == 2:
                 self._reconcile_v2_heartbeat(registration, data, result)
-            if result is None and not process_state["active"]:
+            if result is None and same_host and process and not process_state["active"]:
                 age = time.time() - parse_time(registration["created_at"])
-                if age >= 2 and not any(event["event_type"] == "supervisor_error" for event in data["events"]):
-                    detail = "process identity was lost without a result record" if process_state["state"] == "identity_lost" else "detached worker exited without a result record"
-                    append_event(data, registration, "supervisor_error", detail=detail)
+                if age >= 2 and not any(event.get("reason") == "worker_lost" for event in data["events"]):
+                    detail = ("process identity was lost without a result record"
+                              if process_state["state"] == "identity_lost" else "detached worker exited without a result record")
+                    append_event(data, registration, "supervisor_error", reason="worker_lost", detail=detail)
             return registration, data, process_state
 
     def _event_view(self, event: dict, registration: dict, process_state: dict) -> dict:
-        command = f"{registration['python_executable']} {registration['supervisor_path']}"
+        command = shlex.join([registration["python_executable"], registration["supervisor_path"], "--state-root", str(self.state_root)])
         view = {
             "job_id": registration["job_id"],
             "name": registration["name"],
@@ -313,6 +373,7 @@ class JobStore:
             "event_time": event["created_at"],
             "finished_at": event.get("finished_at"),
             "reason": event.get("reason"),
+            "stage": event.get("stage"),
             "monitor_id": event.get("monitor_id"),
             "scope": event.get("scope"),
             "subject": event.get("subject"),
@@ -320,7 +381,7 @@ class JobStore:
             "detail": event.get("detail"),
             "evidence": event.get("evidence"),
             "evidence_gap": event.get("evidence_gap"),
-            "process": registration["process"],
+            "process": registration.get("process"),
             "target_process": self._target_identity(registration),
             "process_state": process_state,
             "paths": {"job_dir": registration["paths"]["job_dir"], "log": registration["paths"]["log"], "result": registration["paths"]["result"], "artifacts": registration.get("artifacts", [])[:16]},
@@ -354,13 +415,26 @@ class JobStore:
         for field in ("detail", "evidence_gap"):
             if candidate.get(field):
                 candidate[field] = str(candidate[field])[:512]
+        candidate["payload_truncated"] = True
         encoded = json.dumps(candidate, ensure_ascii=False, separators=(",", ":")).encode()
         if len(encoded) <= MAX_PAYLOAD_BYTES:
-            candidate["payload_truncated"] = True
             return candidate
-        compact = {key: candidate.get(key) for key in ("job_id", "name", "status", "waitable", "event_id", "event_type", "exit_code", "event_time", "reason", "monitor_id", "scope", "subject", "process", "target_process", "process_state", "commands", "authority") if key in candidate}
+        compact = {key: candidate.get(key) for key in ("job_id", "name", "status", "waitable", "event_id", "event_type", "exit_code", "event_time", "reason", "monitor_id", "scope", "subject", "process", "target_process", "process_state", "commands", "authority", "stage", "stage_state", "stage_path") if key in candidate}
+        if "pending_event" in candidate:
+            event = candidate["pending_event"]
+            compact["pending_event"] = (
+                {key: event.get(key) for key in ("event_id", "event_type", "event_time", "exit_code")}
+                if event else None
+            )
         compact["paths"] = candidate.get("paths", {})
         compact["payload_truncated"] = True
+        # Long paths and recovery commands can exceed the remaining space even
+        # after removing duplicate stage data. Keep the native event deliverable.
+        for field in ("commands", "paths", "stage_path", "target_process", "process_state",
+                      "process", "subject", "scope", "reason", "name", "stage_state"):
+            if len(json.dumps(compact, ensure_ascii=False, separators=(",", ":")).encode()) <= MAX_PAYLOAD_BYTES:
+                break
+            compact.pop(field, None)
         return compact
 
     def render_payload(self, value: dict) -> str:
@@ -370,31 +444,40 @@ class JobStore:
         return payload
 
     def inspect_job(self, job_id: str) -> dict:
+        return self._bounded(self._observe_job(job_id))
+
+    def _observe_job(self, job_id: str) -> dict:
         registration, data, process_state = self._reconcile(job_id)
         pending = next((event for event in data["events"] if not event.get("acknowledged_at")), None)
         terminal = next((event for event in reversed(data["events"]) if event["event_type"] in ("completed", "failed")), None)
         status = terminal["event_type"] if terminal else ("running" if process_state["active"] else process_state["state"])
-        return self._bounded(
-            {
-                "job_id": job_id,
-                "name": registration["name"],
-                "schema_version": registration.get("schema_version", 2),
-                "status": status,
-                "waitable": terminal is None and (process_state["active"] or not any(
-                    event["event_type"] == "supervisor_error" for event in data["events"]
-                )),
-                "process": registration["process"],
-                "target_process": self._target_identity(registration),
-                "process_state": process_state,
-                "pending_event": self._event_view(pending, registration, process_state) if pending else None,
-                "paths": registration["paths"],
-                "monitors": registration.get("monitors", []),
-                "monitor_states": data.get("monitor_states", {}),
-                "heartbeat_path": registration.get("heartbeat_path"),
-                "stale_after_seconds": registration.get("stale_after_seconds"),
-                "artifacts": registration.get("artifacts", [])[:16],
-            }
-        )
+        reasons = {event.get("reason") for event in data["events"] if event["event_type"] == "supervisor_error"}
+        launch_error = "worker_not_started" in reasons
+        observation_closed = bool(reasons & {"worker_lost", "worker_not_started", "launch_unconfirmed"})
+        if not registration.get("process") and reasons:
+            observation_closed = True
+        if not terminal and launch_error:
+            status = "worker_not_started"
+        return {
+            "job_id": job_id,
+            "name": registration["name"],
+            "schema_version": registration.get("schema_version", 2),
+            "status": status,
+            "waitable": (terminal is None and process_state["state"] != "execution_host_unverified"
+                         and (process_state["active"] or not observation_closed)),
+            "process": registration.get("process"),
+            "target_process": self._target_identity(registration),
+            "process_state": process_state,
+            "pending_event": self._event_view(pending, registration, process_state) if pending else None,
+            "paths": registration["paths"],
+            "stage_path": registration.get("stage_path"),
+            "stage_state": data.get("stage_state"),
+            "monitors": registration.get("monitors", []),
+            "monitor_states": data.get("monitor_states", {}),
+            "heartbeat_path": registration.get("heartbeat_path"),
+            "stale_after_seconds": registration.get("stale_after_seconds"),
+            "artifacts": registration.get("artifacts", [])[:16],
+        }
 
     def _wait_token(self, job_id: str):
         path = self.job_dir(job_id) / "wait_control.json"
@@ -409,14 +492,14 @@ class JobStore:
     def wait_event(self, job_id: str, poll_interval: float = 2.0, cancel_event=None) -> dict:
         return self.wait_any([job_id], poll_interval=poll_interval, cancel_event=cancel_event)
 
-    def wait_any(self, job_ids: list[str], poll_interval: float = 2.0, cancel_event=None) -> dict:
+    def wait_any(self, job_ids: list[str], poll_interval: float = 2.0, cancel_event=None, wait_tokens=None) -> dict:
         """Return one pending event; closed observations do not block other jobs."""
         if not isinstance(job_ids, list) or not job_ids or not all(isinstance(item, str) for item in job_ids):
             raise SupervisorError("job_ids must be a non-empty list of job IDs")
         job_ids = list(dict.fromkeys(job_ids))
         for job_id in job_ids:
             self._registration(job_id)
-        tokens = {job_id: self._wait_token(job_id) for job_id in job_ids}
+        tokens = wait_tokens if wait_tokens is not None else {job_id: self._wait_token(job_id) for job_id in job_ids}
         while True:
             if cancel_event is not None and cancel_event.is_set():
                 raise SupervisorError("wait cancelled by MCP client; underlying jobs are unchanged")
@@ -424,12 +507,18 @@ class JobStore:
                 if self._wait_token(job_id) != tokens[job_id]:
                     raise SupervisorError(f"wait interrupted for {job_id}; underlying jobs are unchanged")
             waitable = False
+            unverified = []
             for job_id in job_ids:
-                observed = self.inspect_job(job_id)
+                observed = self._observe_job(job_id)
                 if observed["pending_event"]:
                     return observed["pending_event"]
+                if observed["status"] == "execution_host_unverified":
+                    unverified.append(job_id)
+                    continue
                 waitable = waitable or observed["waitable"]
             if not waitable:
+                if unverified:
+                    raise SupervisorError("no waitable execution target; execution host unverified: " + ", ".join(unverified))
                 raise SupervisorError("observations are already terminal or inactive and have no unacknowledged event; target outcome is unknown without a result record")
             if cancel_event is not None:
                 cancel_event.wait(poll_interval)
@@ -447,36 +536,72 @@ class JobStore:
                 event["acknowledged_at"] = utc_now()
             return {"job_id": job_id, "event_id": int(event_id), "acknowledged": True, "already_acknowledged": already}
 
-    def list_jobs(self) -> dict:
+    @staticmethod
+    def _list_row(observed):
+        pending = observed.get("pending_event")
+        row = {key: observed.get(key) for key in ("job_id", "name", "status", "process")}
+        row["job_dir"] = (observed.get("paths") or {}).get("job_dir")
+        row["pending_event"] = ({key: pending.get(key) for key in
+                                 ("event_id", "event_type", "event_time", "exit_code", "reason")}
+                                if pending else None)
+        if pending and pending.get("stage"):
+            row["pending_event"]["stage"] = {k: pending["stage"].get(k) for k in ("seq", "stage")}
+        state = observed.get("stage_state")
+        row["stage_state"] = None
+        if state:
+            snapshot = state.get("snapshot")
+            row["stage_state"] = {"snapshot": ({k: snapshot.get(k) for k in ("seq", "stage")}
+                                               if snapshot else None),
+                                  "evidence_gap": state.get("evidence_gap")}
+        return row
+
+    def _list_rows(self):
         jobs, skipped = [], 0
         for path in sorted(self.jobs_root.iterdir(), reverse=True):
-            if not path.is_dir():
-                continue
-            try:
-                observed = self.inspect_job(path.name)
-                pending = observed.get("pending_event")
-                jobs.append({"job_id": observed["job_id"], "name": observed["name"], "status": observed["status"], "process": observed["process"], "pending_event": ({key: pending.get(key) for key in ("event_id", "event_type", "event_time", "exit_code", "reason")} if pending else None), "job_dir": observed["paths"]["job_dir"]})
-            except SupervisorError:
-                skipped += 1
+            if path.is_dir():
+                try:
+                    jobs.append(self._list_row(self._observe_job(path.name)))
+                except SupervisorError:
+                    skipped += 1
+        return jobs, skipped
+
+    def list_jobs(self) -> dict:
+        jobs, skipped = self._list_rows()
         bounded = []
-        for job in jobs[:100]:
-            candidate = {"jobs": bounded + [job], "total_jobs": len(jobs), "truncated": len(bounded) + 1 < len(jobs), "skipped_corrupt": skipped}
-            if len(json.dumps(candidate, ensure_ascii=False, separators=(",", ":")).encode()) > 7800:
+        for job in jobs:
+            for field in (None, "job_dir", "process", "detail"):
+                if field:
+                    job.pop(field, None)
+                if len(json.dumps(bounded + [job], ensure_ascii=False, separators=(",", ":")).encode()) <= 7800:
+                    bounded.append(job)
+                    break
+            if len(bounded) >= 100:
                 break
-            bounded.append(job)
         return {"jobs": bounded, "total_jobs": len(jobs), "truncated": len(bounded) < len(jobs), "skipped_corrupt": skipped}
 
-    def clean_job(self, job_id: str) -> dict:
-        observed = self.inspect_job(job_id)
+    def clean_job(self, job_id: str, released_host: bool = False) -> dict:
+        observed = self._observe_job(job_id)
         if observed["process_state"]["active"]:
             raise SupervisorError("refusing to clean a running job")
-        if observed["pending_event"] is not None:
+        foreign = observed["process_state"]["state"] == "execution_host_unverified"
+        if released_host and (not foreign or self._registration(job_id).get("event_lock") != "mkdir"):
+            raise SupervisorError("released-host cleanup requires a different remote execution instance")
+        if foreign and observed["status"] not in ("completed", "failed") and not released_host:
+            raise SupervisorError("refusing to clean an unverified remote execution without a terminal result")
+        target = observed.get("target_process")
+        if not foreign and target and self.runtime.inspect(target)["active"]:
+            raise SupervisorError("refusing to clean a running target")
+        if observed["pending_event"] is not None and not released_host:
             raise SupervisorError("acknowledge all events before cleaning the job")
         events = self._read_json(self.job_dir(job_id) / "events.json")["events"]
-        if not any(event.get("event_type") in ("completed", "failed", "supervisor_error") and event.get("acknowledged_at") for event in events):
+        if not released_host and not any((event.get("event_type") in ("completed", "failed") or event.get("reason") == "worker_not_started") and event.get("acknowledged_at") for event in events):
             raise SupervisorError("refusing to clean without a confirmed terminal event")
+        registration = self._registration(job_id)
+        if registration.get("request_id"):
+            # A delayed replay must not launch again after explicit cleanup.
+            atomic_write_json(self.state_root / "cleaned_requests" / job_id, {"cleaned": True})
         shutil.rmtree(self.job_dir(job_id))
-        return {"job_id": job_id, "cleaned": True}
+        return {"job_id": job_id, "cleaned": True, **({"release_confirmed_by_caller": True} if released_host else {})}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -485,7 +610,9 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="subcommand", required=True)
     start = commands.add_parser("start", help="start a command in a detached process session")
     start.add_argument("--name", required=True)
+    start.add_argument("--request-id", help="stable ID for a retryable launch; never reuse for another command")
     start.add_argument("--cwd", required=True, type=Path)
+    start.add_argument("--stage-path", type=Path, help="task-owned atomic stage snapshot")
     start.add_argument("--monitor", action="append", default=[])
     start.add_argument("--heartbeat-path", type=Path)
     start.add_argument("--stale-after", type=float)
@@ -502,6 +629,7 @@ def build_parser() -> argparse.ArgumentParser:
     interrupt.add_argument("job_id")
     clean = commands.add_parser("clean", help="remove an acknowledged inactive job record")
     clean.add_argument("job_id")
+    clean.add_argument("--released-host", action="store_true", help="confirm original remote instance was released and required evidence was preserved; discard its run records without inventing a result")
     return parser
 
 
@@ -516,7 +644,7 @@ def main(argv: list[str] | None = None) -> int:
         store = JobStore(args.state_root)
         if args.subcommand == "start":
             command = args.command[1:] if args.command and args.command[0] == "--" else args.command
-            output = store.start_job(name=args.name, cwd=args.cwd, command=command, monitors=args.monitor, heartbeat_path=args.heartbeat_path, stale_after=args.stale_after, artifacts=args.artifact)
+            output = store.start_job(name=args.name, cwd=args.cwd, command=command, monitors=args.monitor, heartbeat_path=args.heartbeat_path, stale_after=args.stale_after, artifacts=args.artifact, request_id=args.request_id, stage_path=args.stage_path)
         elif args.subcommand == "status":
             output = store.inspect_job(args.job_id)
         elif args.subcommand == "list":
@@ -526,7 +654,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.subcommand == "interrupt-wait":
             output = store.interrupt_wait(args.job_id)
         elif args.subcommand == "clean":
-            output = store.clean_job(args.job_id)
+            output = store.clean_job(args.job_id, released_host=args.released_host)
         else:
             parser.error("unknown command")
             return 2

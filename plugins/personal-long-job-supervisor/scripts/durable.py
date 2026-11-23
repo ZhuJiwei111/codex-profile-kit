@@ -8,11 +8,15 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import time
 
 if os.name == "nt":
     import msvcrt
 else:
     import fcntl
+
+
+RELEASE_VERSION = "0.6.10+codex.20261124"
 
 
 def utc_now() -> str:
@@ -66,18 +70,23 @@ def _unlock_file(lock) -> None:
 
 
 @contextmanager
-def locked_events(job_dir: Path):
-    lock_path = job_dir / "events.lock"
+def file_lock(lock_path: Path):
     with lock_path.open("a+", encoding="utf-8") as lock:
         os.chmod(lock_path, 0o600)
         _lock_file(lock)
         try:
-            path = job_dir / "events.json"
-            data = read_json(path)
-            yield data
-            atomic_write_json(path, data)
+            yield
         finally:
             _unlock_file(lock)
+
+
+@contextmanager
+def _file_locked_events(job_dir: Path):
+    with file_lock(job_dir / "events.lock"):
+        path = job_dir / "events.json"
+        data = read_json(path)
+        yield data
+        atomic_write_json(path, data)
 
 
 def append_event(data: dict, registration: dict, event_type: str, **fields) -> dict:
@@ -92,3 +101,32 @@ def append_event(data: dict, registration: dict, event_type: str, **fields) -> d
     data["next_event_id"] = event["event_id"] + 1
     data["events"].append(event)
     return event
+
+
+@contextmanager
+def locked_events(job_dir: Path):
+    registration = read_json(job_dir / "job.json") if (job_dir / "job.json").exists() else {}
+    if registration.get("event_lock") != "mkdir":
+        with _file_locked_events(job_dir) as data:
+            yield data
+        return
+    from process_identity import execution_host_identity, require_process_identity
+    lock = job_dir / "events.lockdir"
+    deadline = time.monotonic() + 15
+    while True:
+        try:
+            lock.mkdir(mode=0o700)
+            break
+        except FileExistsError:
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"event lock busy: {lock}; verify its owner before recovery")
+            time.sleep(0.05)
+    try:
+        atomic_write_json(lock / "owner.json", {"host": execution_host_identity(),
+                                               "process": require_process_identity()})
+        data = read_json(job_dir / "events.json")
+        yield data
+        atomic_write_json(job_dir / "events.json", data)
+    finally:
+        (lock / "owner.json").unlink(missing_ok=True)
+        lock.rmdir()

@@ -12,18 +12,6 @@
             "statusMessage": "Checking Conda base policy"
           }
         ]
-      },
-      {
-        "matcher": "^request_user_input$",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "{{PROFILE_SYNC_COMMAND:hooks/no_autoresolution_guard.py}}",
-            "commandWindows": "{{PROFILE_SYNC_COMMAND_WINDOWS:hooks/no_autoresolution_guard.py}}",
-            "timeout": 10,
-            "statusMessage": "Checking user-choice wait policy"
-          }
-        ]
       }
     ]
   }

@@ -104,7 +104,7 @@ def validate_source() -> str:
     if server.get("tool_timeout_sec") != 604800:
         raise PluginSyncError("MCP wait timeout must remain seven days")
 
-    for script in ("durable.py", "monitoring.py", "mcp_server.py", "process_identity.py", "supervisor.py", "worker.py"):
+    for script in ("durable.py", "monitoring.py", "mcp_server.py", "stages.py", "remote.py", "process_identity.py", "supervisor.py", "worker.py"):
         path = PLUGIN_ROOT / "scripts" / script
         try:
             compile(path.read_bytes(), str(path), "exec")
@@ -171,6 +171,27 @@ def run_codex_json(codex_home: Path, arguments: list[str]) -> dict:
     return value
 
 
+def installed_entry_works(codex_home: Path, version: str) -> bool:
+    package = codex_home / "plugins" / "cache" / MARKETPLACE_NAME / PLUGIN_NAME / version
+    runtime = profile_sync.resolve_hook_runtime()
+    try:
+        server = read_json(package / ".mcp.json")["mcpServers"]["long_job_supervisor"]
+        if (server["command"] != str(runtime) or server["cwd"] != "."
+                or server["args"] != ["./scripts/mcp_server.py"]):
+            return False
+        for source in (PLUGIN_ROOT / "scripts").glob("*.py"):
+            if (package / "scripts" / source.name).read_bytes() != source.read_bytes():
+                return False
+        request = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}
+        result = subprocess.run([str(runtime), "-B", *server["args"]], cwd=package,
+                                input=json.dumps(request) + "\n", text=True, capture_output=True,
+                                timeout=5, check=False)
+        return (result.returncode == 0 and
+                json.loads(result.stdout)["result"]["serverInfo"]["version"] == version)
+    except (OSError, KeyError, TypeError, ValueError, subprocess.TimeoutExpired, PluginSyncError):
+        return False
+
+
 def inspect_state(
     codex_home: Path,
     *,
@@ -216,6 +237,7 @@ def inspect_state(
             or plugin.get("enabled") is not True
             or not isinstance(source_path, str)
             or Path(source_path).resolve(strict=False) != PLUGIN_ROOT.resolve(strict=True)
+            or not installed_entry_works(codex_home, version)
         ):
             changes.append(Change("CHANGE", f"plugin:{PLUGIN_ID}"))
     if LEGACY_PLUGIN_ID in by_id:

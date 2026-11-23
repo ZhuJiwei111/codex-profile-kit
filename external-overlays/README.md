@@ -56,3 +56,15 @@ manifest 将其列为精确退役项；恢复时先撤销该 retirement，再独
 - 本机 `personal-*` 的 source-notes 是设计来源记录；
   这些已重写为本地工作流，不与其引用的社区仓库保持逐文件同步。
   更新判断应保留实际改错经验和当前授权边界，不用新上游覆盖本地契约。
+
+## 2026-11-19 个人工作流整理
+
+`skill-routing-20261119.patch` 在现有本机 ARS 0.1.22 适配基础上更新入口：
+常用写作/审稿不强制走 Nature，项目与记录归个人 skill，中文沿用户当前字形。
+不升级上游、不改子工作流、不启用新的运行时。PaperSpine 已完整移至
+`archive/profile-consolidation-20261119/external/paper-spine/`，未运行其 updater。
+此前 patch 中的 PaperSpine 操作仅作历史，不是当前安装要求。
+
+## Nature 套件退役（2026-11-19）
+
+`nature-retirement-20261119.patch` 在同日路由补丁之后应用，仅删除 ARS 入口对已退役 Nature 技能的推荐。保留 ARS 内 Nature 期刊政策资料；不升级或重建外部套件。完整 Nature 源码归档于 `archive/profile-consolidation-20261119/managed/`，由 manifest 精确退役活动副本。

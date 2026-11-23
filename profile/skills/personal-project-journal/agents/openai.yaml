@@ -1,6 +1,6 @@
 interface:
-  display_name: "Project Journal"
-  short_description: "Maintain human-auditable project journals"
-  default_prompt: "Use $personal-project-journal to initialize or update this project's audit journal."
+  display_name: "个人项目记录"
+  short_description: "统一维护实验、阶段与维护卡片、项目待办、分类术语和重要事件，避免重复记录"
+  default_prompt: "使用 $personal-project-journal 将这次工作的事实、待办、术语或重要事件更新到唯一维护位置。"
 policy:
   allow_implicit_invocation: true

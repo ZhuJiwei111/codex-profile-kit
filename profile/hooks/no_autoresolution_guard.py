@@ -32,7 +32,7 @@ def must_deny(event: dict[str, Any]) -> bool:
     if event.get("tool_name") != "request_user_input":
         return False
     tool_input = event.get("tool_input")
-    return isinstance(tool_input, dict) and "autoResolutionMs" in tool_input
+    return isinstance(tool_input, dict) and tool_input.get("autoResolutionMs") is not None
 
 
 def emit_denial() -> None:

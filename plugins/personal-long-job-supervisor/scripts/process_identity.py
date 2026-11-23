@@ -170,3 +170,14 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def execution_host_identity() -> dict:
+    """Identity for deciding whether local PID inspection applies to a saved job."""
+    if sys.platform.startswith("linux"):
+        return {"platform": "linux",
+                "boot_id": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
+                "pid_namespace": os.readlink("/proc/self/ns/pid"),
+                "init_start_ticks": _linux_identity(1)["start_ticks"]}
+    # Local-only jobs keep their existing process identity behavior.
+    return {"platform": sys.platform, "host": __import__("socket").gethostname()}
