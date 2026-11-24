@@ -8,8 +8,7 @@ project/
 ├── README.md                 结构、常用用法
 ├── .gitignore
 ├── .agent/                   记录能力按需建立
-├── environment-<用途>.sh
-├── environments/             依赖规格较多时使用
+├── environments/             环境准备脚本、依赖规格与锁文件
 ├── src/                      公共实现
 ├── tools/                    按需的薄命令入口
 ├── data/                     数据与来源说明
