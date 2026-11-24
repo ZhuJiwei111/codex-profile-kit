@@ -17,6 +17,10 @@ otherwise use the smallest isolated task directory. Do not create a framework,
 manifest, ignore rule, or persistent setup merely to organize scratch.
 
 Before editing or removing an existing artifact, establish its owner and role.
+A temporary directory may contain originals still needed by retained outputs,
+including through indexes or symlinks. Preserve those originals until their
+retained uses have been transferred and verified; the directory name alone
+does not make its contents disposable.
 Use staging, a sample, or a dry run when it reduces a concrete transition risk;
 ordinary reversible work does not need all three.
 
